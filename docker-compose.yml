@@ -1,0 +1,58 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-quiz}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-quiz}
+      POSTGRES_DB: ${POSTGRES_DB:-quizapp}
+    ports:
+      - "5432:5432" # zodat je met een DB-tool kunt kijken
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  server:
+    build: ./server
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-quiz}:${POSTGRES_PASSWORD:-quiz}@db:5432/${POSTGRES_DB:-quizapp}
+      PORT: 3000
+      NODE_ENV: development
+      PRISMA_HIDE_UPDATE_MESSAGE: "true" # verbergt de update-melding van Prisma bij elke start
+      JWT_SECRET: ${JWT_SECRET:-verander-mij}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./server:/app
+      - /app/node_modules # node_modules blijven in de container
+    depends_on:
+      db:
+        condition: service_healthy
+    command: sh -c "npx prisma generate && npx prisma migrate deploy && npx prisma db seed && npm run dev"
+
+  client:
+    build: ./client
+    environment:
+      VITE_PROXY_TARGET: http://server:3000
+      VITE_PUBLIC_URL: ${PUBLIC_URL:-} # optioneel: http://192.168.x.x:5173 voor de QR-code
+      CHOKIDAR_USEPOLLING: "true"
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    depends_on:
+      - server
+
+  adminer: # database bekijken in de browser: http://localhost:8080
+    image: adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
+volumes:
+  db-data:

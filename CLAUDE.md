@@ -6,6 +6,8 @@ Kahoot-achtige quizwebsite voor HU Open ICT (squad-project, beginners). Volledig
 
 Skeleton (projectplan Fase 0–2) is klaar. **Fase 3+ (MVP-features) bouwt het team zelf** — bouw die alleen als daar expliciet om gevraagd wordt. Zoek naar `TODO(team` voor openstaand werk.
 
+De paginacomponenten voor `/quizzes`, `/host/new/:quizId`, `/host/:code`, `/join` en `/play/:code` zijn **bewust leeggehaald** (stubs met een `TODO(team)`-blok): die bouwt het team zelf, ook het lobby-/sessiegedeelte dat eerder al werkte. De oude skeleton-versies staan als voorbeeld in `docs/reference/pages/` (uitleg: `docs/reference/README.md`) — die map is referentie, niet in gebruik door de app. Vul deze pagina's niet in zonder expliciete vraag.
+
 ## Stack
 
 - `client/`: React 19 + Vite + Ant Design 6 + React Router 7 + socket.io-client + qrcode.react. JavaScript (geen TypeScript).

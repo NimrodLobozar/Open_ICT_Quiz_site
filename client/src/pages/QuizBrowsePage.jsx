@@ -1,63 +1,24 @@
-import { App, Button, Card, Col, Empty, Input, Row, Spin, Tag, Typography } from 'antd'
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { api } from '../api/http.js'
+import { Card, Typography } from 'antd'
 
 // Quiz-overzicht met zoekbalk (projectplan 3.1 stap 2).
-// TODO(team, Fase 1–2 afmaken): filteren op beroepsrol, mooiere kaarten, laadstatus per zoekactie.
+//
+// LEEGGEHAALD — bouw deze pagina zelf. Voorbeeld: docs/reference/pages/QuizBrowsePage.jsx
+//
+// TODO(team, Fase 1–2 afmaken):
+// - Quizzen ophalen met `api('/quizzes?search=...')` uit ../api/http.js in een useEffect.
+//   De response is een array: { id, title, description, questionCount, role: { name, color } }.
+// - Zolang je nog niets hebt: antd <Spin />. Niets gevonden: antd <Empty />.
+// - Lijst tonen met antd <Row>/<Col> + <Card> per quiz (mobiel 1 kolom, desktop 3).
+// - Zoekbalk met antd <Input.Search /> die de zoekterm in state zet.
+// - Per quiz een knop "Host" → navigate(`/host/new/${quiz.id}`).
+// - Filteren op beroepsrol (quiz.role), nettere kaarten, laadstatus per zoekactie.
 export default function QuizBrowsePage() {
-  const navigate = useNavigate()
-  const { message } = App.useApp()
-  const [search, setSearch] = useState('')
-  const [quizzes, setQuizzes] = useState(null) // null = nog aan het laden
-
-  useEffect(() => {
-    let cancelled = false
-    api(`/quizzes?search=${encodeURIComponent(search)}`)
-      .then((data) => !cancelled && setQuizzes(data))
-      .catch((error) => {
-        if (cancelled) return
-        message.error(error.message)
-        setQuizzes([])
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [search, message])
-
   return (
     <>
       <Typography.Title level={2}>Kies een quiz</Typography.Title>
-      <Input.Search
-        placeholder="Zoek op titel of omschrijving"
-        allowClear
-        enterButton
-        size="large"
-        onSearch={(value) => setSearch(value.trim())}
-        style={{ marginBottom: 16 }}
-      />
-
-      {quizzes === null && <Spin size="large" style={{ display: 'block', margin: 40 }} />}
-      {quizzes?.length === 0 && <Empty description="Geen quizzen gevonden" />}
-
-      <Row gutter={[16, 16]}>
-        {quizzes?.map((quiz) => (
-          <Col xs={24} sm={12} lg={8} key={quiz.id}>
-            <Card
-              title={quiz.title}
-              extra={quiz.role && <Tag color={quiz.role.color}>{quiz.role.name}</Tag>}
-              actions={[
-                <Button type="primary" key="host" onClick={() => navigate(`/host/new/${quiz.id}`)}>
-                  Host
-                </Button>,
-              ]}
-            >
-              <Typography.Paragraph>{quiz.description}</Typography.Paragraph>
-              <Typography.Text type="secondary">{quiz.questionCount} vragen</Typography.Text>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+      <Card>
+        TODO(team): quiz-overzicht met zoekbalk bouwen (zie het commentaar bovenaan dit bestand).
+      </Card>
     </>
   )
 }

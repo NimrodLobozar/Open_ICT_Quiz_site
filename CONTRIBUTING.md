@@ -42,3 +42,5 @@ docker compose exec client npm run lint
 ## Waar moet ik beginnen?
 
 Zoek in de code naar `TODO(team` — daar staat per plek uitgelegd wat er nog moet gebeuren en in welke fase. De bouwvolgorde staat in `docs/PROJECTPLAN.md` hoofdstuk 9.
+
+De pagina's voor `/quizzes`, `/host/new/:quizId`, `/host/:code`, `/join` en `/play/:code` zijn leeg: die bouwen we zelf. In elk bestand in `client/src/pages/` staat bovenaan een `TODO(team)`-blok met wat de pagina moet doen; de skeleton-versie staat als voorbeeld in [`docs/reference/`](docs/reference/README.md).

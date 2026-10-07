@@ -100,4 +100,5 @@ Een speler "resetten": DevTools → Application → Cookies → `quiz_player` ve
 - [`CONTRIBUTING.md`](CONTRIBUTING.md): git-workflow, branches, PR-regels en code-stijl
 - [`docs/PROJECTPLAN.md`](docs/PROJECTPLAN.md): wat we bouwen en in welke volgorde
 - [`docs/SOCKET-EVENTS.md`](docs/SOCKET-EVENTS.md): alle REST-endpoints en socket-events
+- [`docs/reference/README.md`](docs/reference/README.md): welke pagina's we zelf bouwen + de skeleton-versies als voorbeeld
 - [`docs/IDEEEN.md`](docs/IDEEEN.md): ideeën voor later

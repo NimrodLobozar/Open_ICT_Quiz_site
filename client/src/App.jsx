@@ -10,6 +10,11 @@ import QuizBrowsePage from './pages/QuizBrowsePage.jsx'
 import SocketTestPage from './pages/SocketTestPage.jsx'
 
 // Alle routes van de app (zie docs/PROJECTPLAN.md hoofdstuk 7).
+//
+// De routes blijven staan, maar /quizzes, /host/new/:quizId, /host/:code, /join en /play/:code
+// zijn leeggehaald: die bouwt het team zelf. Je werkt dus in het bijbehorende bestand in
+// src/pages/ (elk met een TODO(team)-blok bovenaan). De oude skeleton-versies staan als voorbeeld
+// in docs/reference/pages/ — uitleg in docs/reference/README.md.
 export default function App() {
   return (
     <Routes>

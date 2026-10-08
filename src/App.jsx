@@ -2,6 +2,7 @@ import { Link, Navigate, Route, Routes } from 'react-router-dom'
 import EndScreenPage from './pages/EndScreenPage/EndScreenPage.jsx'
 import JoinPage from './pages/JoinPage/JoinPage.jsx'
 import LobbyHost from './pages/LobbyHost.jsx'
+import LobbyPage from './pages/Lobby/LobbyPage.jsx'
 
 export default function App() {
   return (
@@ -18,7 +19,8 @@ export default function App() {
         }
       />
       <Route path="/lobbyhost" element={<LobbyHost />} />
-=      <Route path="/join" element={<JoinPage />} />
+        <Route path="/lobby" element={<LobbyPage />} />
+      <Route path="/join" element={<JoinPage />} />
       <Route path="/join/:code" element={<JoinPage />} />
       <Route path="/end" element={<EndScreenPage />} />
     </Routes>

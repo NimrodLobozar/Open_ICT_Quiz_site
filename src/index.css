@@ -1,0 +1,9 @@
+/* Globale basisstijl: geen witte rand om de pagina. */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+}

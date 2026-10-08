@@ -1,16 +1,22 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Lobby from "./lobby";
+import { Link, Navigate, Route, Routes } from 'react-router-dom'
+import EndScreenPage from './pages/EndScreenPage/EndScreenPage.jsx'
+import JoinPage from './pages/JoinPage/JoinPage.jsx'
 
-function App() {
+export default function App() {
   return (
-    <BrowserRouter>
     <Routes>
-      <route path="/lobby" element={<Lobby />}>
-
-      </route>
+      <Route
+        path="/"
+        element={
+          <>
+            <h1>Welcome to the Quiz</h1>
+            <Link to="/end">Naar het eindscherm (test)</Link>
+          </>
+        }
+      />
+      <Route path="/join" element={<JoinPage />} />
+      <Route path="/join/:code" element={<JoinPage />} />
+      <Route path="/end" element={<EndScreenPage />} />
     </Routes>
-  </BrowserRouter>
   )
 }
-
-export default App

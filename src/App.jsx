@@ -1,5 +1,16 @@
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Lobby from "./lobby";
+
 function App() {
-  return <h1>Hello World</h1>
+  return (
+    <BrowserRouter>
+    <Routes>
+      <route path="/lobby" element={<Lobby />}>
+
+      </route>
+    </Routes>
+  </BrowserRouter>
+  )
 }
 
 export default App

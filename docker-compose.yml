@@ -1,8 +1,46 @@
 services:
-  client:
-    build: .
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "5173:5173"
+    environment:
+      API_PROXY_TARGET: http://backend:3000
     volumes:
       - .:/app
       - /app/node_modules
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://quiz:quiz@db:5432/quiz
+      NODE_ENV: development
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: quiz
+      POSTGRES_PASSWORD: quiz
+      POSTGRES_DB: quiz
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U quiz -d quiz"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres-data:

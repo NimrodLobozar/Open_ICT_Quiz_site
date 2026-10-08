@@ -6,16 +6,24 @@
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
-    "preview": "vite preview --host"
+    "preview": "vite preview --host",
+    "server": "node backend/index.js",
+    "prisma:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev"
   },
   "dependencies": {
+    "@prisma/client": "^7.10.0",
     "antd": "^6.6.5",
+    "dotenv": "^18.0.6",
+    "express": "^5.2.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.18.4"
   },
   "devDependencies": {
+    "@types/node": "^26.6.4",
     "@vitejs/plugin-react": "^4.3.4",
+    "prisma": "^7.10.0",
     "vite": "^6.0.0"
   }
 }

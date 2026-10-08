@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Jouw uitslag poster telefoon</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFFFFF}
+a{color:#111111}a:hover{color:#E2231A}
+</style>
+</helmet>
+<div style="width: 390px; height: 1240px; box-sizing: border-box; background: #FFFFFF; color: #111111; font-family: 'Archivo', sans-serif; padding: 24px 16px 32px; display: flex; flex-direction: column">
+
+<header style="display: flex; justify-content: space-between; padding-bottom: 10px; border-bottom: 3px solid #111111; font-size: 14px; font-weight: 500">
+<span style="font-weight: 900">Open ICT Quiz</span>
+<span>Code 482913</span>
+</header>
+
+<section aria-labelledby="jij" style="display: flex; flex-direction: column; padding: 28px 0 24px">
+<span style="font-weight: 900; font-size: 180px; line-height: 0.75; color: {{accent}}; letter-spacing: -0.04em">{{me.rank}}</span>
+<h1 id="jij" style="margin: 20px 0 0; font-weight: 900; font-size: 64px; line-height: 0.9; letter-spacing: -0.03em">{{me.nickname}}</h1>
+<p style="margin: 14px 0 0; font-size: 18px; font-weight: 500">{{me.rank}}e van {{count}} · {{me.scoreText}} punten · {{me.correct}}/8 goed</p>
+<p style="margin: 6px 0 0; font-size: 15px">{{gapText}}</p>
+</section>
+
+<section aria-labelledby="lijst">
+<h2 id="lijst" style="margin: 0 0 4px; font-size: 14px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em">Ranglijst</h2>
+<ol style="list-style: none; margin: 0; padding: 0; border-top: 3px solid #111111">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="10">
+<li style="display: flex; align-items: baseline; gap: 12px; padding: 12px 8px; border-bottom: 1px solid #111111; font-size: 18px; background: {{r.bg}}; color: {{r.fg}}">
+<span style="width: 26px; font-weight: 900">{{r.rank}}</span>
+<span style="flex: 1; min-width: 0; font-weight: {{r.weight}}; overflow-wrap: anywhere">{{r.nickname}}</span>
+<span style="font-variant-numeric: tabular-nums">{{r.scoreText}}</span>
+</li>
+</sc-for>
+</ol>
+</section>
+
+<div style="display: flex; flex-direction: column; gap: 10px; margin-top: auto; padding-top: 24px">
+<p style="margin: 0 0 4px; font-size: 14px">Gast: zonder account wordt je score na de quiz gewist.</p>
+<button type="button" style="min-height: 52px; border: 0; background: #111111; color: #FFFFFF; font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 17px">Score bewaren met account</button>
+<button type="button" style="min-height: 52px; border: 3px solid #111111; background: #FFFFFF; color: #111111; font-family: 'Archivo', sans-serif; font-weight: 700; font-size: 17px">Terug naar start</button>
+</div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#E2231A","options":["#E2231A","#1F4BFF","#111111"]},"$preview":{"width":390,"height":1240}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#E2231A';
+    const results = [
+      { id: 1, nickname: 'Sanne', score: 7420, correct: 8 },
+      { id: 2, nickname: 'Daan', score: 5310, correct: 6 },
+      { id: 3, nickname: 'Fatima', score: 6150, correct: 7 },
+      { id: 4, nickname: 'Lucas', score: 2890, correct: 4 },
+      { id: 5, nickname: 'Noah', score: 4480, correct: 5 },
+      { id: 6, nickname: 'Mo', score: 6150, correct: 7 },
+      { id: 7, nickname: 'Emma', score: 3720, correct: 5 },
+      { id: 8, nickname: 'quizkoning', score: 1540, correct: 2 },
+      { id: 9, nickname: 'Yara', score: 5880, correct: 7 },
+      { id: 10, nickname: 'Tim_04', score: 0, correct: 0 }
+    ];
+    const meId = 7;
+    const fmt = (n) => n.toLocaleString('nl-NL');
+    const sorted = results.slice().sort((a, b) => b.score - a.score || a.nickname.localeCompare(b.nickname));
+    const ranked = sorted.map((r) => ({ ...r, rank: sorted.findIndex((o) => o.score === r.score) + 1, scoreText: fmt(r.score) }));
+    const me = ranked.find((r) => r.id === meId);
+    const above = ranked.filter((r) => r.score > me.score).pop();
+    const gapText = above ? fmt(above.score - me.score) + ' punten achter ' + above.nickname + ' (' + above.rank + 'e).' : 'Niemand had meer punten.';
+    const rows = ranked.map((r) => ({
+      ...r,
+      bg: r.id === meId ? '#111111' : 'transparent',
+      fg: r.id === meId ? '#FFFFFF' : '#111111',
+      weight: r.id === meId ? 900 : 500
+    }));
+    return { accent, me, gapText, rows, count: ranked.length };
+  }
+}
+</script>
+</body>
+</html>

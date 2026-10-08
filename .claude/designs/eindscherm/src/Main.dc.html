@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Eindscherm quiz</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&amp;family=Barlow:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#111318}
+a{color:#F2F0EA}a:hover{color:#ffffff}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #111318; color: #F2F0EA; font-family: 'Barlow', sans-serif; padding: 0 24px 64px; box-sizing: border-box">
+<div style="max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column">
+
+<header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; padding: 28px 0; border-bottom: 1px solid #2A2E37">
+<div style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 22px; letter-spacing: 0.08em; text-transform: uppercase">Open ICT Quiz</div>
+<div style="display: flex; flex-wrap: wrap; gap: 32px; font-size: 16px; color: #A3A8B3">
+<span>8 vragen</span>
+<span>10 spelers</span>
+<span>Code <strong style="color: #F2F0EA; font-weight: 600; letter-spacing: 0.06em">482913</strong></span>
+</div>
+</header>
+
+<section aria-labelledby="uitslag-titel" style="display: flex; flex-direction: column; padding-top: 56px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+<h1 id="uitslag-titel" style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: clamp(64px, 9vw, 128px); line-height: 0.85; letter-spacing: -0.01em; text-transform: uppercase">Uitslag</h1>
+<p style="margin: 0 0 8px; font-size: 18px; color: #A3A8B3; max-width: 360px">Gelijke score betekent een gedeelde plek.</p>
+</div>
+
+<ol style="list-style: none; margin: 48px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: end">
+<sc-for list="{{podium}}" as="p" hint-placeholder-count="3">
+<li style="display: flex; flex-direction: column; min-width: 0">
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 0 4px 16px">
+<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: {{p.nameSize}}; line-height: 1; overflow-wrap: anywhere">{{p.nickname}}</span>
+<span style="font-size: 18px; color: #A3A8B3; font-variant-numeric: tabular-nums">{{p.scoreText}} punten</span>
+</div>
+<div style="height: {{p.height}}; background: {{p.fill}}; color: #111318; display: flex; flex-direction: column; justify-content: space-between; padding: 20px 24px; box-sizing: border-box">
+<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: {{p.rankSize}}; line-height: 0.8">{{p.rank}}</span>
+<span style="font-size: 15px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase">{{p.label}}</span>
+</div>
+</li>
+</sc-for>
+</ol>
+<div style="height: 6px; background: #F2F0EA"></div>
+</section>
+
+<section aria-labelledby="ranglijst-titel" style="display: flex; flex-direction: column; padding-top: 72px">
+<h2 id="ranglijst-titel" style="margin: 0 0 16px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 32px; text-transform: uppercase; letter-spacing: 0.04em">Alle spelers</h2>
+<div style="overflow-x: auto">
+<table style="width: 100%; min-width: 560px; border-collapse: collapse; font-size: 18px">
+<thead>
+<tr style="color: #A3A8B3; font-size: 14px; text-transform: uppercase; letter-spacing: 0.08em; text-align: left">
+<th scope="col" style="padding: 12px 8px; font-weight: 500; width: 72px">Plek</th>
+<th scope="col" style="padding: 12px 8px; font-weight: 500">Speler</th>
+<th scope="col" style="padding: 12px 8px; font-weight: 500; width: 240px">Goed</th>
+<th scope="col" style="padding: 12px 8px; font-weight: 500; width: 140px; text-align: right">Punten</th>
+</tr>
+</thead>
+<tbody>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="10">
+<tr style="border-top: 1px solid #2A2E37">
+<td style="padding: 16px 8px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 26px; color: {{r.rankColor}}">{{r.rank}}</td>
+<td style="padding: 16px 8px">
+<span style="font-weight: 600">{{r.nickname}}</span>
+<sc-if value="{{r.guest}}" hint-placeholder-val="{{ false }}">
+<span style="margin-left: 10px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: #A3A8B3; border: 1px solid #3A3F4A; padding: 2px 8px">Gast</span>
+</sc-if>
+</td>
+<td style="padding: 16px 8px">
+<div style="display: flex; align-items: center; gap: 12px">
+<div style="display: flex; gap: 3px" aria-hidden="true">
+<sc-for list="{{r.segs}}" as="s" hint-placeholder-count="8">
+<span style="display: block; width: 14px; height: 14px; background: {{s.bg}}"></span>
+</sc-for>
+</div>
+<span style="font-variant-numeric: tabular-nums; color: #A3A8B3">{{r.correctText}}</span>
+</div>
+</td>
+<td style="padding: 16px 8px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600">{{r.scoreText}}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</section>
+
+<div style="display: flex; flex-wrap: wrap; gap: 12px; padding-top: 48px">
+<button type="button" style="min-height: 56px; padding: 0 32px; border: 0; background: {{accent}}; color: #111318; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 22px; text-transform: uppercase; letter-spacing: 0.04em; cursor: pointer">Nog een ronde</button>
+<button type="button" style="min-height: 56px; padding: 0 32px; border: 2px solid #F2F0EA; background: transparent; color: #F2F0EA; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 22px; text-transform: uppercase; letter-spacing: 0.04em; cursor: pointer">Terug naar start</button>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#FFD23F","options":["#FFD23F","#FF8A3D","#5CC8FF"]},"$preview":{"width":1440,"height":1760}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#FFD23F';
+    const results = [
+      { id: 1, nickname: 'Sanne', guest: false, score: 7420, correct: 8 },
+      { id: 2, nickname: 'Daan', guest: false, score: 5310, correct: 6 },
+      { id: 3, nickname: 'Fatima', guest: false, score: 6150, correct: 7 },
+      { id: 4, nickname: 'Lucas', guest: false, score: 2890, correct: 4 },
+      { id: 5, nickname: 'Noah', guest: false, score: 4480, correct: 5 },
+      { id: 6, nickname: 'Mo', guest: true, score: 6150, correct: 7 },
+      { id: 7, nickname: 'Emma', guest: true, score: 3720, correct: 5 },
+      { id: 8, nickname: 'quizkoning', guest: true, score: 1540, correct: 2 },
+      { id: 9, nickname: 'Yara', guest: true, score: 5880, correct: 7 },
+      { id: 10, nickname: 'Tim_04', guest: true, score: 0, correct: 0 }
+    ];
+    const total = 8;
+    const sorted = results.slice().sort((a, b) => b.score - a.score || a.nickname.localeCompare(b.nickname));
+    const ranked = sorted.map((r) => ({ ...r, rank: sorted.findIndex((o) => o.score === r.score) + 1 }));
+    const fmt = (n) => n.toLocaleString('nl-NL');
+    const tied = (rank) => ranked.filter((r) => r.rank === rank).length > 1;
+
+    const heights = { 1: '340px', 2: '240px', 3: '170px' };
+    const fills = { 1: accent, 2: '#D9DCE1', 3: '#B98A63' };
+    const top = ranked.slice(0, 3);
+    const order = [top[1], top[0], top[2]].filter(Boolean);
+    const podium = order.map((p) => ({
+      nickname: p.nickname,
+      rank: p.rank,
+      scoreText: fmt(p.score),
+      height: heights[p.rank] || '170px',
+      fill: fills[p.rank] || '#B98A63',
+      nameSize: p.rank === 1 ? '56px' : '40px',
+      rankSize: p.rank === 1 ? '120px' : '88px',
+      label: tied(p.rank) ? 'Gedeeld ' + p.rank + 'e' : p.rank + 'e plek'
+    }));
+
+    const rows = ranked.map((r) => ({
+      rank: r.rank,
+      nickname: r.nickname,
+      guest: r.guest,
+      scoreText: fmt(r.score),
+      correctText: r.correct + '/' + total,
+      rankColor: r.rank === 1 ? accent : '#F2F0EA',
+      segs: Array.from({ length: total }, (_, i) => ({ bg: i < r.correct ? '#F2F0EA' : '#2A2E37' }))
+    }));
+
+    return { accent, podium, rows };
+  }
+}
+</script>
+</body>
+</html>

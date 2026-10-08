@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Finish racebaan</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,500;0,700;1,800;1,900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#1E2024}
+a{color:#FFFFFF}a:hover{color:#FF7A1A}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #1E2024; color: #FFFFFF; font-family: 'Rubik', sans-serif; padding: 32px 24px 56px; box-sizing: border-box">
+<div style="max-width: 1300px; margin: 0 auto; display: flex; flex-direction: column">
+<header style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; font-weight: 700; font-size: 18px; color: #B9BDC6">
+<span>Open ICT Quiz</span>
+<span>Code 482913 · 8 vragen</span>
+</header>
+
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px; margin-top: 32px">
+<h1 style="margin: 0; font-style: italic; font-weight: 900; font-size: clamp(56px, 7vw, 104px); line-height: 0.9; text-transform: uppercase">Finish!</h1>
+<p style="margin: 0; font-style: italic; font-weight: 800; font-size: 28px; color: {{accent}}">{{first.nickname}} komt als eerste over de streep</p>
+</div>
+
+<ol style="list-style: none; margin: 40px 0 0; padding: 0; background: #2B2D31; border-radius: 12px; overflow: hidden">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="10">
+<li style="display: grid; grid-template-columns: 88px minmax(0, 1fr) 28px; align-items: center; min-height: 72px; border-bottom: 2px dashed #4A4D55">
+<span style="font-style: italic; font-weight: 900; font-size: 30px; text-align: center; color: {{r.posColor}}">P{{r.rank}}</span>
+<div style="padding: 10px 16px 10px 0">
+<div style="width: {{r.pct}}; min-width: 260px; display: flex; justify-content: flex-end">
+<span style="display: flex; align-items: center; gap: 14px; min-height: 48px; padding: 0 18px 0 22px; background: {{r.car}}; color: {{r.carFg}}; border-radius: 24px 10px 10px 24px; font-size: 20px">
+<span style="font-style: italic; font-weight: 800; overflow-wrap: anywhere">{{r.nickname}}</span>
+<span style="font-weight: 500; font-variant-numeric: tabular-nums">{{r.scoreText}}</span>
+</span>
+</div>
+</div>
+<span aria-hidden="true" style="align-self: stretch; background: repeating-conic-gradient(#FFFFFF 0 25%, #111111 0 50%) 0 0 / 14px 14px"></span>
+</li>
+</sc-for>
+</ol>
+<p style="margin: 12px 0 0; font-size: 15px; color: #B9BDC6">Hoe verder rechts, hoe meer punten. Gelijke score is dezelfde positie.</p>
+
+<div style="display: flex; flex-wrap: wrap; gap: 14px; margin-top: 40px">
+<button type="button" style="min-height: 58px; padding: 0 32px; border: 0; border-radius: 8px; background: {{accent}}; color: #111111; font-family: 'Rubik', sans-serif; font-style: italic; font-weight: 900; font-size: 21px; text-transform: uppercase; cursor: pointer">Nog een ronde</button>
+<button type="button" style="min-height: 58px; padding: 0 32px; border: 2px solid #FFFFFF; border-radius: 8px; background: transparent; color: #FFFFFF; font-family: 'Rubik', sans-serif; font-style: italic; font-weight: 800; font-size: 21px; text-transform: uppercase; cursor: pointer">Terug naar start</button>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#FF7A1A","options":["#FF7A1A","#E8FF3A","#3AD1FF"]},"$preview":{"width":1440,"height":1160}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#FF7A1A';
+    const results = [
+      { nickname: 'Sanne', score: 7420 }, { nickname: 'Daan', score: 5310 }, { nickname: 'Fatima', score: 6150 },
+      { nickname: 'Lucas', score: 2890 }, { nickname: 'Noah', score: 4480 }, { nickname: 'Mo', score: 6150 },
+      { nickname: 'Emma', score: 3720 }, { nickname: 'quizkoning', score: 1540 }, { nickname: 'Yara', score: 5880 },
+      { nickname: 'Tim_04', score: 0 }
+    ];
+    const fmt = (n) => n.toLocaleString('nl-NL');
+    const sorted = results.slice().sort((a, b) => b.score - a.score || a.nickname.localeCompare(b.nickname));
+    const ranked = sorted.map((r) => ({ ...r, rank: sorted.findIndex((o) => o.score === r.score) + 1, scoreText: fmt(r.score) }));
+    const max = ranked[0].score || 1;
+    const cars = { 1: [accent, '#111111'], 2: ['#FFFFFF', '#111111'], 3: ['#C9CDD6', '#111111'] };
+    const rows = ranked.map((r) => {
+      const c = cars[r.rank] || ['#454852', '#FFFFFF'];
+      return { ...r, pct: Math.round((r.score / max) * 100) + '%', car: c[0], carFg: c[1], posColor: r.rank === 1 ? accent : '#FFFFFF' };
+    });
+    return { accent, rows, first: ranked[0] };
+  }
+}
+</script>
+</body>
+</html>

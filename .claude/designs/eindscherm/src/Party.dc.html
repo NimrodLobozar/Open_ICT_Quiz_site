@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Podium quizfeest</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#46178F}
+a{color:#FFFFFF}a:hover{color:#FFC00A}
+</style>
+</helmet>
+<div style="position: relative; overflow: hidden; min-height: 100vh; background: {{ground}}; color: #FFFFFF; font-family: 'Montserrat', sans-serif; padding: 32px 24px 64px; box-sizing: border-box">
+
+<div aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none">
+<svg width="420" height="420" viewBox="0 0 100 100" style="position: absolute; left: -120px; top: 160px; opacity: 0.12"><polygon points="50,6 96,92 4,92" fill="#FFFFFF"></polygon></svg>
+<svg width="360" height="360" viewBox="0 0 100 100" style="position: absolute; right: -100px; top: 40px; opacity: 0.12"><circle cx="50" cy="50" r="46" fill="#FFFFFF"></circle></svg>
+<svg width="300" height="300" viewBox="0 0 100 100" style="position: absolute; right: 80px; bottom: 120px; opacity: 0.1"><rect x="14" y="14" width="72" height="72" fill="#FFFFFF" transform="rotate(45 50 50)"></rect></svg>
+</div>
+
+<div style="position: relative; max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; align-items: center">
+
+<header style="width: 100%; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px">
+<span style="font-weight: 900; font-size: 26px">Open ICT Quiz</span>
+<span style="background: #FFFFFF; color: #2F0F66; font-weight: 800; font-size: 20px; padding: 10px 20px; border-radius: 8px; box-shadow: 0 4px 0 #2F0F66">PIN 482913</span>
+</header>
+
+<h1 style="margin: 32px 0 0; background: #FFFFFF; color: #2F0F66; font-weight: 900; font-size: clamp(36px, 4.5vw, 60px); padding: 14px 40px; border-radius: 12px; box-shadow: 0 6px 0 #2F0F66; text-align: center">Podium</h1>
+
+<ol style="list-style: none; width: 100%; max-width: 1000px; margin: 48px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; align-items: end">
+<sc-for list="{{podium}}" as="p" hint-placeholder-count="3">
+<li style="display: flex; flex-direction: column; align-items: center; min-width: 0">
+<span style="max-width: 100%; background: #FFFFFF; color: #2F0F66; font-weight: 900; font-size: {{p.nameSize}}; padding: 10px 22px; border-radius: 10px; box-shadow: 0 5px 0 #2F0F66; overflow-wrap: anywhere; text-align: center">{{p.nickname}}</span>
+<div style="width: 100%; height: {{p.height}}; margin-top: 20px; background: {{p.block}}; border-radius: 12px 12px 0 0; box-shadow: inset 0 -10px 0 rgba(0,0,0,0.18); display: flex; flex-direction: column; align-items: center; padding-top: 24px; gap: 14px; box-sizing: border-box">
+<span style="width: {{p.medal}}; height: {{p.medal}}; border-radius: 50%; background: {{p.medalBg}}; color: #2F0F66; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: {{p.medalFont}}; box-shadow: 0 6px 0 rgba(0,0,0,0.25)">{{p.rank}}</span>
+<span style="font-weight: 800; font-size: 26px">{{p.scoreText}}</span>
+<span style="font-weight: 700; font-size: 17px">{{p.correct}} van 8 goed</span>
+</div>
+</li>
+</sc-for>
+</ol>
+
+<section aria-labelledby="rest" style="width: 100%; max-width: 1000px; margin-top: 48px; display: flex; flex-direction: column; gap: 10px">
+<h2 id="rest" style="margin: 0 0 6px; font-weight: 900; font-size: 28px">Scorebord</h2>
+<sc-for list="{{rest}}" as="r" hint-placeholder-count="7">
+<div style="display: flex; align-items: center; gap: 18px; min-height: 60px; padding: 0 20px; background: #FFFFFF; color: #2F0F66; border-radius: 10px; box-shadow: 0 4px 0 #2F0F66; font-size: 21px">
+<span style="width: 40px; height: 40px; border-radius: 8px; background: {{r.chip}}; color: {{r.chipFg}}; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 19px">{{r.rank}}</span>
+<span style="flex: 1; min-width: 0; font-weight: 800; overflow-wrap: anywhere">{{r.nickname}}</span>
+<span style="font-weight: 800; font-variant-numeric: tabular-nums">{{r.scoreText}}</span>
+</div>
+</sc-for>
+</section>
+
+<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; margin-top: 48px">
+<button type="button" style="min-height: 60px; padding: 0 36px; border: 0; border-radius: 10px; background: #26890C; color: #FFFFFF; font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 21px; box-shadow: 0 6px 0 #145206; cursor: pointer">Nog een ronde</button>
+<button type="button" style="min-height: 60px; padding: 0 36px; border: 0; border-radius: 10px; background: #FFFFFF; color: #2F0F66; font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 21px; box-shadow: 0 6px 0 #2F0F66; cursor: pointer">Terug naar start</button>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"ground":{"editor":"color","default":"#46178F","options":["#46178F","#1368CE","#2F0F66"]},"$preview":{"width":1440,"height":1320}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const ground = this.props.ground ?? '#46178F';
+    const results = [
+      { nickname: 'Sanne', score: 7420, correct: 8 },
+      { nickname: 'Daan', score: 5310, correct: 6 },
+      { nickname: 'Fatima', score: 6150, correct: 7 },
+      { nickname: 'Lucas', score: 2890, correct: 4 },
+      { nickname: 'Noah', score: 4480, correct: 5 },
+      { nickname: 'Mo', score: 6150, correct: 7 },
+      { nickname: 'Emma', score: 3720, correct: 5 },
+      { nickname: 'quizkoning', score: 1540, correct: 2 },
+      { nickname: 'Yara', score: 5880, correct: 7 },
+      { nickname: 'Tim_04', score: 0, correct: 0 }
+    ];
+    const fmt = (n) => n.toLocaleString('nl-NL');
+    const sorted = results.slice().sort((a, b) => b.score - a.score || a.nickname.localeCompare(b.nickname));
+    const ranked = sorted.map((r) => ({ ...r, rank: sorted.findIndex((o) => o.score === r.score) + 1, scoreText: fmt(r.score) }));
+    const look = {
+      1: { height: '380px', block: '#864CBF', medal: '96px', medalFont: '48px', medalBg: '#FFC00A', nameSize: '34px' },
+      2: { height: '290px', block: '#6A2FB0', medal: '76px', medalFont: '38px', medalBg: '#E4E4EC', nameSize: '26px' },
+      3: { height: '220px', block: '#5A2399', medal: '68px', medalFont: '34px', medalBg: '#E89C5C', nameSize: '24px' }
+    };
+    const top = ranked.slice(0, 3);
+    const podium = [top[1], top[0], top[2]].filter(Boolean).map((p) => ({ ...p, ...(look[p.rank] || look[3]) }));
+    const chips = [['#E21B3C', '#FFFFFF'], ['#1368CE', '#FFFFFF'], ['#FFC00A', '#2F0F66'], ['#26890C', '#FFFFFF']];
+    const rest = ranked.slice(3).map((r, i) => ({ ...r, chip: chips[i % 4][0], chipFg: chips[i % 4][1] }));
+    return { ground, podium, rest };
+  }
+}
+</script>
+</body>
+</html>

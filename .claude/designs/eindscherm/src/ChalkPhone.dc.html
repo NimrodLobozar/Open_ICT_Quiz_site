@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Jouw plek schoolbord telefoon</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Gochi+Hand&amp;family=Patrick+Hand&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#6E4526}
+a{color:#FFE58A}a:hover{color:#FFFFFF}
+</style>
+</helmet>
+<div style="width: 390px; height: 1240px; box-sizing: border-box; background: #6E4526; padding: 10px">
+<div style="height: 100%; box-sizing: border-box; background: {{board}}; color: #F4F1E8; font-family: 'Patrick Hand', cursive; border-radius: 6px; box-shadow: inset 0 0 0 4px #4E2F18; padding: 22px 16px 24px; display: flex; flex-direction: column">
+<header style="display: flex; justify-content: space-between; font-size: 18px; color: #D7E3D9">
+<span>Open ICT Quiz</span>
+<span>code: 482913</span>
+</header>
+
+<h1 style="margin: 20px 0 0; font-family: 'Gochi Hand', cursive; font-weight: 400; font-size: 32px; line-height: 1.1">Goed gedaan, {{me.nickname}}!</h1>
+<div style="position: relative; align-self: center; display: flex; align-items: center; justify-content: center; width: 220px; height: 170px; margin-top: 8px">
+<svg aria-hidden="true" width="220" height="170" viewBox="0 0 300 240" style="position: absolute; inset: 0"><path d="M150 14 C 250 10, 292 70, 286 122 C 280 190, 210 230, 140 226 C 60 222, 10 176, 14 112 C 18 52, 80 16, 160 22" fill="none" stroke="{{chalk}}" stroke-width="6" stroke-linecap="round"></path></svg>
+<span style="font-family: 'Gochi Hand', cursive; font-size: 104px; line-height: 1; color: {{chalk}}">{{me.rank}}e</span>
+</div>
+<p style="margin: 4px 0 0; font-size: 22px; text-align: center">van de {{count}} spelers</p>
+<ul style="margin: 12px 0 0; padding-left: 22px; font-size: 20px; line-height: 1.45">
+<li>{{me.scoreText}} punten</li>
+<li>{{me.correct}} van de 8 goed</li>
+<li>{{gapText}}</li>
+</ul>
+
+<h2 style="margin: 18px 0 4px; font-family: 'Gochi Hand', cursive; font-weight: 400; font-size: 28px; color: {{chalk}}">De klas</h2>
+<ol style="list-style: none; margin: 0; padding: 0">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="10">
+<li style="display: flex; align-items: baseline; gap: 10px; padding: 5px 8px; border-bottom: 2px dashed rgba(244,241,232,0.45); font-size: 19px; color: {{r.fg}}; outline: {{r.ring}}; outline-offset: -2px; border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px">
+<span style="width: 26px; font-family: 'Gochi Hand', cursive">{{r.rank}}.</span>
+<span style="flex: 1; min-width: 0; overflow-wrap: anywhere">{{r.label}}</span>
+<span>{{r.scoreText}}</span>
+</li>
+</sc-for>
+</ol>
+
+<div style="display: flex; flex-direction: column; gap: 12px; margin-top: auto; padding-top: 18px">
+<p style="margin: 0; font-size: 16px; color: #D7E3D9">Als gast wordt je score na de quiz gewist.</p>
+<button type="button" style="min-height: 52px; border: 3px solid #F4F1E8; border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px; background: #F4F1E8; color: #23412F; font-family: 'Gochi Hand', cursive; font-size: 20px">Account maken en score bewaren</button>
+<button type="button" style="min-height: 52px; border: 3px solid #F4F1E8; border-radius: 15px 225px 15px 255px / 255px 15px 225px 15px; background: transparent; color: #F4F1E8; font-family: 'Gochi Hand', cursive; font-size: 20px">Terug naar start</button>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"board":{"editor":"color","default":"#23412F","options":["#23412F","#1F2A2E","#2B3A55"]},"chalk":{"editor":"color","default":"#FFE58A","options":["#FFE58A","#F7A1C4","#A6E3F0"]},"$preview":{"width":390,"height":1240}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const board = this.props.board ?? '#23412F';
+    const chalk = this.props.chalk ?? '#FFE58A';
+    const results = [
+      { id: 1, nickname: 'Sanne', score: 7420, correct: 8 }, { id: 2, nickname: 'Daan', score: 5310, correct: 6 },
+      { id: 3, nickname: 'Fatima', score: 6150, correct: 7 }, { id: 4, nickname: 'Lucas', score: 2890, correct: 4 },
+      { id: 5, nickname: 'Noah', score: 4480, correct: 5 }, { id: 6, nickname: 'Mo', score: 6150, correct: 7 },
+      { id: 7, nickname: 'Emma', score: 3720, correct: 5 }, { id: 8, nickname: 'quizkoning', score: 1540, correct: 2 },
+      { id: 9, nickname: 'Yara', score: 5880, correct: 7 }, { id: 10, nickname: 'Tim_04', score: 0, correct: 0 }
+    ];
+    const meId = 7;
+    const fmt = (n) => n.toLocaleString('nl-NL');
+    const sorted = results.slice().sort((a, b) => b.score - a.score || a.nickname.localeCompare(b.nickname));
+    const ranked = sorted.map((r) => ({ ...r, rank: sorted.findIndex((o) => o.score === r.score) + 1, scoreText: fmt(r.score) }));
+    const m = ranked.find((r) => r.id === meId);
+    const above = ranked.filter((r) => r.score > m.score).pop();
+    const gapText = above ? fmt(above.score - m.score) + ' punten achter ' + above.nickname : 'Niemand had meer punten!';
+    const rows = ranked.map((r) => {
+      const mine = r.id === meId;
+      return { ...r, label: mine ? r.nickname + ' (jij)' : r.nickname, fg: mine ? chalk : '#F4F1E8', ring: mine ? '3px solid ' + chalk : 'none' };
+    });
+    return { board, chalk, me: m, gapText, rows, count: ranked.length };
+  }
+}
+</script>
+</body>
+</html>

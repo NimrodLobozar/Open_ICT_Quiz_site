@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Eindstand staafdiagram</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&amp;family=IBM+Plex+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F1F2F4}
+a{color:#0F5F59}a:hover{color:#14161A}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #F1F2F4; color: #14161A; font-family: 'Space Grotesk', sans-serif; padding: 40px 24px 64px; box-sizing: border-box">
+<div style="max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column">
+
+<header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; font-size: 16px; color: #545B66">
+<span style="font-weight: 700; color: #14161A">Open ICT Quiz</span>
+<span style="font-family: 'IBM Plex Mono', monospace">sessie 482913 · 8 vragen · 10 spelers</span>
+</header>
+
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 24px; margin-top: 48px">
+<div style="display: flex; flex-direction: column; gap: 12px">
+<h1 style="margin: 0; font-weight: 700; font-size: clamp(48px, 6vw, 88px); line-height: 0.95; letter-spacing: -0.02em">Eindstand</h1>
+<p style="margin: 0; font-size: 22px; color: #3A404A">{{first.nickname}} wint met {{leadText}} punten voorsprong.</p>
+</div>
+<div style="display: flex; gap: 32px">
+<div style="display: flex; flex-direction: column">
+<span style="font-size: 14px; color: #545B66; text-transform: uppercase; letter-spacing: 0.08em">Hoogste</span>
+<span style="font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 32px">{{first.scoreText}}</span>
+</div>
+<div style="display: flex; flex-direction: column">
+<span style="font-size: 14px; color: #545B66; text-transform: uppercase; letter-spacing: 0.08em">Gemiddeld</span>
+<span style="font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 32px">{{avgText}}</span>
+</div>
+</div>
+</div>
+
+<ol style="list-style: none; margin: 48px 0 0; padding: 32px; background: #FFFFFF; border-radius: 12px; display: flex; flex-direction: column; gap: 14px">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="10">
+<li style="display: grid; grid-template-columns: 48px minmax(96px, 180px) minmax(0, 1fr) 96px; align-items: center; gap: 16px">
+<span style="font-family: 'IBM Plex Mono', monospace; font-weight: 600; font-size: 20px; color: {{r.rankColor}}">{{r.rank}}</span>
+<span style="font-weight: {{r.weight}}; font-size: 20px; overflow-wrap: anywhere">{{r.nickname}}</span>
+<span style="height: {{r.barH}}; background: #E6E8EC; border-radius: 4px; overflow: hidden; display: block">
+<span style="display: block; height: 100%; width: {{r.pct}}; background: {{r.barColor}}; border-radius: 4px"></span>
+</span>
+<span style="font-family: 'IBM Plex Mono', monospace; font-size: 18px; text-align: right; font-variant-numeric: tabular-nums">{{r.scoreText}}</span>
+</li>
+</sc-for>
+</ol>
+<p style="margin: 12px 0 0; font-size: 15px; color: #545B66">Donkere balken: top 3. Gelijke score is een gedeelde plek.</p>
+
+<div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 40px">
+<button type="button" style="min-height: 52px; padding: 0 28px; border: 0; border-radius: 8px; background: {{accent}}; color: #FFFFFF; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px; cursor: pointer">Nog een ronde</button>
+<button type="button" style="min-height: 52px; padding: 0 28px; border: 2px solid #14161A; border-radius: 8px; background: transparent; color: #14161A; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 18px; cursor: pointer">Terug naar start</button>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#0F5F59","options":["#0F5F59","#2B4ACB","#B4451F"]},"$preview":{"width":1440,"height":1040}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#0F5F59';
+    const results = [
+      { nickname: 'Sanne', score: 7420 },
+      { nickname: 'Daan', score: 5310 },
+      { nickname: 'Fatima', score: 6150 },
+      { nickname: 'Lucas', score: 2890 },
+      { nickname: 'Noah', score: 4480 },
+      { nickname: 'Mo', score: 6150 },
+      { nickname: 'Emma', score: 3720 },
+      { nickname: 'quizkoning', score: 1540 },
+      { nickname: 'Yara', score: 5880 },
+      { nickname: 'Tim_04', score: 0 }
+    ];
+    const sorted = results.slice().sort((a, b) => b.score - a.score || a.nickname.localeCompare(b.nickname));
+    const fmt = (n) => n.toLocaleString('nl-NL');
+    const ranked = sorted.map((r) => ({ ...r, rank: sorted.findIndex((o) => o.score === r.score) + 1, scoreText: fmt(r.score) }));
+    const max = ranked[0].score || 1;
+    const second = ranked.find((r) => r.score < ranked[0].score);
+    const lead = second ? ranked[0].score - second.score : 0;
+    const avg = Math.round(ranked.reduce((s, r) => s + r.score, 0) / ranked.length);
+    const rows = ranked.map((r) => {
+      const top = r.rank <= 3;
+      return {
+        ...r,
+        pct: Math.round((r.score / max) * 100) + '%',
+        barColor: top ? accent : '#9AA2AE',
+        barH: r.rank === 1 ? '36px' : '24px',
+        weight: top ? 700 : 500,
+        rankColor: top ? accent : '#545B66'
+      };
+    });
+    return { accent, rows, first: ranked[0], leadText: fmt(lead), avgText: fmt(avg) };
+  }
+}
+</script>
+</body>
+</html>

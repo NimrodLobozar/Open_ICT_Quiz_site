@@ -1,0 +1,360 @@
+{
+  "v": 3,
+  "attachments": {},
+  "boards": {
+    "Arcade.dc.html": {
+      "expand": "fill",
+      "h": 1120,
+      "title": "3 · Host — groot scherm",
+      "w": 1440,
+      "x": 0,
+      "y": 3720
+    },
+    "ArcadePhone.dc.html": {
+      "h": 1240,
+      "title": "3 · Student — telefoon",
+      "w": 390,
+      "x": 3040,
+      "y": 3720
+    },
+    "ArcadeStudent.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "title": "3 · Student — desktop",
+      "w": 1440,
+      "x": 1520,
+      "y": 3720
+    },
+    "Bars.dc.html": {
+      "expand": "fill",
+      "h": 1040,
+      "title": "5 · Host — groot scherm",
+      "w": 1440,
+      "x": 0,
+      "y": 6920
+    },
+    "BarsPhone.dc.html": {
+      "h": 1240,
+      "title": "5 · Student — telefoon",
+      "w": 390,
+      "x": 3040,
+      "y": 6920
+    },
+    "BarsStudent.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "title": "5 · Student — desktop",
+      "w": 1440,
+      "x": 1520,
+      "y": 6920
+    },
+    "Blocks.dc.html": {
+      "expand": "fill",
+      "h": 1240,
+      "title": "4 · Host — groot scherm",
+      "w": 1440,
+      "x": 0,
+      "y": 5320
+    },
+    "BlocksPhone.dc.html": {
+      "h": 1240,
+      "title": "4 · Student — telefoon",
+      "w": 390,
+      "x": 3040,
+      "y": 5320
+    },
+    "BlocksStudent.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "title": "4 · Student — desktop",
+      "w": 1440,
+      "x": 1520,
+      "y": 5320
+    },
+    "Chalk.dc.html": {
+      "expand": "fill",
+      "h": 1200,
+      "title": "10 · Host — groot scherm",
+      "w": 1440,
+      "x": 0,
+      "y": 15000
+    },
+    "ChalkPhone.dc.html": {
+      "h": 1240,
+      "title": "10 · Student — telefoon",
+      "w": 390,
+      "x": 3040,
+      "y": 15000
+    },
+    "ChalkStudent.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "title": "10 · Student — desktop",
+      "w": 1440,
+      "x": 1520,
+      "y": 15000
+    },
+    "Main.dc.html": {
+      "expand": "fill",
+      "h": 1760,
+      "title": "1 · Host — groot scherm",
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "Party.dc.html": {
+      "expand": "fill",
+      "h": 1320,
+      "title": "6 · Host — groot scherm",
+      "w": 1440,
+      "x": 0,
+      "y": 8520
+    },
+    "PartyPhone.dc.html": {
+      "h": 1240,
+      "title": "6 · Student — telefoon",
+      "w": 390,
+      "x": 3040,
+      "y": 8520
+    },
+    "PartyStudent.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "title": "6 · Student — desktop",
+      "w": 1440,
+      "x": 1520,
+      "y": 8520
+    },
+    "Phone.dc.html": {
+      "h": 1240,
+      "title": "1 · Student — telefoon",
+      "w": 390,
+      "x": 3040,
+      "y": 0
+    },
+    "Race.dc.html": {
+      "expand": "fill",
+      "h": 1160,
+      "title": "9 · Host — groot scherm",
+      "w": 1440,
+      "x": 0,
+      "y": 13400
+    },
+    "RacePhone.dc.html": {
+      "h": 1240,
+      "title": "9 · Student — telefoon",
+      "w": 390,
+      "x": 3040,
+      "y": 13400
+    },
+    "RaceStudent.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "title": "9 · Student — desktop",
+      "w": 1440,
+      "x": 1520,
+      "y": 13400
+    },
+    "Show.dc.html": {
+      "expand": "fill",
+      "h": 1240,
+      "title": "7 · Host — groot scherm",
+      "w": 1440,
+      "x": 0,
+      "y": 10200
+    },
+    "ShowPhone.dc.html": {
+      "h": 1240,
+      "title": "7 · Student — telefoon",
+      "w": 390,
+      "x": 3040,
+      "y": 10200
+    },
+    "ShowStudent.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "title": "7 · Student — desktop",
+      "w": 1440,
+      "x": 1520,
+      "y": 10200
+    },
+    "Sticker.dc.html": {
+      "expand": "fill",
+      "h": 1240,
+      "title": "8 · Host — groot scherm",
+      "w": 1440,
+      "x": 0,
+      "y": 11800
+    },
+    "StickerPhone.dc.html": {
+      "h": 1240,
+      "title": "8 · Student — telefoon",
+      "w": 390,
+      "x": 3040,
+      "y": 11800
+    },
+    "StickerStudent.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "title": "8 · Student — desktop",
+      "w": 1440,
+      "x": 1520,
+      "y": 11800
+    },
+    "StudentDesk.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "title": "1 · Student — desktop",
+      "w": 1440,
+      "x": 1520,
+      "y": 0
+    },
+    "Swiss.dc.html": {
+      "expand": "fill",
+      "h": 1120,
+      "title": "2 · Host — groot scherm",
+      "w": 1440,
+      "x": 0,
+      "y": 2120
+    },
+    "SwissPhone.dc.html": {
+      "h": 1240,
+      "title": "2 · Student — telefoon",
+      "w": 390,
+      "x": 3040,
+      "y": 2120
+    },
+    "SwissStudent.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "title": "2 · Student — desktop",
+      "w": 1440,
+      "x": 1520,
+      "y": 2120
+    }
+  },
+  "createdOnFiles": {
+    "at": "2026-10-08T12:00:00Z",
+    "v": 1
+  },
+  "designSystems": [],
+  "launch": {
+    "view": "canvas"
+  },
+  "notes": {
+    "row1": {
+      "kind": "title1",
+      "maxW": 3430,
+      "text": "1 · Scorebord",
+      "w": 240,
+      "x": 0,
+      "y": -260
+    },
+    "row10": {
+      "kind": "title1",
+      "maxW": 3430,
+      "text": "10 · Schoolbord",
+      "w": 240,
+      "x": 0,
+      "y": 14740
+    },
+    "row2": {
+      "kind": "title1",
+      "maxW": 3430,
+      "text": "2 · Zwitserse poster",
+      "w": 240,
+      "x": 0,
+      "y": 1860
+    },
+    "row3": {
+      "kind": "title1",
+      "maxW": 3430,
+      "text": "3 · Arcade high scores",
+      "w": 240,
+      "x": 0,
+      "y": 3460
+    },
+    "row4": {
+      "kind": "title1",
+      "maxW": 3430,
+      "text": "4 · Kleurblokken",
+      "w": 240,
+      "x": 0,
+      "y": 5060
+    },
+    "row5": {
+      "kind": "title1",
+      "maxW": 3430,
+      "text": "5 · Staafdiagram",
+      "w": 240,
+      "x": 0,
+      "y": 6660
+    },
+    "row6": {
+      "kind": "title1",
+      "maxW": 3430,
+      "text": "6 · Kahoot-achtig",
+      "w": 240,
+      "x": 0,
+      "y": 8260
+    },
+    "row7": {
+      "kind": "title1",
+      "maxW": 3430,
+      "text": "7 · Quizshow op tv",
+      "w": 240,
+      "x": 0,
+      "y": 9940
+    },
+    "row8": {
+      "kind": "title1",
+      "maxW": 3430,
+      "text": "8 · Stickers",
+      "w": 240,
+      "x": 0,
+      "y": 11540
+    },
+    "row9": {
+      "kind": "title1",
+      "maxW": 3430,
+      "text": "9 · Racebaan",
+      "w": 240,
+      "x": 0,
+      "y": 13140
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "StudentDesk.dc.html",
+    "Phone.dc.html",
+    "Swiss.dc.html",
+    "SwissStudent.dc.html",
+    "SwissPhone.dc.html",
+    "Arcade.dc.html",
+    "ArcadeStudent.dc.html",
+    "ArcadePhone.dc.html",
+    "Blocks.dc.html",
+    "BlocksStudent.dc.html",
+    "BlocksPhone.dc.html",
+    "Bars.dc.html",
+    "BarsStudent.dc.html",
+    "BarsPhone.dc.html",
+    "Party.dc.html",
+    "PartyStudent.dc.html",
+    "PartyPhone.dc.html",
+    "Show.dc.html",
+    "ShowStudent.dc.html",
+    "ShowPhone.dc.html",
+    "Sticker.dc.html",
+    "StickerStudent.dc.html",
+    "StickerPhone.dc.html",
+    "Race.dc.html",
+    "RaceStudent.dc.html",
+    "RacePhone.dc.html",
+    "Chalk.dc.html",
+    "ChalkStudent.dc.html",
+    "ChalkPhone.dc.html"
+  ],
+  "pages": [],
+  "title": "Quiz End Screen"
+}

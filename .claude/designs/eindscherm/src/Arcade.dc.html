@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>High scores</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&amp;family=VT323&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0B0B0F}
+a{color:#3EF2E0}a:hover{color:#FFE14D}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #0B0B0F; color: #F4F4F4; font-family: 'VT323', monospace; padding: 40px 24px 64px; box-sizing: border-box">
+<div style="max-width: 1080px; margin: 0 auto; display: flex; flex-direction: column; align-items: center">
+
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; width: 100%; gap: 16px; font-size: 28px; color: #9A9AA8">
+<span>OPEN ICT QUIZ</span>
+<span>CODE 482913</span>
+<span>8 VRAGEN</span>
+</div>
+
+<h1 style="margin: 40px 0 0; font-family: 'Press Start 2P', monospace; font-size: clamp(32px, 5vw, 64px); line-height: 1.2; color: {{accent}}; text-align: center; text-shadow: 6px 6px 0 #5B1E7A">HIGH SCORES</h1>
+
+<ol style="list-style: none; margin: 56px 0 0; padding: 0; width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0; align-items: end">
+<sc-for list="{{podium}}" as="p" hint-placeholder-count="3">
+<li style="display: flex; flex-direction: column; align-items: center; gap: 12px; min-width: 0">
+<span style="font-family: 'Press Start 2P', monospace; font-size: 20px; color: {{p.color}}; overflow-wrap: anywhere; text-align: center">{{p.nickname}}</span>
+<span style="font-size: 32px">{{p.scoreText}}</span>
+<div style="width: 100%; height: {{p.height}}; background: {{p.color}}; border: 6px solid #0B0B0F; box-shadow: inset -12px -12px 0 rgba(0,0,0,0.25), inset 12px 12px 0 rgba(255,255,255,0.25); box-sizing: border-box; display: flex; justify-content: center; padding-top: 24px">
+<span style="font-family: 'Press Start 2P', monospace; font-size: 48px; color: #0B0B0F">{{p.rank}}</span>
+</div>
+</li>
+</sc-for>
+</ol>
+
+<table style="width: 100%; margin-top: 48px; border-collapse: collapse; font-size: 34px">
+<thead>
+<tr style="font-family: 'Press Start 2P', monospace; font-size: 14px; color: #9A9AA8">
+<th scope="col" style="text-align: left; padding: 8px 0; font-weight: 400; width: 120px">PLEK</th>
+<th scope="col" style="text-align: left; padding: 8px 0; font-weight: 400">NAAM</th>
+<th scope="col" style="text-align: right; padding: 8px 0; font-weight: 400; width: 160px">GOED</th>
+<th scope="col" style="text-align: right; padding: 8px 0; font-weight: 400; width: 200px">SCORE</th>
+</tr>
+</thead>
+<tbody>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="10">
+<tr style="color: {{r.color}}">
+<td style="padding: 4px 0">{{r.place}}</td>
+<td style="padding: 4px 0; overflow-wrap: anywhere">{{r.name}}</td>
+<td style="padding: 4px 0; text-align: right">{{r.correct}}/8</td>
+<td style="padding: 4px 0; text-align: right">{{r.scorePad}}</td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+
+<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 24px; margin-top: 56px">
+<button type="button" style="min-height: 56px; padding: 0 24px; border: 0; background: {{accent}}; color: #0B0B0F; font-family: 'Press Start 2P', monospace; font-size: 16px; box-shadow: 6px 6px 0 #5B1E7A; cursor: pointer">NOG EEN RONDE</button>
+<button type="button" style="min-height: 56px; padding: 0 24px; border: 4px solid #F4F4F4; background: transparent; color: #F4F4F4; font-family: 'Press Start 2P', monospace; font-size: 16px; cursor: pointer">STOPPEN</button>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#FFE14D","options":["#FFE14D","#3EF2E0","#FF4FD8"]},"$preview":{"width":1440,"height":1120}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#FFE14D';
+    const results = [
+      { nickname: 'Sanne', score: 7420, correct: 8 },
+      { nickname: 'Daan', score: 5310, correct: 6 },
+      { nickname: 'Fatima', score: 6150, correct: 7 },
+      { nickname: 'Lucas', score: 2890, correct: 4 },
+      { nickname: 'Noah', score: 4480, correct: 5 },
+      { nickname: 'Mo', score: 6150, correct: 7 },
+      { nickname: 'Emma', score: 3720, correct: 5 },
+      { nickname: 'quizkoning', score: 1540, correct: 2 },
+      { nickname: 'Yara', score: 5880, correct: 7 },
+      { nickname: 'Tim_04', score: 0, correct: 0 }
+    ];
+    const sorted = results.slice().sort((a, b) => b.score - a.score || a.nickname.localeCompare(b.nickname));
+    const ranked = sorted.map((r) => ({ ...r, rank: sorted.findIndex((o) => o.score === r.score) + 1 }));
+    const colors = { 1: accent, 2: '#3EF2E0', 3: '#FF4FD8' };
+    const heights = { 1: '260px', 2: '180px', 3: '120px' };
+    const top = ranked.slice(0, 3);
+    const podium = [top[1], top[0], top[2]].filter(Boolean).map((p) => ({
+      nickname: p.nickname.toUpperCase(),
+      rank: p.rank,
+      scoreText: String(p.score).padStart(6, '0'),
+      color: colors[p.rank] || '#FF4FD8',
+      height: heights[p.rank] || '120px'
+    }));
+    const rows = ranked.map((r) => ({
+      place: r.rank + 'E',
+      name: r.nickname.toUpperCase(),
+      correct: r.correct,
+      scorePad: String(r.score).padStart(6, '0'),
+      color: colors[r.rank] || '#F4F4F4'
+    }));
+    return { accent, podium, rows };
+  }
+}
+</script>
+</body>
+</html>

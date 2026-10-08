@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Podium stickers</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFE66D}
+a{color:#111111}a:hover{color:#000000}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: {{ground}}; color: #111111; font-family: 'Fredoka', sans-serif; padding: 32px 24px 64px; box-sizing: border-box">
+<div style="max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column">
+
+<header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px">
+<span style="font-weight: 700; font-size: 26px">Open ICT Quiz</span>
+<span style="background: #FFFFFF; border: 3px solid #111111; border-radius: 12px; box-shadow: 4px 4px 0 #111111; padding: 8px 16px; font-weight: 600; font-size: 18px">Code 482913</span>
+</header>
+
+<h1 style="align-self: flex-start; margin: 40px 0 0; background: #FF7AB6; border: 4px solid #111111; border-radius: 20px; box-shadow: 8px 8px 0 #111111; padding: 12px 32px; font-weight: 700; font-size: clamp(48px, 6vw, 84px); line-height: 1; transform: rotate(-2deg)">Winnaars!</h1>
+
+<ol style="list-style: none; margin: 56px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; align-items: end">
+<sc-for list="{{podium}}" as="p" hint-placeholder-count="3">
+<li style="position: relative; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 14px">
+<sc-if value="{{p.first}}" hint-placeholder-val="{{ false }}">
+<svg width="72" height="72" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.9 6.2 6.8.8-5 4.6 1.4 6.7L12 17l-6.1 3.3 1.4-6.7-5-4.6 6.8-.8z" fill="#FFFFFF" stroke="#111111" stroke-width="1.6" stroke-linejoin="round"></path></svg>
+</sc-if>
+<span style="max-width: 100%; background: #FFFFFF; border: 3px solid #111111; border-radius: 14px; box-shadow: 4px 4px 0 #111111; padding: 8px 18px; font-weight: 700; font-size: {{p.nameSize}}; overflow-wrap: anywhere; text-align: center; transform: rotate({{p.tilt}})">{{p.nickname}}</span>
+<div style="width: 100%; height: {{p.height}}; background: {{p.fill}}; border: 4px solid #111111; border-radius: 24px 24px 0 0; box-shadow: 8px 8px 0 #111111; display: flex; flex-direction: column; align-items: center; padding-top: 20px; box-sizing: border-box">
+<span style="font-weight: 700; font-size: {{p.rankSize}}; line-height: 1">{{p.rank}}</span>
+<span style="font-weight: 600; font-size: 22px">{{p.scoreText}} punten</span>
+</div>
+</li>
+</sc-for>
+</ol>
+
+<section aria-labelledby="rest" style="margin-top: 56px">
+<h2 id="rest" style="margin: 0 0 16px; font-weight: 700; font-size: 32px">De rest</h2>
+<ol style="list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 20px">
+<sc-for list="{{rest}}" as="r" hint-placeholder-count="7">
+<li style="display: flex; align-items: center; gap: 14px; min-height: 60px; padding: 0 18px; background: #FFFFFF; border: 3px solid #111111; border-radius: 16px; box-shadow: 4px 4px 0 #111111; font-size: 21px">
+<span style="width: 38px; height: 38px; border-radius: 50%; border: 3px solid #111111; background: {{r.dot}}; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 17px">{{r.rank}}</span>
+<span style="flex: 1; min-width: 0; font-weight: 600; overflow-wrap: anywhere">{{r.nickname}}</span>
+<span style="font-weight: 600">{{r.scoreText}}</span>
+</li>
+</sc-for>
+</ol>
+</section>
+
+<div style="display: flex; flex-wrap: wrap; gap: 20px; margin-top: 48px">
+<button type="button" style="min-height: 60px; padding: 0 32px; border: 4px solid #111111; border-radius: 16px; background: #3DDC97; color: #111111; font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 22px; box-shadow: 6px 6px 0 #111111; cursor: pointer">Nog een ronde</button>
+<button type="button" style="min-height: 60px; padding: 0 32px; border: 4px solid #111111; border-radius: 16px; background: #FFFFFF; color: #111111; font-family: 'Fredoka', sans-serif; font-weight: 700; font-size: 22px; box-shadow: 6px 6px 0 #111111; cursor: pointer">Terug naar start</button>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"ground":{"editor":"color","default":"#FFE66D","options":["#FFE66D","#A8E6FF","#C8F5D2"]},"$preview":{"width":1440,"height":1240}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const ground = this.props.ground ?? '#FFE66D';
+    const results = [
+      { nickname: 'Sanne', score: 7420 }, { nickname: 'Daan', score: 5310 }, { nickname: 'Fatima', score: 6150 },
+      { nickname: 'Lucas', score: 2890 }, { nickname: 'Noah', score: 4480 }, { nickname: 'Mo', score: 6150 },
+      { nickname: 'Emma', score: 3720 }, { nickname: 'quizkoning', score: 1540 }, { nickname: 'Yara', score: 5880 },
+      { nickname: 'Tim_04', score: 0 }
+    ];
+    const fmt = (n) => n.toLocaleString('nl-NL');
+    const sorted = results.slice().sort((a, b) => b.score - a.score || a.nickname.localeCompare(b.nickname));
+    const ranked = sorted.map((r) => ({ ...r, rank: sorted.findIndex((o) => o.score === r.score) + 1, scoreText: fmt(r.score) }));
+    const look = {
+      1: { height: '340px', fill: '#FF7AB6', rankSize: '120px', nameSize: '36px' },
+      2: { height: '250px', fill: '#4D9DE0', rankSize: '88px', nameSize: '28px' },
+      3: { height: '190px', fill: '#3DDC97', rankSize: '76px', nameSize: '26px' }
+    };
+    const tilts = ['-3deg', '2deg', '-1deg'];
+    const top = ranked.slice(0, 3);
+    const podium = [top[1], top[0], top[2]].filter(Boolean).map((p, i) => ({ ...p, ...(look[p.rank] || look[3]), tilt: tilts[i], first: p.rank === 1 }));
+    const dots = ['#FF7AB6', '#4D9DE0', '#3DDC97', '#FFFFFF'];
+    const rest = ranked.slice(3).map((r, i) => ({ ...r, dot: dots[i % 4] }));
+    return { ground, podium, rest };
+  }
+}
+</script>
+</body>
+</html>

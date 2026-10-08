@@ -6,5 +6,7 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
+    // Docker op Windows geeft geen file-change events door aan de container, dus pollen we daar.
+    watch: process.env.VITE_USE_POLLING === 'true' ? { usePolling: true, interval: 300 } : undefined,
   },
 })

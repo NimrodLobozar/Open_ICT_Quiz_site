@@ -1,6 +1,6 @@
-import Podium from '../components/Podium.jsx'
-import { gameResults } from '../data/dummyDatabase.js'
-import { getRanking } from '../utils/ranking.js'
+import Podium from '../../components/Podium.jsx'
+import { gameResults } from '../../data/dummyDatabase.js'
+import { getRanking } from '../../utils/ranking.js'
 import './EndScreenPage.css'
 
 // TODO(team): dummy data vervangen door de echte uitslag (socket-event game:podium) zodra de server er is.

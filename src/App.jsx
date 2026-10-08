@@ -1,6 +1,6 @@
-import { Link, Navigate, Route, Routes } from 'react-router-dom'
-import EndScreenPage from './pages/EndScreenPage/EndScreenPage.jsx'
-import JoinPage from './pages/JoinPage/JoinPage.jsx'
+import { Link, Navigate, Route, Routes } from "react-router-dom";
+import EndScreenPage from "./pages/EndScreenPage/EndScreenPage.jsx";
+import JoinPage from "./pages/JoinPage/JoinPage.jsx";
 
 export default function App() {
   return (
@@ -16,10 +16,11 @@ export default function App() {
             </>
           }
         />
+        <Route path="/lobbyplayer" element={<LobbyPlayer />} />
         <Route path="/join" element={<JoinPage />} />
         <Route path="/join/:code" element={<JoinPage />} />
         <Route path="/end" element={<EndScreenPage />} />
       </Routes>
     </>
-  )
+  );
 }

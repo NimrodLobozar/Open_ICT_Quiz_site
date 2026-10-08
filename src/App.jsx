@@ -3,6 +3,7 @@ import EndScreenPage from "./pages/EndScreenPage/EndScreenPage.jsx";
 import JoinPage from "./pages/JoinPage/JoinPage.jsx";
 import LobbyHost from "./pages/LobbyHost.jsx";
 import LobbyPage from "./pages/Lobby/LobbyPage.jsx";
+import LobbyPlayer from "./pages/Lobby/LobbyPlayer.jsx";
 
 export default function App() {
   return (

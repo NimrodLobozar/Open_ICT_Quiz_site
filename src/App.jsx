@@ -20,6 +20,7 @@ export default function App() {
             </>
           }
         />
+        <Route path="/lobbyplayer" element={<LobbyPlayer />} />
         <Route path="/lobbyhost" element={<LobbyHost />} />
         <Route path="/lobby" element={<LobbyPage />} />
         <Route path="/join" element={<JoinPage />} />

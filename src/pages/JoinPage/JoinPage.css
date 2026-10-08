@@ -1,0 +1,84 @@
+.join-page {
+  min-height: calc(100vh - 64px - 32px);
+  display: flex;
+  align-items: center;
+}
+
+.join-card {
+  max-width: 22vw;
+  width: 100%;
+  margin-inline: auto;
+}
+
+.skill-slider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.skill-slider > span {
+  width: 52px;
+}
+
+.skill-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skill-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex: 0 0 12px;
+}
+
+.skill-slider > strong {
+  width: 44px;
+  text-align: right;
+}
+
+.skills-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 95%;
+  margin: 0 auto;
+  margin-top: 0.3vh;
+}
+
+.join-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.join-header-text {
+  font-size: 0.875rem;
+}
+
+.join-title {
+  text-align: center;
+}
+
+.join-title-text {
+  font-size: 1.20rem;
+  font-weight: 500;
+  border-bottom: 2px solid #f0f0f0;
+  text-align: center;
+}
+
+.join-title .join-title-title {
+  font-weight: 600;
+  margin-top: 0 !important;
+  margin-bottom: 2vh !important;
+}
+
+.login-link {
+  display: block;
+  text-align: center;
+  margin-top: 0.5vh;
+  font-size: 0.875rem;
+  text-decoration: underline;
+}

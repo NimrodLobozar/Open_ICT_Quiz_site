@@ -1,9 +1,37 @@
-.box{
-    width: 100px;
-    height: 300px;
-    background-color: #ffffff;
-    border: 4px solid #0f7dfa;
+.navBalk{
+    width: 100%;
+    height: 50px;
+    background-color: #FFF7ED;
+    color:rgb(0, 0, 0);
+    padding: 0px;
+    border-bottom: solid #FDBA74;
+    color: #C2410C;
+}
+.joinCode{
+    padding: 0 10px;
+    background-color: #ffcd90;
+    position: absolute;
+    top: 2.5%;
+    right: 6%;
     border-radius: 10px;
-    color:blue;
-    padding: 20px;
+    border: 1px solid #FDBA74;
+}
+.accountButton{
+    position: absolute;
+    top: 2.5%;
+    right: 1%;
+    background-color: #ffcd90;
+    border-radius: 10px;
+    border: 1px solid #FDBA74;
+}
+.navBalkText{
+    position: absolute;
+    top: 2.5%;
+    left: 1%;
+}
+.background{
+    width: 100%;
+    height: 100vh;
+    background-color: #FFEDD5;
+    color: #C2410C;
 }

@@ -7,9 +7,14 @@ services:
       - "5173:5173"
     environment:
       API_PROXY_TARGET: http://backend:3000
+      # Windows/OneDrive geeft bestandswijzigingen niet door aan Docker,
+      # dus Vite moet zelf regelmatig kijken (polling) voor live reload.
+      VITE_USE_POLLING: "true"
     volumes:
-      - .:/app
-      - /app/node_modules
+      # Moet gelijk zijn aan WORKDIR in de Dockerfile, anders draait Vite
+      # op de kopie uit de image en zie je je wijzigingen niet.
+      - .:/home/node/app
+      - /home/node/app/node_modules
     depends_on:
       - backend
 

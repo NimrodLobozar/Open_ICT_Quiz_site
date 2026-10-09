@@ -6,6 +6,9 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
+    watch: {
+      usePolling: process.env.VITE_USE_POLLING === 'true',
+    },
     proxy: {
       '/api': process.env.API_PROXY_TARGET || 'http://localhost:3000',
     },

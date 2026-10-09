@@ -27,9 +27,9 @@ a{color:#2E6A8A}a:hover{color:#22404F}
 </div>
 
 <div style="width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 18px; text-align: left">
-<div style="background: #22404F; border: 2px solid #BCD7E8; border-radius: 10px; padding: 10px; display: flex; flex-direction: column"><span style="font-size: 13px; color: #557489">Punten</span><span style="font-family: 'Anton', sans-serif; font-size: 24px">{{me.scoreText}}</span></div>
-<div style="background: #22404F; border: 2px solid #BCD7E8; border-radius: 10px; padding: 10px; display: flex; flex-direction: column"><span style="font-size: 13px; color: #557489">Goed</span><span style="font-family: 'Anton', sans-serif; font-size: 24px">{{me.correct}}/8</span></div>
-<div style="background: #22404F; border: 2px solid #BCD7E8; border-radius: 10px; padding: 10px; display: flex; flex-direction: column"><span style="font-size: 13px; color: #557489">Tot {{gap.rank}}e</span><span style="font-family: 'Anton', sans-serif; font-size: 24px">{{gap.text}}</span></div>
+<div style="background: #F7FBFD; border: 2px solid #BCD7E8; border-radius: 10px; padding: 10px; display: flex; flex-direction: column"><span style="font-size: 13px; color: #557489">Punten</span><span style="font-family: 'Anton', sans-serif; font-size: 24px">{{me.scoreText}}</span></div>
+<div style="background: #F7FBFD; border: 2px solid #BCD7E8; border-radius: 10px; padding: 10px; display: flex; flex-direction: column"><span style="font-size: 13px; color: #557489">Goed</span><span style="font-family: 'Anton', sans-serif; font-size: 24px">{{me.correct}}/8</span></div>
+<div style="background: #F7FBFD; border: 2px solid #BCD7E8; border-radius: 10px; padding: 10px; display: flex; flex-direction: column"><span style="font-size: 13px; color: #557489">Tot {{gap.rank}}e</span><span style="font-family: 'Anton', sans-serif; font-size: 24px">{{gap.text}}</span></div>
 </div>
 
 <ol style="list-style: none; width: 100%; margin: 22px 0 0; padding: 0; display: flex; flex-direction: column; gap: 6px; text-align: left">
@@ -69,7 +69,7 @@ class Component extends DCLogic {
     const gap = above ? { rank: above.rank, text: fmt(above.score - m.score) } : { rank: 1, text: '—' };
     const rows = ranked.map((r) => {
       const mine = r.id === meId;
-      return { ...r, label: mine ? r.nickname + ' (jij)' : r.nickname, fill: mine ? accent : '#22404F', fg: mine ? '#3A2233' : '#22404F' };
+      return { ...r, label: mine ? r.nickname + ' (jij)' : r.nickname, fill: mine ? accent : '#F7FBFD', fg: mine ? '#3A2233' : '#22404F' };
     });
     return { accent, me: { ...m, upper: m.nickname.toUpperCase() }, gap, rows, count: ranked.length };
   }

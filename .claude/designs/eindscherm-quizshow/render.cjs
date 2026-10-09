@@ -60,6 +60,8 @@ function renderFile(file) {
   for (const [k, v] of Object.entries(JSON.parse(script[1]))) if (!k.startsWith('$')) props[k] = v.default;
   const Component = new Function('DCLogic', `${script[2]}\nreturn Component;`)(DCLogic);
   const vals = new Component(props).renderVals();
+  // Links tussen artboards (Play in de canvas) wijzen naar .dc.html; in de previews heten ze .html.
+  const html = render(template, vals).trim().replace(/href="([^"#]+)\.dc\.html"/g, 'href="$1.html"');
   return `<!doctype html>
 <html lang="nl">
 <head>
@@ -69,21 +71,28 @@ function renderFile(file) {
 ${helmet.trim()}
 </head>
 <body>
-${render(template, vals).trim()}
+${html}
 </body>
 </html>
 `;
 }
 
 const canvas = JSON.parse(fs.readFileSync(path.join(srcDir, 'canvas.json'), 'utf8'));
-const rows = Object.values(canvas.notes)
-  .sort((a, b) => a.y - b.y)
-  .map((note) => ({
-    title: note.text,
-    boards: canvas.order
-      .filter((f) => canvas.boards[f].y === note.y + 260)
-      .sort((a, b) => canvas.boards[a].x - canvas.boards[b].x),
-  }));
+// Een canvas kan meerdere pagina's hebben; zonder `page` hoort een bord of notitie bij de eerste.
+const pages = canvas.pages && canvas.pages.length ? canvas.pages : [{ id: '', name: '' }];
+const pageOf = (item) => item.page || pages[0].id;
+const sections = pages.map((pg) => ({
+  name: pg.name,
+  rows: Object.values(canvas.notes)
+    .filter((note) => pageOf(note) === pg.id)
+    .sort((a, b) => a.y - b.y)
+    .map((note) => ({
+      title: note.text,
+      boards: canvas.order
+        .filter((f) => pageOf(canvas.boards[f]) === pg.id && canvas.boards[f].y === note.y + 260)
+        .sort((a, b) => canvas.boards[a].x - canvas.boards[b].x),
+    })),
+}));
 
 for (const file of canvas.order) {
   fs.writeFileSync(path.join(outDir, file.replace('.dc.html', '.html')), renderFile(file));
@@ -113,6 +122,7 @@ fs.writeFileSync(path.join(dir, 'index.html'), `<!doctype html>
 :root[data-theme="dark"] { color-scheme: dark; --bg: #17181b; --fg: #eee; --muted: #999; --line: #33353a; }
 body { margin: 0; padding: 32px 16px 64px; background: var(--bg); color: var(--fg); font: 16px/1.5 system-ui, sans-serif; }
 h1 { margin: 0 0 4px; font-size: 28px; }
+h1.page { margin: 48px 0 8px; font-size: 24px; }
 p { margin: 0 0 32px; color: var(--muted); }
 section { border-top: 1px solid var(--line); padding: 24px 0; }
 h2 { margin: 0 0 16px; font-size: 20px; }
@@ -126,10 +136,10 @@ iframe { border: 0; transform-origin: 0 0; display: block; }
 </head>
 <body>
 <h1>Quizshow kleurvarianten</h1>
-<p>Ontwerp 7 (quizshow op tv) in lichtere kleuren met minder contrast. Rij 0 is het origineel ter vergelijking. Per variant: host op groot scherm, student op desktop en student op telefoon. Klik op een titel om het scherm op ware grootte te openen.</p>
-${rows.map((r) => `<section>\n<h2>${r.title}</h2>\n<div class="row">\n${r.boards.map(card).join('\n')}\n</div>\n</section>`).join('\n')}
+<p>Ontwerp 7 (quizshow op tv) in lichtere kleuren met minder contrast. Rij 0 is het origineel ter vergelijking. Per variant: host op groot scherm, student op desktop en student op telefoon. Klik op een titel om het scherm op ware grootte te openen. In de flow-schermen werken de knoppen als links naar het volgende scherm.</p>
+${sections.map((sec) => `${sec.name ? `<h1 class="page">${sec.name}</h1>\n` : ''}${sec.rows.map((r) => `<section>\n<h2>${r.title}</h2>\n<div class="row">\n${r.boards.map(card).join('\n')}\n</div>\n</section>`).join('\n')}`).join('\n')}
 </body>
 </html>
 `);
 
-console.log(`Rendered ${canvas.order.length} previews in ${rows.length} rows`);
+console.log(`Rendered ${canvas.order.length} previews on ${sections.length} pages`);

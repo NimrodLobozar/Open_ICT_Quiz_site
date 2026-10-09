@@ -31,6 +31,7 @@ services:
       # Je backend-code live in de container, zodat nodemon wijzigingen ziet
       # zonder rebuild. node_modules blijft die uit de image.
       - ./backend:/app/backend
+      - ./src/utils:/app/src/utils
       - ./prisma:/app/prisma
       - ./prisma.config.ts:/app/prisma.config.ts
       - ./nodemon.json:/app/nodemon.json

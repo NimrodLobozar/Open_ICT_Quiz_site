@@ -1,0 +1,100 @@
+/* Tijdelijke host-lobby, totdat de lobby-pagina van het team (LobbyPage) aan de server hangt. */
+.host-game {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 40px 16px;
+  background: #ffedd5;
+  color: #7c2d12;
+  font-family: 'Rubik', sans-serif;
+  text-align: center;
+}
+
+.host-game__label {
+  margin: 0;
+  font-size: 20px;
+}
+
+.host-game__code {
+  margin: 0;
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(64px, 12vw, 120px);
+  line-height: 1;
+  letter-spacing: 0.08em;
+  color: #c2410c;
+}
+
+.host-game__title {
+  margin: 16px 0 0;
+  font-size: 28px;
+}
+
+.host-game__players {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  max-width: 900px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.host-game__players li {
+  padding: 8px 18px;
+  border: 2px solid #fdba74;
+  border-radius: 999px;
+  background: #fff7ed;
+  font-size: 20px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.host-game__player--offline {
+  opacity: 0.6;
+}
+
+.host-game__dev {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  max-width: 640px;
+  margin-top: 32px;
+  padding: 16px;
+  border: 2px dashed #9a4a22;
+  border-radius: 12px;
+}
+
+.host-game__dev p {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.host-game__dev button {
+  min-height: 44px;
+  padding: 0 20px;
+  border: 2px solid #9a4a22;
+  border-radius: 999px;
+  background: #fdba74;
+  color: #7c2d12;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.host-game__error {
+  margin: 0;
+  font-weight: 700;
+}
+
+.host-game__error--top {
+  padding: 10px 16px;
+  background: #7c2d12;
+  color: #fff7ed;
+  font-family: 'Rubik', sans-serif;
+  text-align: center;
+}

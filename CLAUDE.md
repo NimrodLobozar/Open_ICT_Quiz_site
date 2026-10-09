@@ -20,3 +20,10 @@ Live classroom quiz (Kahoot-style): a host shows the quiz on a big screen, stude
 - The editable online canvas is https://claude.ai/artifact/DYQLfMYVaoqjGKCUZ89XHf. After changing it, copy the updated `project/*` files into `src/` and rerun the script.
 - New design work goes in its own folder under `.claude/designs/`.
 - `.claude/designs/eindscherm-quizshow/` holds lighter, lower-contrast colour variants of design 7 (quizshow), including one on the `/lobby` background. Its second canvas page ("Volledige flow · 3 & 4") has every screen of the user flow (host big screen, student desktop, student phone) for variants 3 and 4; the buttons link to the next screen. Same setup: edit `src/`, then run `node .claude/designs/eindscherm-quizshow/render.cjs`. The editable online canvas is https://claude.ai/artifact/CU4wB5XbDxmXAhZbLRqEY5. After changing it, copy the updated `project/*` files into `src/` and rerun the script.
+
+## Realtime (Socket.IO)
+
+- Games live in memory on the server (`backend/game/`); REST in `backend/routes/games.js` sets/clears the httpOnly session cookies, Socket.IO (`backend/socket/`) does everything live. See `docs/SOCKET-IO-UITLEG.md` and the contract in `docs/SOCKET-EVENTS.md`.
+- Event names live in `backend/socket/events.js` and a copy in `src/socket/events.js`; change both plus `docs/SOCKET-EVENTS.md` together.
+- `src/utils/` (ranking, playerResult) is shared with the backend; Docker mounts it into the backend container.
+- Tests: `npm test` (Vitest, `backend/tests/`).

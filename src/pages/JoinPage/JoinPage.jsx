@@ -1,6 +1,7 @@
 import { Alert, Button, Card, Form, Input, Slider, Typography } from 'antd'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { api } from '../../api/http.js'
 import './JoinPage.css'
 
 const skills = [
@@ -12,10 +13,8 @@ const skills = [
   { label: 'BI', color: '#3b82f6' },
 ]
 
-const demoGame = {
-  quizTitle: 'Open ICT Quiz',
-  locked: false,
-}
+// TODO(team): quiztitel van de server halen zodra games aan een echte quiz hangen.
+const QUIZ_TITLE = 'Open ICT Quiz'
 
 export default function JoinPage() {
   const { code } = useParams()
@@ -74,13 +73,26 @@ function LoginForm() {
 
 function CodeForm() {
   const navigate = useNavigate()
+  const [error, setError] = useState(null)
+
+  // Eerst vragen of de game bestaat, zodat je bij een typfout meteen een melding krijgt.
+  async function checkCode({ code }) {
+    setError(null)
+    try {
+      await api(`/games/${code}`)
+      navigate(`/join/${code}`)
+    } catch (apiError) {
+      setError(apiError.message)
+    }
+  }
 
   return (
     <>
       <header className="code-header">
         <Typography.Title className="code-title" level={3}>Voer de code in</Typography.Title>
       </header>
-      <Form className="code-form" layout="vertical" onFinish={({ code }) => navigate(`/join/${code}`)}>
+      {error && <Alert type="error" showIcon message={error} style={{ marginBottom: 16 }} />}
+      <Form className="code-form" layout="vertical" onFinish={checkCode}>
         <Form.Item
           label="Code"
           name="code"
@@ -121,21 +133,28 @@ function SkillSlider({ label, color }) {
 
 function NicknameStep({ code }) {
   const [form] = Form.useForm()
-  const [joined, setJoined] = useState(false)
+  const navigate = useNavigate()
+  const [error, setError] = useState(null)
+  const [sending, setSending] = useState(false)
 
-  function join({ nickname }) {
-    setJoined(nickname)
-  }
+  // Rejoin: heeft deze browser al een speler-cookie voor deze game, dan meteen door naar het spel.
+  useEffect(() => {
+    api(`/games/${code}/me`)
+      .then(() => navigate(`/play/${code}`, { replace: true }))
+      .catch(() => {}) // geen sessie: gewoon het formulier tonen
+  }, [code, navigate])
 
-  if (joined) {
-    return (
-      <Alert
-        type="success"
-        showIcon
-        message={`Welkom, ${joined}!`}
-        description={`Je bent lokaal toegevoegd aan ${demoGame.quizTitle} (${code}).`}
-      />
-    )
+  // De server checkt de naam en zet de cookie. Daarna weet /play/:code wie we zijn.
+  async function join({ nickname }) {
+    setError(null)
+    setSending(true)
+    try {
+      await api(`/games/${code}/players`, { method: 'POST', body: { nickname } })
+      navigate(`/play/${code}`)
+    } catch (apiError) {
+      setError(apiError.message)
+      setSending(false)
+    }
   }
 
   return (
@@ -143,7 +162,7 @@ function NicknameStep({ code }) {
       <Card className="join-card">
         <header className="join-header">
           <Typography.Text type="secondary" className="join-header-text">
-            {demoGame.quizTitle}
+            {QUIZ_TITLE}
           </Typography.Text>
           <Typography.Text type="secondary" className="join-header-text">
             {code}
@@ -157,9 +176,7 @@ function NicknameStep({ code }) {
             Vul je gegevens in
           </Typography.Title>
         </div>
-        {demoGame.locked && (
-          <Alert type="warning" showIcon message="Deze lobby is gesloten." style={{ marginBottom: 16 }} />
-        )}
+        {error && <Alert type="error" showIcon message={error} style={{ marginBottom: 16 }} />}
         <Form form={form} layout="vertical" onFinish={join}>
           <Form.Item
             label="Gebruikersnaam:"
@@ -174,7 +191,7 @@ function NicknameStep({ code }) {
               {skills.map((skill) => <SkillSlider key={skill.label} {...skill} />)}
             </div>
           </Form.Item>
-          <Button type="primary" htmlType="submit" size="large" block>
+          <Button type="primary" htmlType="submit" size="large" block loading={sending}>
             Join
           </Button>
           <a href="/login" className="login-link">

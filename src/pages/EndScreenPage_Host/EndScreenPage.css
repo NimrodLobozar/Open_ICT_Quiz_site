@@ -155,3 +155,9 @@
     padding: 32px 16px 48px;
   }
 }
+
+/* "Nog een ronde" is een <button> als hij een actie doet: dezelfde stijl als de links. */
+button.end-screen__button {
+  font-family: inherit;
+  cursor: pointer;
+}

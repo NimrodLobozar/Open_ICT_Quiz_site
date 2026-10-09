@@ -1,12 +1,34 @@
-/* Twee kolommen naast elkaar; minmax(0, 1fr) voorkomt dat een lange naam een kolom breder maakt. */
+/* De kleuren (--quiz-*) komen van de pagina, net als bij het podium. */
 .scoreboard {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px 20px;
   width: 100%;
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+/* Host: twee kolommen naast elkaar; minmax(0, 1fr) voorkomt dat een lange naam een kolom breder maakt. */
+.scoreboard--columns {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Speler: één kolom die zelf scrollt. De pagina bepaalt de hoogte met --scoreboard-max-height.
+   position: relative maakt de lijst het referentiepunt voor offsetTop, nodig voor het auto-scrollen. */
+.scoreboard--list {
+  position: relative;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  max-height: var(--scoreboard-max-height, 70vh);
+  overflow-y: auto;
+  overscroll-behavior: contain; /* doorscrollen aan het eind van de lijst scrolt niet de hele pagina */
+  scroll-behavior: smooth;
+  padding-right: 4px;
+}
+
+.scoreboard--list:focus-visible {
+  outline: 3px solid var(--quiz-primary);
+  outline-offset: 3px;
 }
 
 /* Zelfde puntvorm als het podium, maar kleiner en met een dunnere rand. */
@@ -21,19 +43,44 @@
   align-items: center;
   gap: 16px;
   min-height: 54px;
-  padding: 0 36px;
+  padding: 6px 36px;
   background: var(--quiz-surface);
   font-size: 20px;
   clip-path: polygon(19px 0, calc(100% - 19px) 0, 100% 50%, calc(100% - 19px) 100%, 19px 100%, 0 50%);
 }
 
-/* Vaste breedte, zodat de namen in beide kolommen netjes onder elkaar beginnen. */
+.scoreboard--list .scoreboard__bar {
+  min-height: 48px;
+  font-size: 18px;
+}
+
+/* Eigen rij: andere achtergrond, donkere rand én het label "(jij)". */
+.scoreboard__row--me {
+  padding: 3px;
+  background: var(--quiz-primary);
+}
+
+.scoreboard__row--me .scoreboard__bar {
+  background: var(--quiz-accent);
+}
+
+.scoreboard__me {
+  font-weight: 800;
+}
+
+/* Vaste breedte, zodat de namen netjes onder elkaar beginnen (ook bij plek 100). */
 .scoreboard__rank {
-  width: 28px;
+  flex: 0 0 auto;
+  min-width: 28px;
   font-family: 'Anton', sans-serif;
   color: var(--quiz-primary);
 }
 
+.scoreboard__row--me .scoreboard__rank {
+  color: var(--quiz-text);
+}
+
+/* min-width: 0 laat een lange naam afbreken in plaats van de rij breder te maken. */
 .scoreboard__name {
   flex: 1;
   min-width: 0;
@@ -42,13 +89,37 @@
 }
 
 .scoreboard__score {
+  flex: 0 0 auto;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
 
 /* Op een smal scherm is er geen ruimte voor twee kolommen. */
 @media (max-width: 640px) {
-  .scoreboard {
+  .scoreboard--columns {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .scoreboard--list {
+    gap: 5px;
+  }
+
+  .scoreboard__row {
+    clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 50%, calc(100% - 16px) 100%, 16px 100%, 0 50%);
+  }
+
+  .scoreboard__bar,
+  .scoreboard--list .scoreboard__bar {
+    gap: 12px;
+    min-height: 40px;
+    padding: 4px 26px;
+    font-size: 15px;
+    clip-path: polygon(15px 0, calc(100% - 15px) 0, 100% 50%, calc(100% - 15px) 100%, 15px 100%, 0 50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scoreboard--list {
+    scroll-behavior: auto;
   }
 }

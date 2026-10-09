@@ -40,7 +40,7 @@ Elke actie heeft een ack: `{ ok: true, ... }` of `{ ok: false, error, message }`
 |---|---|---|---|
 | `game:sync` | host/speler | `{}` | `{ ok, state }`, zie hieronder |
 | `dev:finish` | host, **alleen development** | `{ bots?: number }` | `{ ok }`; speelt 8 nepvragen en gaat naar `PODIUM` |
-| `host:restart` | host | `{}` | `{ ok }` — **nog niet gebouwd, oefening** |
+| `host:restart` | host | `{}` | `{ ok }`; alleen in fase `PODIUM`, anders `WRONG_PHASE`. Zelfde spelers en namen, scores 0, terug naar `LOBBY` |
 
 ### `state` van `game:sync`
 
@@ -64,7 +64,7 @@ Zo krijgt een speler na verversen of verbindingsverlies precies hetzelfde eindsc
 | `lobby:update` | room (iedereen) | `{ players: [{ id, nickname, connected, isVerified }], playerCount, locked }` |
 | `game:podium` | room (iedereen) | `{ top3, ranking: [{ id, nickname, score, rank, isVerified }], totalQuestions }` |
 | `player:result` | room van één speler | zie hieronder |
-| `game:restarted` | room (iedereen) | `{}` — **nog niet gebouwd, oefening** |
+| `game:restarted` | room (iedereen) | `{}`; direct daarna volgt `lobby:update`. Clients gaan terug naar het lobby-wachtscherm |
 
 ### `player:result` (na de laatste vraag)
 

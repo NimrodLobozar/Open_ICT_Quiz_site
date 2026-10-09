@@ -1,0 +1,217 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-10-08T12:00:00Z" },
+  "title": "Quizshow kleurvarianten",
+  "launch": { "view": "canvas" },
+  "attachments": {},
+  "boards": {
+    "Main.dc.html": {
+      "expand": "fill",
+      "h": 1240,
+      "title": "0 · Host — groot scherm",
+      "w": 1440,
+      "x": 0,
+      "y": 260
+    },
+    "OrigineelStudent.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "title": "0 · Student — desktop",
+      "w": 1440,
+      "x": 1520,
+      "y": 260
+    },
+    "OrigineelPhone.dc.html": {
+      "h": 1240,
+      "title": "0 · Student — telefoon",
+      "w": 390,
+      "x": 3040,
+      "y": 260
+    },
+    "Hemel.dc.html": {
+      "expand": "fill",
+      "h": 1240,
+      "title": "1 · Host — groot scherm",
+      "w": 1440,
+      "x": 0,
+      "y": 1860
+    },
+    "HemelStudent.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "title": "1 · Student — desktop",
+      "w": 1440,
+      "x": 1520,
+      "y": 1860
+    },
+    "HemelPhone.dc.html": {
+      "h": 1240,
+      "title": "1 · Student — telefoon",
+      "w": 390,
+      "x": 3040,
+      "y": 1860
+    },
+    "Oceaan.dc.html": {
+      "expand": "fill",
+      "h": 1240,
+      "title": "2 · Host — groot scherm",
+      "w": 1440,
+      "x": 0,
+      "y": 3460
+    },
+    "OceaanStudent.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "title": "2 · Student — desktop",
+      "w": 1440,
+      "x": 1520,
+      "y": 3460
+    },
+    "OceaanPhone.dc.html": {
+      "h": 1240,
+      "title": "2 · Student — telefoon",
+      "w": 390,
+      "x": 3040,
+      "y": 3460
+    },
+    "Lobby.dc.html": {
+      "expand": "fill",
+      "h": 1240,
+      "title": "3 · Host — groot scherm",
+      "w": 1440,
+      "x": 0,
+      "y": 5060
+    },
+    "LobbyStudent.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "title": "3 · Student — desktop",
+      "w": 1440,
+      "x": 1520,
+      "y": 5060
+    },
+    "LobbyPhone.dc.html": {
+      "h": 1240,
+      "title": "3 · Student — telefoon",
+      "w": 390,
+      "x": 3040,
+      "y": 5060
+    },
+    "IJs.dc.html": {
+      "expand": "fill",
+      "h": 1240,
+      "title": "4 · Host — groot scherm",
+      "w": 1440,
+      "x": 0,
+      "y": 6660
+    },
+    "IJsStudent.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "title": "4 · Student — desktop",
+      "w": 1440,
+      "x": 1520,
+      "y": 6660
+    },
+    "IJsPhone.dc.html": {
+      "h": 1240,
+      "title": "4 · Student — telefoon",
+      "w": 390,
+      "x": 3040,
+      "y": 6660
+    },
+    "Avond.dc.html": {
+      "expand": "fill",
+      "h": 1240,
+      "title": "5 · Host — groot scherm",
+      "w": 1440,
+      "x": 0,
+      "y": 8260
+    },
+    "AvondStudent.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "title": "5 · Student — desktop",
+      "w": 1440,
+      "x": 1520,
+      "y": 8260
+    },
+    "AvondPhone.dc.html": {
+      "h": 1240,
+      "title": "5 · Student — telefoon",
+      "w": 390,
+      "x": 3040,
+      "y": 8260
+    }
+  },
+  "notes": {
+    "row0": {
+      "kind": "title1",
+      "maxW": 3430,
+      "text": "0 · Origineel (ontwerp 7)",
+      "w": 240,
+      "x": 0,
+      "y": 0
+    },
+    "row1": {
+      "kind": "title1",
+      "maxW": 3430,
+      "text": "1 · Hemelsblauw & perzik",
+      "w": 240,
+      "x": 0,
+      "y": 1600
+    },
+    "row2": {
+      "kind": "title1",
+      "maxW": 3430,
+      "text": "2 · Oceaanblauw & mint",
+      "w": 240,
+      "x": 0,
+      "y": 3200
+    },
+    "row3": {
+      "kind": "title1",
+      "maxW": 3430,
+      "text": "3 · Lobby-oranje (achtergrond van /lobby)",
+      "w": 240,
+      "x": 0,
+      "y": 4800
+    },
+    "row4": {
+      "kind": "title1",
+      "maxW": 3430,
+      "text": "4 · IJsblauw & zachtroze",
+      "w": 240,
+      "x": 0,
+      "y": 6400
+    },
+    "row5": {
+      "kind": "title1",
+      "maxW": 3430,
+      "text": "5 · Avondblauw & zacht goud",
+      "w": 240,
+      "x": 0,
+      "y": 8000
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "OrigineelStudent.dc.html",
+    "OrigineelPhone.dc.html",
+    "Hemel.dc.html",
+    "HemelStudent.dc.html",
+    "HemelPhone.dc.html",
+    "Oceaan.dc.html",
+    "OceaanStudent.dc.html",
+    "OceaanPhone.dc.html",
+    "Lobby.dc.html",
+    "LobbyStudent.dc.html",
+    "LobbyPhone.dc.html",
+    "IJs.dc.html",
+    "IJsStudent.dc.html",
+    "IJsPhone.dc.html",
+    "Avond.dc.html",
+    "AvondStudent.dc.html",
+    "AvondPhone.dc.html"
+  ]
+}

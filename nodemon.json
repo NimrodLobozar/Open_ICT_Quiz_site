@@ -1,0 +1,8 @@
+{
+  "watch": ["backend", "prisma/schema.prisma"],
+  "ext": "js,json,prisma",
+  "legacyWatch": true,
+  "pollingInterval": 500,
+  "signal": "SIGTERM",
+  "exec": "npx prisma db push && npx prisma generate && node backend/index.js"
+}

@@ -27,6 +27,13 @@ services:
     environment:
       DATABASE_URL: postgresql://quiz:quiz@db:5432/quiz
       NODE_ENV: development
+    volumes:
+      # Je backend-code live in de container, zodat nodemon wijzigingen ziet
+      # zonder rebuild. node_modules blijft die uit de image.
+      - ./backend:/app/backend
+      - ./prisma:/app/prisma
+      - ./prisma.config.ts:/app/prisma.config.ts
+      - ./nodemon.json:/app/nodemon.json
     depends_on:
       db:
         condition: service_healthy

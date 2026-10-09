@@ -14,4 +14,7 @@ RUN npx prisma generate
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "npx prisma db push && node backend/index.js"]
+# nodemon herstart de server als je iets in backend/ of het Prisma-schema opslaat.
+# Bij een schemawijziging zet het eerst de tabellen bij (db push) en maakt de client opnieuw.
+COPY nodemon.json ./
+CMD ["npx", "nodemon"]

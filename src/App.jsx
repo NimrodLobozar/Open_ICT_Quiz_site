@@ -4,6 +4,7 @@ import JoinPage from "./pages/JoinPage/JoinPage.jsx";
 import LobbyHost from "./pages/LobbyHost.jsx";
 import LobbyPage from "./pages/Lobby/LobbyPage.jsx";
 import LobbyPlayer from "./pages/Lobby/LobbyPlayer.jsx";
+import EndScreenPagePlayer from "./pages/EndScreenPage_Player/EndScreenPage.jsx";
 
 export default function App() {
   return (
@@ -14,7 +15,8 @@ export default function App() {
           element={
             <>
               <h1>Welcome to the Quiz</h1>
-              <Link to="/end">Naar het eindscherm (test)</Link>
+              <Link to="/end">Naar het eindscherm - Host</Link>
+              <Link to="/end-player">Naar het Eindscherm - Player</Link>
               <a href="/lobbyhost">
                 <button>Kom maar hier heen</button>
               </a>
@@ -26,7 +28,8 @@ export default function App() {
         <Route path="/lobby" element={<LobbyPage />} />
         <Route path="/join" element={<JoinPage />} />
         <Route path="/join/:code" element={<JoinPage />} />
-        <Route path="/end" element={<EndScreenPage />} />
+        <Route path="/end" element={<EndScreenPageHost />} />
+        <Route path="/end-player" element={<EndScreenPagePlayer />} />
       </Routes>
     </>
   );

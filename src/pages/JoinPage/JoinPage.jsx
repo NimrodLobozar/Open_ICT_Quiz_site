@@ -1,6 +1,6 @@
 import { Alert, Button, Card, Form, Input, Slider, Typography } from 'antd'
-import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import './JoinPage.css'
 
 const skills = [
@@ -19,12 +19,112 @@ const demoGame = {
 
 export default function JoinPage() {
   const { code } = useParams()
-  const locationNotice = null
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [locationNotice, setLocationNotice] = useState('')
+  const [isNoticeClosing, setIsNoticeClosing] = useState(false)
+  const isInvalidCode = code && !/^\d{6}$/.test(code)
+  const [codeStatus, setCodeStatus] = useState(code ? 'checking' : 'idle')
+
+  useEffect(() => {
+    if (isInvalidCode) {
+      navigate('/join', {
+        replace: true,
+        state: { locationNotice: 'Ongeldige code. Voer een 6-cijferige code in.' },
+      })
+      return
+    }
+
+    if (!code) {
+      setCodeStatus('idle')
+      return
+    }
+
+    const controller = new AbortController()
+
+    async function checkCode() {
+      try {
+        const response = await fetch(`/api/code/${code}`, { signal: controller.signal })
+
+        if (!response.ok) {
+          throw new Error(`Code check failed with status ${response.status}`)
+        }
+
+        const data = await response.json()
+
+        if (!data.exists) {
+          navigate('/join', {
+            replace: true,
+            state: { locationNotice: 'Ongeldige code. Voer een 6-cijferige code in.' },
+          })
+          return
+        }
+
+        setCodeStatus('valid')
+      } catch (error) {
+        if (error.name === 'AbortError') return
+
+        console.error('Error checking quiz code:', error)
+        navigate('/join', {
+          replace: true,
+          state: { locationNotice: 'De quizcode kon niet worden gecontroleerd.' },
+        })
+      }
+    }
+
+    checkCode()
+
+    return () => controller.abort()
+  }, [code, isInvalidCode, navigate])
+
+  useEffect(() => {
+    const notice = location.state?.locationNotice
+
+    if (!notice) return
+
+    setLocationNotice(notice)
+    setIsNoticeClosing(false)
+    navigate(location.pathname, { replace: true, state: null })
+  }, [location.pathname, location.state?.locationNotice, navigate])
+
+  useEffect(() => {
+    if (!locationNotice) return
+
+    const closeTimeout = setTimeout(() => {
+      setIsNoticeClosing(true)
+    }, 5000)
+    const removeTimeout = setTimeout(() => {
+      setLocationNotice('')
+    }, 5300)
+
+    return () => {
+      clearTimeout(closeTimeout)
+      clearTimeout(removeTimeout)
+    }
+  }, [locationNotice])
 
   return (
     <div className="join-page">
-      {locationNotice && <Alert type="info" showIcon message={locationNotice} style={{ marginBottom: 16 }} />}
-      {code ? <NicknameStep key={code} code={code} /> : <CodeStep />}
+      <header className="join-nav">
+        <span className="join-brand">OPEN ICT QUIZ</span>
+        <a className="join-login-button" href="/login">
+          <svg className="join-login-icon" viewBox="0 0 16 16" aria-hidden="true">
+            <circle cx="8" cy="5" r="2.5" />
+            <path d="M3.5 14c.4-2.4 2-3.6 4.5-3.6s4.1 1.2 4.5 3.6" />
+          </svg>
+          Inloggen
+        </a>
+      </header>
+      {locationNotice && (
+        <Alert
+          className={`join-notice ${isNoticeClosing ? 'join-notice-closing' : ''}`}
+          type="error"
+          showIcon
+          message="Ongeldige quizcode"
+          description={locationNotice}
+        />
+      )}
+      {code && !isInvalidCode && codeStatus === 'valid' ? <NicknameStep key={code} code={code} /> : <CodeStep />}
     </div>
   )
 }
@@ -153,7 +253,7 @@ function NicknameStep({ code }) {
           <Typography.Text type="secondary" className="join-title-text">
             Je bent er bijna!
           </Typography.Text>
-          <Typography.Title level={3} className="join-title-title">
+          <Typography.Title className="join-title-title">
             Vul je gegevens in
           </Typography.Title>
         </div>
@@ -169,7 +269,7 @@ function NicknameStep({ code }) {
           >
             <Input placeholder="Vul hier in..." size="large" maxLength={20} autoComplete="off" autoFocus />
           </Form.Item>
-          <Form.Item label="Vul hier jouw vaardigheden in:" required style={{ marginBottom: '2.5vh' }}>
+          <Form.Item label="Vul hier jouw vaardigheden in: (0-5)" required style={{ marginBottom: '2.5vh' }}>
             <div className="skills-list">
               {skills.map((skill) => <SkillSlider key={skill.label} {...skill} />)}
             </div>

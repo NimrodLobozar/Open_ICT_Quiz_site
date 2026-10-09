@@ -1,7 +1,157 @@
-/* Het eindscherm vult het hele scherm. */
+/* Kleuren van het oranje lobby-design. Als variabelen, zodat Podium en Scoreboard dezelfde kleuren gebruiken. */
 .end-screen {
+  --quiz-bg: #ffedd5;
+  --quiz-surface: #fff7ed;
+  --quiz-border: #fdba74;
+  --quiz-accent: #fdba74;
+  --quiz-primary: #c2410c;
+  --quiz-muted: #9a4a22;
+  --quiz-text: #7c2d12;
+
+  position: relative;
+  overflow: hidden; /* de grote cirkels mogen geen scrollbalk opzij maken */
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
   min-height: 100dvh; /* dvh = juiste hoogte op telefoons, ook met de adresbalk in beeld */
-  background: linear-gradient(160deg, #2b1055, #7597de);
-  color: #fff;
+  background: var(--quiz-bg);
+  color: var(--quiz-text);
+  font-family: 'Rubik', sans-serif;
+}
+
+/* Grote cirkels bovenaan, half buiten beeld, als rustige achtergrond. */
+.end-screen__rings {
+  position: absolute;
+  top: -620px;
+  left: 50%;
+  width: 1400px;
+  height: 1400px;
+  margin-left: -700px;
+  opacity: 0.18;
+  pointer-events: none;
+}
+
+.end-screen__rings circle {
+  fill: none;
+  stroke: #fb923c;
+  stroke-width: 0.3;
+}
+
+/* position: relative zet de balk bóven de cirkels. */
+.end-screen__nav {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 24px;
+  padding: 18px 40px;
+  background: var(--quiz-surface);
+  border-bottom: 2px solid var(--quiz-border);
+}
+
+.end-screen__logo {
+  font-family: 'Anton', sans-serif;
+  font-size: 30px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: var(--quiz-primary);
+  text-decoration: none;
+}
+
+.end-screen__code {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 2px solid var(--quiz-border);
+  border-radius: 999px;
+  background: var(--quiz-bg);
+  color: var(--quiz-muted);
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.end-screen__code strong {
+  color: var(--quiz-text);
+  font-size: 24px;
+  letter-spacing: 0.12em;
+}
+
+.end-screen__main {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 24px 56px;
+}
+
+.end-screen__title {
+  margin: 0;
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(64px, 8vw, 104px);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: 0.04em;
+  color: var(--quiz-primary);
+}
+
+.end-screen__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.end-screen__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 58px;
+  padding: 0 32px;
+  border: 2px solid var(--quiz-muted);
+  border-radius: 999px;
+  color: var(--quiz-text);
+  font-size: 20px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.end-screen__button--primary {
+  border-color: var(--quiz-accent);
+  background: var(--quiz-accent);
+  font-weight: 800;
+}
+
+/* antd's reset kleurt links blauw bij hover; hier houden we de eigen kleur. */
+.end-screen__button:hover,
+.end-screen__logo:hover {
+  color: var(--quiz-text);
+}
+
+.end-screen__button:hover {
+  filter: brightness(0.95);
+}
+
+.end-screen__button:focus-visible,
+.end-screen__logo:focus-visible {
+  outline: 3px solid var(--quiz-primary);
+  outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  .end-screen__nav {
+    padding: 14px 16px;
+  }
+  .end-screen__main {
+    padding: 32px 16px 48px;
+  }
 }

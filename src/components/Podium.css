@@ -1,122 +1,80 @@
-/* Het podium vult het hele scherm: titel bovenaan, podiumblokken onderaan. */
+/* Top 3 onder elkaar, gecentreerd. De 1e plek is breder en hoger dan de rest.
+   De kleuren (--quiz-*) komen van de pagina, zodat elk scherm zijn eigen thema kan geven. */
 .podium {
-  position: relative;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  min-height: 100dvh;
-  padding: 32px 16px 0;
-  text-align: center;
-}
-
-.podium__title {
-  position: relative;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
   margin: 0;
-  font-size: clamp(2rem, 7vw, 4.5rem);
-}
-
-.podium__stand {
-  position: relative;
-  display: flex;
-  flex: 1;
-  align-items: flex-end;
-  justify-content: center;
-  gap: clamp(8px, 2vw, 24px);
-  margin: 24px 0 0;
   padding: 0;
   list-style: none;
 }
 
+/* De buitenste laag is de rand: 4px padding in de randkleur, met dezelfde puntvorm als de balk.
+   clip-path knipt de rechthoek bij tot een zeshoek met punten links en rechts. */
 .podium__place {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  align-items: center;
-  max-width: 320px;
-  min-width: 0;
+  width: 86%;
+  max-width: 100%;
+  padding: 4px;
+  background: var(--quiz-accent);
+  clip-path: polygon(36px 0, calc(100% - 36px) 0, 100% 50%, calc(100% - 36px) 100%, 36px 100%, 0 50%);
+  animation: podium-rise 0.6s ease-out both;
 }
 
+.podium__bar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  min-height: 80px;
+  padding: 0 64px;
+  background: var(--quiz-surface);
+  color: var(--quiz-text);
+  clip-path: polygon(34px 0, calc(100% - 34px) 0, 100% 50%, calc(100% - 34px) 100%, 34px 100%, 0 50%);
+}
+
+.podium__rank {
+  font-family: 'Anton', sans-serif;
+  font-size: 48px;
+  line-height: 1;
+}
+
+/* flex: 1 + min-width: 0 zorgt dat een lange naam afbreekt in plaats van de balk op te rekken. */
 .podium__name {
-  max-width: 100%;
-  font-size: clamp(1.1rem, 3.5vw, 2rem);
-  font-weight: 700;
+  flex: 1;
+  min-width: 0;
+  font-size: 32px;
+  font-weight: 800;
   overflow-wrap: anywhere;
 }
 
 .podium__score {
-  margin-bottom: 12px;
-  font-size: clamp(0.95rem, 2.5vw, 1.4rem);
-  opacity: 0.9;
-}
-
-.podium__block {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  width: 100%;
-  padding-top: 16px;
-  border-radius: 10px 10px 0 0;
-  color: #222;
-  font-weight: 800;
-}
-
-.podium__medal {
-  font-size: clamp(2rem, 6vw, 4rem);
-}
-
-.podium__rank {
-  font-size: clamp(1.6rem, 5vw, 3.5rem);
-}
-
-/* Plaats 1 valt op: hoogste blok, goud, grotere naam en een kroon. */
-.podium__place--1 .podium__block {
-  height: clamp(200px, 45vh, 480px);
-  background: linear-gradient(#ffe066, #f5b700);
-  box-shadow: 0 0 24px rgba(255, 215, 0, 0.7);
-}
-
-.podium__place--1 .podium__name {
-  font-size: clamp(1.5rem, 5vw, 3rem);
-}
-
-.podium__place--1 .podium__score {
-  font-size: clamp(1.1rem, 3vw, 1.8rem);
+  font-size: 26px;
   font-weight: 700;
+  font-variant-numeric: tabular-nums; /* alle cijfers even breed, dan springen scores niet */
 }
 
-.podium__crown {
-  font-size: clamp(2.2rem, 6vw, 4rem);
-  animation: podium-bounce 1.2s ease-in-out infinite;
+/* Plaats 1 valt op: volle breedte, gevulde balk en grotere letters. */
+.podium__place--first {
+  width: 100%;
 }
 
-.podium__place--2 .podium__block {
-  height: clamp(150px, 33vh, 350px);
-  background: linear-gradient(#f1f1f1, #b8b8b8);
+.podium__place--first .podium__bar {
+  min-height: 104px;
+  background: var(--quiz-accent);
 }
 
-.podium__place--3 .podium__block {
-  height: clamp(110px, 24vh, 260px);
-  background: linear-gradient(#f0b27a, #c87533);
+.podium__place--first .podium__rank {
+  font-size: 64px;
 }
 
-/* Spelers komen een voor een omhoog: eerst 3e, dan 2e, dan 1e. */
-.podium__place {
-  animation: podium-rise 0.6s ease-out both;
+.podium__place--first .podium__name {
+  font-size: 44px;
 }
-.podium__place--3 { animation-delay: 0.2s; }
-.podium__place--2 { animation-delay: 0.6s; }
-.podium__place--1 { animation-delay: 1s; }
 
-.podium__confetti span {
-  position: absolute;
-  top: -16px;
-  width: 10px;
-  height: 16px;
-  border-radius: 2px;
-  animation: podium-confetti linear infinite;
-}
+/* De balken komen een voor een binnen, van boven naar beneden. */
+.podium__place:nth-child(2) { animation-delay: 0.15s; }
+.podium__place:nth-child(3) { animation-delay: 0.3s; }
 
 .podium__empty {
   margin: 0;
@@ -125,26 +83,32 @@
   text-align: center;
 }
 
+/* Op een smal scherm passen de grote letters en ruime padding niet. */
+@media (max-width: 640px) {
+  .podium__place {
+    width: 100%;
+  }
+  .podium__bar {
+    gap: 12px;
+    min-height: 64px;
+    padding: 0 40px;
+  }
+  .podium__rank { font-size: 32px; }
+  .podium__name { font-size: 20px; }
+  .podium__score { font-size: 18px; }
+  .podium__place--first .podium__bar { min-height: 80px; }
+  .podium__place--first .podium__rank { font-size: 44px; }
+  .podium__place--first .podium__name { font-size: 26px; }
+}
+
 @keyframes podium-rise {
-  from { opacity: 0; transform: translateY(40px); }
+  from { opacity: 0; transform: translateY(24px); }
   to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes podium-bounce {
-  50% { transform: translateY(-6px); }
-}
-
-@keyframes podium-confetti {
-  to { transform: translateY(110vh) rotate(540deg); }
 }
 
 /* Geen bewegende animaties voor mensen die dat in hun systeem hebben uitgezet. */
 @media (prefers-reduced-motion: reduce) {
-  .podium__place,
-  .podium__crown {
+  .podium__place {
     animation: none;
-  }
-  .podium__confetti {
-    display: none;
   }
 }

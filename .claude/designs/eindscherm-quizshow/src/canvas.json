@@ -1,0 +1,758 @@
+{
+  "v": 3,
+  "createdOnFiles": {
+    "v": 1,
+    "at": "2026-10-08T12:00:00Z"
+  },
+  "title": "Quizshow kleurvarianten",
+  "launch": {
+    "view": "canvas"
+  },
+  "attachments": {},
+  "boards": {
+    "Main.dc.html": {
+      "expand": "fill",
+      "h": 1240,
+      "title": "0 · Host — groot scherm",
+      "w": 1440,
+      "x": 0,
+      "y": 260,
+      "page": "eindscherm"
+    },
+    "OrigineelStudent.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "title": "0 · Student — desktop",
+      "w": 1440,
+      "x": 1520,
+      "y": 260,
+      "page": "eindscherm"
+    },
+    "OrigineelPhone.dc.html": {
+      "h": 1240,
+      "title": "0 · Student — telefoon",
+      "w": 390,
+      "x": 3040,
+      "y": 260,
+      "page": "eindscherm"
+    },
+    "Hemel.dc.html": {
+      "expand": "fill",
+      "h": 1240,
+      "title": "1 · Host — groot scherm",
+      "w": 1440,
+      "x": 0,
+      "y": 1860,
+      "page": "eindscherm"
+    },
+    "HemelStudent.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "title": "1 · Student — desktop",
+      "w": 1440,
+      "x": 1520,
+      "y": 1860,
+      "page": "eindscherm"
+    },
+    "HemelPhone.dc.html": {
+      "h": 1240,
+      "title": "1 · Student — telefoon",
+      "w": 390,
+      "x": 3040,
+      "y": 1860,
+      "page": "eindscherm"
+    },
+    "Oceaan.dc.html": {
+      "expand": "fill",
+      "h": 1240,
+      "title": "2 · Host — groot scherm",
+      "w": 1440,
+      "x": 0,
+      "y": 3460,
+      "page": "eindscherm"
+    },
+    "OceaanStudent.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "title": "2 · Student — desktop",
+      "w": 1440,
+      "x": 1520,
+      "y": 3460,
+      "page": "eindscherm"
+    },
+    "OceaanPhone.dc.html": {
+      "h": 1240,
+      "title": "2 · Student — telefoon",
+      "w": 390,
+      "x": 3040,
+      "y": 3460,
+      "page": "eindscherm"
+    },
+    "Lobby.dc.html": {
+      "expand": "fill",
+      "h": 1240,
+      "title": "3 · Host — groot scherm",
+      "w": 1440,
+      "x": 0,
+      "y": 5060,
+      "page": "eindscherm"
+    },
+    "LobbyStudent.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "title": "3 · Student — desktop",
+      "w": 1440,
+      "x": 1520,
+      "y": 5060,
+      "page": "eindscherm"
+    },
+    "LobbyPhone.dc.html": {
+      "h": 1240,
+      "title": "3 · Student — telefoon",
+      "w": 390,
+      "x": 3040,
+      "y": 5060,
+      "page": "eindscherm"
+    },
+    "IJs.dc.html": {
+      "expand": "fill",
+      "h": 1240,
+      "title": "4 · Host — groot scherm",
+      "w": 1440,
+      "x": 0,
+      "y": 6660,
+      "page": "eindscherm"
+    },
+    "IJsStudent.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "title": "4 · Student — desktop",
+      "w": 1440,
+      "x": 1520,
+      "y": 6660,
+      "page": "eindscherm"
+    },
+    "IJsPhone.dc.html": {
+      "h": 1240,
+      "title": "4 · Student — telefoon",
+      "w": 390,
+      "x": 3040,
+      "y": 6660,
+      "page": "eindscherm"
+    },
+    "Avond.dc.html": {
+      "expand": "fill",
+      "h": 1240,
+      "title": "5 · Host — groot scherm",
+      "w": 1440,
+      "x": 0,
+      "y": 8260,
+      "page": "eindscherm"
+    },
+    "AvondStudent.dc.html": {
+      "expand": "fill",
+      "h": 1000,
+      "title": "5 · Student — desktop",
+      "w": 1440,
+      "x": 1520,
+      "y": 8260,
+      "page": "eindscherm"
+    },
+    "AvondPhone.dc.html": {
+      "h": 1240,
+      "title": "5 · Student — telefoon",
+      "w": 390,
+      "x": 3040,
+      "y": 8260,
+      "page": "eindscherm"
+    },
+    "Oranje-Host-1-Start.dc.html": {
+      "page": "flow",
+      "title": "3 · Host 1 — Start (ingelogd)",
+      "x": 0,
+      "y": 260,
+      "w": 1440,
+      "h": 900,
+      "is_interactive": true,
+      "expand": "fill"
+    },
+    "Oranje-Host-2-Lobby.dc.html": {
+      "page": "flow",
+      "title": "3 · Host 2 — Lobby open",
+      "x": 1520,
+      "y": 260,
+      "w": 1440,
+      "h": 1000,
+      "is_interactive": true,
+      "expand": "fill"
+    },
+    "Oranje-Host-3-LobbyDicht.dc.html": {
+      "page": "flow",
+      "title": "3 · Host 3 — Lobby vergrendeld",
+      "x": 3040,
+      "y": 260,
+      "w": 1440,
+      "h": 1000,
+      "is_interactive": true,
+      "expand": "fill"
+    },
+    "Oranje-Host-4-Vraag.dc.html": {
+      "page": "flow",
+      "title": "3 · Host 4 — Vraag",
+      "x": 4560,
+      "y": 260,
+      "w": 1440,
+      "h": 900,
+      "is_interactive": true,
+      "expand": "fill"
+    },
+    "Oranje-Host-5-Antwoorden.dc.html": {
+      "page": "flow",
+      "title": "3 · Host 5 — Vraag + antwoorden",
+      "x": 6080,
+      "y": 260,
+      "w": 1440,
+      "h": 900,
+      "is_interactive": true,
+      "expand": "fill"
+    },
+    "Oranje-Host-6-Tussenstand.dc.html": {
+      "page": "flow",
+      "title": "3 · Host 6 — Tussenstand",
+      "x": 7600,
+      "y": 260,
+      "w": 1440,
+      "h": 900,
+      "is_interactive": true,
+      "expand": "fill"
+    },
+    "Oranje-Host-7-Eindstand.dc.html": {
+      "page": "flow",
+      "title": "3 · Host 7 — Eindstand",
+      "x": 9120,
+      "y": 260,
+      "w": 1440,
+      "h": 1100,
+      "is_interactive": true,
+      "expand": "fill"
+    },
+    "Oranje-Desktop-1-Start.dc.html": {
+      "page": "flow",
+      "title": "3 · Desktop 1 — Start",
+      "x": 0,
+      "y": 1820,
+      "w": 1440,
+      "h": 900,
+      "is_interactive": true,
+      "expand": "fill"
+    },
+    "Oranje-Desktop-2-Code.dc.html": {
+      "page": "flow",
+      "title": "3 · Desktop 2 — Code invullen",
+      "x": 1520,
+      "y": 1820,
+      "w": 1440,
+      "h": 900,
+      "is_interactive": true,
+      "expand": "fill"
+    },
+    "Oranje-Desktop-3-Naam.dc.html": {
+      "page": "flow",
+      "title": "3 · Desktop 3 — Naam invullen",
+      "x": 3040,
+      "y": 1820,
+      "w": 1440,
+      "h": 1000,
+      "is_interactive": true,
+      "expand": "fill"
+    },
+    "Oranje-Desktop-4-Lobby.dc.html": {
+      "page": "flow",
+      "title": "3 · Desktop 4 — Lobby (wachten)",
+      "x": 4560,
+      "y": 1820,
+      "w": 1440,
+      "h": 900,
+      "is_interactive": true,
+      "expand": "fill"
+    },
+    "Oranje-Desktop-5-Vraag.dc.html": {
+      "page": "flow",
+      "title": "3 · Desktop 5 — Vraag beantwoorden",
+      "x": 6080,
+      "y": 1820,
+      "w": 1440,
+      "h": 900,
+      "is_interactive": true,
+      "expand": "fill"
+    },
+    "Oranje-Desktop-6-Tussenstand.dc.html": {
+      "page": "flow",
+      "title": "3 · Desktop 6 — Tussenstand",
+      "x": 7600,
+      "y": 1820,
+      "w": 1440,
+      "h": 1000,
+      "is_interactive": true,
+      "expand": "fill"
+    },
+    "Oranje-Desktop-7-Eindscherm.dc.html": {
+      "page": "flow",
+      "title": "3 · Desktop 7 — Eindscherm",
+      "x": 9120,
+      "y": 1820,
+      "w": 1440,
+      "h": 1000,
+      "is_interactive": true,
+      "expand": "fill"
+    },
+    "Oranje-Telefoon-1-Start.dc.html": {
+      "page": "flow",
+      "title": "3 · Telefoon 1 — Start",
+      "x": 0,
+      "y": 3280,
+      "w": 390,
+      "h": 844,
+      "is_interactive": true
+    },
+    "Oranje-Telefoon-2-Code.dc.html": {
+      "page": "flow",
+      "title": "3 · Telefoon 2 — Code invullen",
+      "x": 470,
+      "y": 3280,
+      "w": 390,
+      "h": 844,
+      "is_interactive": true
+    },
+    "Oranje-Telefoon-3-Naam.dc.html": {
+      "page": "flow",
+      "title": "3 · Telefoon 3 — Naam invullen",
+      "x": 940,
+      "y": 3280,
+      "w": 390,
+      "h": 900,
+      "is_interactive": true
+    },
+    "Oranje-Telefoon-4-Lobby.dc.html": {
+      "page": "flow",
+      "title": "3 · Telefoon 4 — Lobby (wachten)",
+      "x": 1410,
+      "y": 3280,
+      "w": 390,
+      "h": 844,
+      "is_interactive": true
+    },
+    "Oranje-Telefoon-5-Vraag.dc.html": {
+      "page": "flow",
+      "title": "3 · Telefoon 5 — Vraag beantwoorden",
+      "x": 1880,
+      "y": 3280,
+      "w": 390,
+      "h": 844,
+      "is_interactive": true
+    },
+    "Oranje-Telefoon-6-Tussenstand.dc.html": {
+      "page": "flow",
+      "title": "3 · Telefoon 6 — Tussenstand",
+      "x": 2350,
+      "y": 3280,
+      "w": 390,
+      "h": 900,
+      "is_interactive": true
+    },
+    "Oranje-Telefoon-7-Eindscherm.dc.html": {
+      "page": "flow",
+      "title": "3 · Telefoon 7 — Eindscherm",
+      "x": 2820,
+      "y": 3280,
+      "w": 390,
+      "h": 1240,
+      "is_interactive": true
+    },
+    "IJs-Host-1-Start.dc.html": {
+      "page": "flow",
+      "title": "4 · Host 1 — Start (ingelogd)",
+      "x": 0,
+      "y": 5180,
+      "w": 1440,
+      "h": 900,
+      "is_interactive": true,
+      "expand": "fill"
+    },
+    "IJs-Host-2-Lobby.dc.html": {
+      "page": "flow",
+      "title": "4 · Host 2 — Lobby open",
+      "x": 1520,
+      "y": 5180,
+      "w": 1440,
+      "h": 1000,
+      "is_interactive": true,
+      "expand": "fill"
+    },
+    "IJs-Host-3-LobbyDicht.dc.html": {
+      "page": "flow",
+      "title": "4 · Host 3 — Lobby vergrendeld",
+      "x": 3040,
+      "y": 5180,
+      "w": 1440,
+      "h": 1000,
+      "is_interactive": true,
+      "expand": "fill"
+    },
+    "IJs-Host-4-Vraag.dc.html": {
+      "page": "flow",
+      "title": "4 · Host 4 — Vraag",
+      "x": 4560,
+      "y": 5180,
+      "w": 1440,
+      "h": 900,
+      "is_interactive": true,
+      "expand": "fill"
+    },
+    "IJs-Host-5-Antwoorden.dc.html": {
+      "page": "flow",
+      "title": "4 · Host 5 — Vraag + antwoorden",
+      "x": 6080,
+      "y": 5180,
+      "w": 1440,
+      "h": 900,
+      "is_interactive": true,
+      "expand": "fill"
+    },
+    "IJs-Host-6-Tussenstand.dc.html": {
+      "page": "flow",
+      "title": "4 · Host 6 — Tussenstand",
+      "x": 7600,
+      "y": 5180,
+      "w": 1440,
+      "h": 900,
+      "is_interactive": true,
+      "expand": "fill"
+    },
+    "IJs-Host-7-Eindstand.dc.html": {
+      "page": "flow",
+      "title": "4 · Host 7 — Eindstand",
+      "x": 9120,
+      "y": 5180,
+      "w": 1440,
+      "h": 1100,
+      "is_interactive": true,
+      "expand": "fill"
+    },
+    "IJs-Desktop-1-Start.dc.html": {
+      "page": "flow",
+      "title": "4 · Desktop 1 — Start",
+      "x": 0,
+      "y": 6740,
+      "w": 1440,
+      "h": 900,
+      "is_interactive": true,
+      "expand": "fill"
+    },
+    "IJs-Desktop-2-Code.dc.html": {
+      "page": "flow",
+      "title": "4 · Desktop 2 — Code invullen",
+      "x": 1520,
+      "y": 6740,
+      "w": 1440,
+      "h": 900,
+      "is_interactive": true,
+      "expand": "fill"
+    },
+    "IJs-Desktop-3-Naam.dc.html": {
+      "page": "flow",
+      "title": "4 · Desktop 3 — Naam invullen",
+      "x": 3040,
+      "y": 6740,
+      "w": 1440,
+      "h": 1000,
+      "is_interactive": true,
+      "expand": "fill"
+    },
+    "IJs-Desktop-4-Lobby.dc.html": {
+      "page": "flow",
+      "title": "4 · Desktop 4 — Lobby (wachten)",
+      "x": 4560,
+      "y": 6740,
+      "w": 1440,
+      "h": 900,
+      "is_interactive": true,
+      "expand": "fill"
+    },
+    "IJs-Desktop-5-Vraag.dc.html": {
+      "page": "flow",
+      "title": "4 · Desktop 5 — Vraag beantwoorden",
+      "x": 6080,
+      "y": 6740,
+      "w": 1440,
+      "h": 900,
+      "is_interactive": true,
+      "expand": "fill"
+    },
+    "IJs-Desktop-6-Tussenstand.dc.html": {
+      "page": "flow",
+      "title": "4 · Desktop 6 — Tussenstand",
+      "x": 7600,
+      "y": 6740,
+      "w": 1440,
+      "h": 1000,
+      "is_interactive": true,
+      "expand": "fill"
+    },
+    "IJs-Desktop-7-Eindscherm.dc.html": {
+      "page": "flow",
+      "title": "4 · Desktop 7 — Eindscherm",
+      "x": 9120,
+      "y": 6740,
+      "w": 1440,
+      "h": 1000,
+      "is_interactive": true,
+      "expand": "fill"
+    },
+    "IJs-Telefoon-1-Start.dc.html": {
+      "page": "flow",
+      "title": "4 · Telefoon 1 — Start",
+      "x": 0,
+      "y": 8200,
+      "w": 390,
+      "h": 844,
+      "is_interactive": true
+    },
+    "IJs-Telefoon-2-Code.dc.html": {
+      "page": "flow",
+      "title": "4 · Telefoon 2 — Code invullen",
+      "x": 470,
+      "y": 8200,
+      "w": 390,
+      "h": 844,
+      "is_interactive": true
+    },
+    "IJs-Telefoon-3-Naam.dc.html": {
+      "page": "flow",
+      "title": "4 · Telefoon 3 — Naam invullen",
+      "x": 940,
+      "y": 8200,
+      "w": 390,
+      "h": 900,
+      "is_interactive": true
+    },
+    "IJs-Telefoon-4-Lobby.dc.html": {
+      "page": "flow",
+      "title": "4 · Telefoon 4 — Lobby (wachten)",
+      "x": 1410,
+      "y": 8200,
+      "w": 390,
+      "h": 844,
+      "is_interactive": true
+    },
+    "IJs-Telefoon-5-Vraag.dc.html": {
+      "page": "flow",
+      "title": "4 · Telefoon 5 — Vraag beantwoorden",
+      "x": 1880,
+      "y": 8200,
+      "w": 390,
+      "h": 844,
+      "is_interactive": true
+    },
+    "IJs-Telefoon-6-Tussenstand.dc.html": {
+      "page": "flow",
+      "title": "4 · Telefoon 6 — Tussenstand",
+      "x": 2350,
+      "y": 8200,
+      "w": 390,
+      "h": 900,
+      "is_interactive": true
+    },
+    "IJs-Telefoon-7-Eindscherm.dc.html": {
+      "page": "flow",
+      "title": "4 · Telefoon 7 — Eindscherm",
+      "x": 2820,
+      "y": 8200,
+      "w": 390,
+      "h": 1240,
+      "is_interactive": true
+    }
+  },
+  "notes": {
+    "row0": {
+      "kind": "title1",
+      "maxW": 3430,
+      "text": "0 · Origineel (ontwerp 7)",
+      "w": 240,
+      "x": 0,
+      "y": 0,
+      "page": "eindscherm"
+    },
+    "row1": {
+      "kind": "title1",
+      "maxW": 3430,
+      "text": "1 · Hemelsblauw & perzik",
+      "w": 240,
+      "x": 0,
+      "y": 1600,
+      "page": "eindscherm"
+    },
+    "row2": {
+      "kind": "title1",
+      "maxW": 3430,
+      "text": "2 · Oceaanblauw & mint",
+      "w": 240,
+      "x": 0,
+      "y": 3200,
+      "page": "eindscherm"
+    },
+    "row3": {
+      "kind": "title1",
+      "maxW": 3430,
+      "text": "3 · Lobby-oranje (achtergrond van /lobby)",
+      "w": 240,
+      "x": 0,
+      "y": 4800,
+      "page": "eindscherm"
+    },
+    "row4": {
+      "kind": "title1",
+      "maxW": 3430,
+      "text": "4 · IJsblauw & zachtroze",
+      "w": 240,
+      "x": 0,
+      "y": 6400,
+      "page": "eindscherm"
+    },
+    "row5": {
+      "kind": "title1",
+      "maxW": 3430,
+      "text": "5 · Avondblauw & zacht goud",
+      "w": 240,
+      "x": 0,
+      "y": 8000,
+      "page": "eindscherm"
+    },
+    "f3host": {
+      "kind": "title1",
+      "text": "3 · Lobby-oranje — Host (groot scherm)",
+      "x": 0,
+      "y": 0,
+      "w": 240,
+      "maxW": 10560,
+      "page": "flow"
+    },
+    "f3desk": {
+      "kind": "title1",
+      "text": "3 · Lobby-oranje — Student (desktop)",
+      "x": 0,
+      "y": 1560,
+      "w": 240,
+      "maxW": 10560,
+      "page": "flow"
+    },
+    "f3phone": {
+      "kind": "title1",
+      "text": "3 · Lobby-oranje — Student (telefoon)",
+      "x": 0,
+      "y": 3020,
+      "w": 240,
+      "maxW": 3210,
+      "page": "flow"
+    },
+    "f4host": {
+      "kind": "title1",
+      "text": "4 · IJsblauw & zachtroze — Host (groot scherm)",
+      "x": 0,
+      "y": 4920,
+      "w": 240,
+      "maxW": 10560,
+      "page": "flow"
+    },
+    "f4desk": {
+      "kind": "title1",
+      "text": "4 · IJsblauw & zachtroze — Student (desktop)",
+      "x": 0,
+      "y": 6480,
+      "w": 240,
+      "maxW": 10560,
+      "page": "flow"
+    },
+    "f4phone": {
+      "kind": "title1",
+      "text": "4 · IJsblauw & zachtroze — Student (telefoon)",
+      "x": 0,
+      "y": 7940,
+      "w": 240,
+      "maxW": 3210,
+      "page": "flow"
+    }
+  },
+  "order": [
+    "Main.dc.html",
+    "OrigineelStudent.dc.html",
+    "OrigineelPhone.dc.html",
+    "Hemel.dc.html",
+    "HemelStudent.dc.html",
+    "HemelPhone.dc.html",
+    "Oceaan.dc.html",
+    "OceaanStudent.dc.html",
+    "OceaanPhone.dc.html",
+    "Lobby.dc.html",
+    "LobbyStudent.dc.html",
+    "LobbyPhone.dc.html",
+    "IJs.dc.html",
+    "IJsStudent.dc.html",
+    "IJsPhone.dc.html",
+    "Avond.dc.html",
+    "AvondStudent.dc.html",
+    "AvondPhone.dc.html",
+    "Oranje-Host-1-Start.dc.html",
+    "Oranje-Host-2-Lobby.dc.html",
+    "Oranje-Host-3-LobbyDicht.dc.html",
+    "Oranje-Host-4-Vraag.dc.html",
+    "Oranje-Host-5-Antwoorden.dc.html",
+    "Oranje-Host-6-Tussenstand.dc.html",
+    "Oranje-Host-7-Eindstand.dc.html",
+    "Oranje-Desktop-1-Start.dc.html",
+    "Oranje-Desktop-2-Code.dc.html",
+    "Oranje-Desktop-3-Naam.dc.html",
+    "Oranje-Desktop-4-Lobby.dc.html",
+    "Oranje-Desktop-5-Vraag.dc.html",
+    "Oranje-Desktop-6-Tussenstand.dc.html",
+    "Oranje-Desktop-7-Eindscherm.dc.html",
+    "Oranje-Telefoon-1-Start.dc.html",
+    "Oranje-Telefoon-2-Code.dc.html",
+    "Oranje-Telefoon-3-Naam.dc.html",
+    "Oranje-Telefoon-4-Lobby.dc.html",
+    "Oranje-Telefoon-5-Vraag.dc.html",
+    "Oranje-Telefoon-6-Tussenstand.dc.html",
+    "Oranje-Telefoon-7-Eindscherm.dc.html",
+    "IJs-Host-1-Start.dc.html",
+    "IJs-Host-2-Lobby.dc.html",
+    "IJs-Host-3-LobbyDicht.dc.html",
+    "IJs-Host-4-Vraag.dc.html",
+    "IJs-Host-5-Antwoorden.dc.html",
+    "IJs-Host-6-Tussenstand.dc.html",
+    "IJs-Host-7-Eindstand.dc.html",
+    "IJs-Desktop-1-Start.dc.html",
+    "IJs-Desktop-2-Code.dc.html",
+    "IJs-Desktop-3-Naam.dc.html",
+    "IJs-Desktop-4-Lobby.dc.html",
+    "IJs-Desktop-5-Vraag.dc.html",
+    "IJs-Desktop-6-Tussenstand.dc.html",
+    "IJs-Desktop-7-Eindscherm.dc.html",
+    "IJs-Telefoon-1-Start.dc.html",
+    "IJs-Telefoon-2-Code.dc.html",
+    "IJs-Telefoon-3-Naam.dc.html",
+    "IJs-Telefoon-4-Lobby.dc.html",
+    "IJs-Telefoon-5-Vraag.dc.html",
+    "IJs-Telefoon-6-Tussenstand.dc.html",
+    "IJs-Telefoon-7-Eindscherm.dc.html"
+  ],
+  "pages": [
+    {
+      "id": "eindscherm",
+      "name": "Eindscherm-varianten"
+    },
+    {
+      "id": "flow",
+      "name": "Volledige flow · 3 & 4"
+    }
+  ]
+}

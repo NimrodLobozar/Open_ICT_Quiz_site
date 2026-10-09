@@ -6,9 +6,8 @@ export default defineConfig({
   server: {
     host: true,
     port: 5173,
-    watch: {
-      usePolling: process.env.VITE_USE_POLLING === 'true',
-    },
+    // In Docker op Windows komen bestandswijzigingen niet door; polling vangt ze toch op.
+    watch: { usePolling: process.env.VITE_USE_POLLING === 'true', interval: 300 },
     proxy: {
       '/api': process.env.API_PROXY_TARGET || 'http://localhost:3000',
     },

@@ -1,5 +1,5 @@
 import { Link, Navigate, Route, Routes } from "react-router-dom";
-import EndScreenPage from "./pages/EndScreenPage/EndScreenPage.jsx";
+import EndScreenPage from "./pages/EndScreenPage_Host/EndScreenPage.jsx";
 import JoinPage from "./pages/JoinPage/JoinPage.jsx";
 import LobbyHost from "./pages/LobbyHost.jsx";
 import LobbyPage from "./pages/Lobby/LobbyPage.jsx";

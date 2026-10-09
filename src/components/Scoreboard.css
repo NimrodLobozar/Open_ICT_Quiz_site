@@ -1,0 +1,54 @@
+/* Twee kolommen naast elkaar; minmax(0, 1fr) voorkomt dat een lange naam een kolom breder maakt. */
+.scoreboard {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 20px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Zelfde puntvorm als het podium, maar kleiner en met een dunnere rand. */
+.scoreboard__row {
+  padding: 2px;
+  background: var(--quiz-border);
+  clip-path: polygon(20px 0, calc(100% - 20px) 0, 100% 50%, calc(100% - 20px) 100%, 20px 100%, 0 50%);
+}
+
+.scoreboard__bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 54px;
+  padding: 0 36px;
+  background: var(--quiz-surface);
+  font-size: 20px;
+  clip-path: polygon(19px 0, calc(100% - 19px) 0, 100% 50%, calc(100% - 19px) 100%, 19px 100%, 0 50%);
+}
+
+/* Vaste breedte, zodat de namen in beide kolommen netjes onder elkaar beginnen. */
+.scoreboard__rank {
+  width: 28px;
+  font-family: 'Anton', sans-serif;
+  color: var(--quiz-primary);
+}
+
+.scoreboard__name {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.scoreboard__score {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Op een smal scherm is er geen ruimte voor twee kolommen. */
+@media (max-width: 640px) {
+  .scoreboard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

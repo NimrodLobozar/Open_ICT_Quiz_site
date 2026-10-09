@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Eindstand quizshow</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Rubik:wght@500;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#3A6BAE}
+a{color:#B8EBDA}a:hover{color:#FFFFFF}
+</style>
+</helmet>
+<div style="position: relative; overflow: hidden; min-height: 100vh; background: #3A6BAE; color: #FFFFFF; font-family: 'Rubik', sans-serif; padding: 32px 24px 64px; box-sizing: border-box">
+
+<svg aria-hidden="true" width="1400" height="1400" viewBox="0 0 100 100" style="position: absolute; left: 50%; top: -560px; margin-left: -700px; opacity: 0.18; pointer-events: none">
+<circle cx="50" cy="50" r="48" fill="none" stroke="#A9C6EE" stroke-width="0.3"></circle>
+<circle cx="50" cy="50" r="38" fill="none" stroke="#A9C6EE" stroke-width="0.3"></circle>
+<circle cx="50" cy="50" r="28" fill="none" stroke="#A9C6EE" stroke-width="0.3"></circle>
+<circle cx="50" cy="50" r="18" fill="none" stroke="#A9C6EE" stroke-width="0.3"></circle>
+</svg>
+
+<div style="position: relative; max-width: 1100px; margin: 0 auto; display: flex; flex-direction: column; align-items: center">
+<header style="width: 100%; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; font-weight: 700; font-size: 18px; color: #E3EDFA; letter-spacing: 0.06em; text-transform: uppercase">
+<span>Open ICT Quiz</span>
+<span>Code 482913</span>
+</header>
+
+<h1 style="margin: 40px 0 0; font-family: 'Anton', sans-serif; font-weight: 400; font-size: clamp(64px, 8vw, 112px); line-height: 1; color: #B8EBDA; letter-spacing: 0.04em">EINDSTAND</h1>
+
+<ol style="list-style: none; width: 100%; margin: 40px 0 0; padding: 0; display: flex; flex-direction: column; align-items: center; gap: 16px">
+<sc-for list="{{top}}" as="p" hint-placeholder-count="3">
+<li style="width: {{p.width}}; max-width: 100%; background: {{p.edge}}; padding: 4px; clip-path: polygon(36px 0, calc(100% - 36px) 0, 100% 50%, calc(100% - 36px) 100%, 36px 100%, 0 50%)">
+<div style="background: {{p.fill}}; color: {{p.fg}}; min-height: {{p.h}}; display: flex; align-items: center; gap: 24px; padding: 0 64px; clip-path: polygon(34px 0, calc(100% - 34px) 0, 100% 50%, calc(100% - 34px) 100%, 34px 100%, 0 50%)">
+<span style="font-family: 'Anton', sans-serif; font-size: {{p.rankSize}}; line-height: 1">{{p.rank}}</span>
+<span style="flex: 1; min-width: 0; font-weight: 800; font-size: {{p.nameSize}}; overflow-wrap: anywhere">{{p.nickname}}</span>
+<span style="font-weight: 700; font-size: 26px; font-variant-numeric: tabular-nums">{{p.scoreText}}</span>
+</div>
+</li>
+</sc-for>
+</ol>
+
+<ol style="list-style: none; width: 100%; margin: 40px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 20px">
+<sc-for list="{{rest}}" as="r" hint-placeholder-count="7">
+<li style="background: #6F96CF; padding: 2px; clip-path: polygon(20px 0, calc(100% - 20px) 0, 100% 50%, calc(100% - 20px) 100%, 20px 100%, 0 50%)">
+<div style="background: #4878BA; min-height: 56px; display: flex; align-items: center; gap: 16px; padding: 0 36px; font-size: 21px; clip-path: polygon(19px 0, calc(100% - 19px) 0, 100% 50%, calc(100% - 19px) 100%, 19px 100%, 0 50%)">
+<span style="font-family: 'Anton', sans-serif; color: #B8EBDA; width: 28px">{{r.rank}}</span>
+<span style="flex: 1; min-width: 0; font-weight: 700; overflow-wrap: anywhere">{{r.nickname}}</span>
+<span style="font-weight: 500; font-variant-numeric: tabular-nums">{{r.scoreText}}</span>
+</div>
+</li>
+</sc-for>
+</ol>
+
+<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 16px; margin-top: 48px">
+<button type="button" style="min-height: 58px; padding: 0 36px; border: 0; border-radius: 999px; background: {{accent}}; color: #1D3A63; font-family: 'Rubik', sans-serif; font-weight: 800; font-size: 20px; cursor: pointer">Nog een ronde</button>
+<button type="button" style="min-height: 58px; padding: 0 36px; border: 2px solid #E3EDFA; border-radius: 999px; background: transparent; color: #FFFFFF; font-family: 'Rubik', sans-serif; font-weight: 700; font-size: 20px; cursor: pointer">Terug naar start</button>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#A8E3CF","options":["#A8E3CF","#B8EBDA"]},"$preview":{"width":1440,"height":1240}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#A8E3CF';
+    const results = [
+      { nickname: 'Sanne', score: 7420 }, { nickname: 'Daan', score: 5310 }, { nickname: 'Fatima', score: 6150 },
+      { nickname: 'Lucas', score: 2890 }, { nickname: 'Noah', score: 4480 }, { nickname: 'Mo', score: 6150 },
+      { nickname: 'Emma', score: 3720 }, { nickname: 'quizkoning', score: 1540 }, { nickname: 'Yara', score: 5880 },
+      { nickname: 'Tim_04', score: 0 }
+    ];
+    const fmt = (n) => n.toLocaleString('nl-NL');
+    const sorted = results.slice().sort((a, b) => b.score - a.score || a.nickname.localeCompare(b.nickname));
+    const ranked = sorted.map((r) => ({ ...r, rank: sorted.findIndex((o) => o.score === r.score) + 1, scoreText: fmt(r.score) }));
+    const look = (rank) => rank === 1
+      ? { width: '100%', h: '112px', edge: accent, fill: accent, fg: '#1D3A63', rankSize: '72px', nameSize: '48px' }
+      : { width: '86%', h: '84px', edge: accent, fill: '#4878BA', fg: '#FFFFFF', rankSize: '52px', nameSize: '34px' };
+    const top = ranked.slice(0, 3).map((p) => ({ ...p, ...look(p.rank) }));
+    return { accent, top, rest: ranked.slice(3) };
+  }
+}
+</script>
+</body>
+</html>

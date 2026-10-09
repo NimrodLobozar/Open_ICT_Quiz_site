@@ -1,7 +1,0 @@
-/* Het eindscherm vult het hele scherm. */
-.end-screen {
-  min-height: 100vh;
-  min-height: 100dvh; /* dvh = juiste hoogte op telefoons, ook met de adresbalk in beeld */
-  background: linear-gradient(160deg, #2b1055, #7597de);
-  color: #fff;
-}

@@ -95,7 +95,7 @@ export default function PlayerGamePage() {
     try {
       await api(`/games/${code}/players/me`, { method: "DELETE" });
       socket.disconnect();
-      navigate("/join");
+      navigate("/");
     } catch {
       setLeaveError(
         "Verlaten lukte niet. Controleer je verbinding en probeer het opnieuw.",

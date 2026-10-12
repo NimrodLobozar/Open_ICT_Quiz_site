@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import QuizHeader from '../../components/QuizHeader.jsx'
 import Scoreboard from '../../components/Scoreboard.jsx'
 import { gameResults, gameSessions } from '../../data/dummyDatabase.js'
@@ -118,6 +118,7 @@ export default function EndScreenPagePlayer() {
   const session = gameSessions[0]
   const ranking = getRanking(gameResults.map((r) => ({ ...r, isVerified: r.userId !== null })))
   const result = buildPlayerResult(ranking, DEMO_PLAYER_ID, session.totalQuestions)
+  const navigate = useNavigate()
 
-  return <PlayerEndScreen code={session.code} ranking={ranking} result={result} onLeave={() => {}} />
+  return <PlayerEndScreen code={session.code} ranking={ranking} result={result} onLeave={() => navigate('/')} />
 }

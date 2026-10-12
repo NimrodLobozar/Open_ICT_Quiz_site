@@ -10,7 +10,9 @@ export default function LobbyPlayer() {
       <button className="accountButton">test</button>
     </div>
     <div className="background">
-      <h1>background lobby player</h1>
+      <h1 className="binnenKomst">JE BENT BINNEN,
+        NAAM
+      </h1>
     </div>
     </>
   );

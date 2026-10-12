@@ -2,6 +2,7 @@ import { Alert, Button, Card, Form, Input, Slider, Typography } from 'antd'
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import './JoinPage.css'
+import { socket } from '../../socket.js'
 
 const skillDefinitions = [
   { label: 'SD', color: '#f59e0b' },
@@ -22,36 +23,17 @@ export default function JoinPage() {
   const isInvalidCode = code && !/^\d{6}$/.test(code)
   const [codeStatus, setCodeStatus] = useState(code ? 'checking' : 'idle')
 
-  // Check when someone presses join on the namepage, send data to backend endpoint
-  const handleJoin = async (nickname) => {
-    if (!code) return
-    const joinData = {
-      nickname,
-      skills: skills.reduce((acc, skill) => {
-        acc[skill.label] = skill.value || 0
-        return acc
-      }, {}),
-    }
-
+  useEffect(() => {
     try {
-      const response = await fetch(`/api/quiz/${code}/join`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(joinData),
-      })
+      const session = JSON.parse(localStorage.getItem('quizSession') || 'null')
 
-      if (!response.ok) {
-        throw new Error(`Failed to join quiz with status ${response.status}`)
+      if (session?.code && session?.playerId) {
+        navigate(`/lobby/${session.code}`, { replace: true })
       }
-
-      const data = await response.json()
-      console.log('Joined quiz:', data)
-    } catch (error) {
-      console.error('Error joining quiz:', error)
+    } catch {
+      localStorage.removeItem('quizSession')
     }
-  }
+  }, [navigate])
 
   useEffect(() => {
     if (isInvalidCode) {
@@ -249,6 +231,7 @@ function SkillSlider({ label, color, value, onChange }) {
 
 function NicknameStep({ code, quiz }) {
   const [form] = Form.useForm()
+  const navigate = useNavigate()
   const [joined, setJoined] = useState(false)
   const [skillValues, setSkillValues] = useState(
     () => Object.fromEntries(skillDefinitions.map(({ label }) => [label, 5])),
@@ -259,20 +242,41 @@ function NicknameStep({ code, quiz }) {
     setJoinError('')
 
     try {
-      const response = await fetch(`/api/code/${code}/join`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nickname, skills: skillValues }),
+      const joinPlayer = () => new Promise((resolve, reject) => {
+        socket.emit('lobby:join', {
+          code,
+          nickname,
+          skills: skillValues,
+          role: 'player',
+        }, (result) => {
+          if (!result?.ok) {
+            reject(new Error(result?.error || 'Aanmelden is mislukt.'))
+            return
+          }
+
+          resolve(result.player)
+        })
       })
 
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}))
-        throw new Error(data.error || 'Aanmelden is mislukt.')
+      if (socket.connected) {
+        socket.disconnect()
       }
+      socket.connect()
+      const connectPromise = new Promise((resolve, reject) => {
+        socket.once('connect', resolve)
+        socket.once('connect_error', reject)
+      })
+      await connectPromise
+      const player = await joinPlayer()
 
-      setJoined(nickname)
+      localStorage.setItem('quizSession', JSON.stringify({
+        code,
+        playerId: player.id,
+        nickname: player.nickname,
+      }))
+      navigate(`/lobby/${code}`)
     } catch (error) {
-      setJoinError(error.message)
+      setJoinError(error.message || 'Aanmelden is mislukt.')
     }
   }
 

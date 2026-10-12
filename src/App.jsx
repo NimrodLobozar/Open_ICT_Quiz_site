@@ -4,6 +4,7 @@ import JoinPage from "./pages/JoinPage/JoinPage.jsx";
 import LobbyHost from "./pages/LobbyHost.jsx";
 import LobbyPage from "./pages/Lobby/LobbyPage.jsx";
 import LobbyPlayer from "./pages/Lobby/LobbyPlayer.jsx";
+import LobbyPlayerPage from "./pages/Lobby/LobbyPlayerPage.jsx";
 
 export default function App() {
   return (
@@ -23,7 +24,8 @@ export default function App() {
         />
         <Route path="/lobbyplayer" element={<LobbyPlayer />} />
         <Route path="/lobbyhost" element={<LobbyHost />} />
-        <Route path="/lobby" element={<LobbyPage />} />
+        <Route path="/lobby/host/:code" element={<LobbyPage />} />
+        <Route path="/lobby/:code" element={<LobbyPlayerPage />} />
         <Route path="/join" element={<JoinPage />} />
         <Route path="/join/:code" element={<JoinPage />} />
         <Route path="/end" element={<EndScreenPage />} />

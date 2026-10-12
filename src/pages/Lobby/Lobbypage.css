@@ -51,7 +51,18 @@
   color: #ea580c;
 }
 
-/* Het middelste vak ("Wachten op deelnemers") */
+/* Deelnemers en het middelste vak ("Wachten op deelnemers") */
+.lobby-participants {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-content: center;
+  gap: 18px;
+  width: min(1100px, calc(100vw - 40px));
+  min-height: 60vh;
+  align-items: center;
+}
+
 .lobby-status-box {
   background-color: #f97316;
   color: white;
@@ -62,12 +73,136 @@
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
 }
 
+.lobby-player-card {
+  position: relative;
+  background-color: #fff;
+  color: #9a3412;
+  flex: 0 0 150px;
+  width: 150px;
+  min-width: 0;
+  padding: 18px 22px;
+  border: 2px solid #fdba74;
+  border-radius: 12px;
+  box-shadow: 0 5px 0 #fb923c;
+  text-align: center;
+  cursor: default;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+  height: 8vh;
+}
+
+.lobby-player-card:hover,
+.lobby-player-card:focus-within {
+  transform: translateY(-5px);
+  box-shadow: 0 9px 0 #fb923c;
+}
+
+.lobby-player-name {
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.lobby-player-tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 12px);
+  width: 130px;
+  padding: 12px 16px;
+  border: 1px solid #fed7aa;
+  border-radius: 10px;
+  background-color: #fff;
+  color: #7c2d12;
+  font-size: 0.9rem;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 8px) scale(0.95);
+  transition: opacity 180ms ease, transform 180ms ease;
+  box-shadow: 0 10px 24px rgba(124, 45, 18, 0.2);
+  white-space: nowrap;
+  z-index: 100;
+}
+
+.lobby-player-tooltip::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  border: 7px solid transparent;
+  border-top-color: #fff;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%);
+  transition: opacity 180ms ease;
+  z-index: 100;
+}
+
+.lobby-skill-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  line-height: 1.5;
+}
+
+.skill-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 52px;
+  font-weight: 600;
+}
+
+.skill-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  flex: 0 0 9px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(124, 45, 18, 0.08);
+}
+
+.lobby-skill-row strong {
+  color: #ea580c;
+}
+
+.lobby-player-card:hover .lobby-player-tooltip,
+.lobby-player-card:focus-visible .lobby-player-tooltip {
+  opacity: 1;
+  transform: translate(-50%, 0) scale(1);
+}
+
+@media (max-width: 560px) {
+  .lobby-participants { gap: 12px; }
+
+  .lobby-player-card {
+    flex-basis: 120px;
+    width: 120px;
+    padding: 15px 10px;
+  }
+}
+
+@media (max-width: 380px) {
+  .lobby-player-card { flex-basis: 130px; width: 130px; }
+}
+
 /* De knop container rechtsonder */
 .lobby-footer {
   width: 100%;
   display: flex;
+  gap: 12px;
   justify-content: flex-end;
   padding-bottom: 20px;
+}
+
+/* Alleen de host kan de lobby vergrendelen. */
+.lobby-lock-btn {
+  background-color: #fff7ed;
+  color: #9a3412;
+  border: 2px solid #fdba74;
+  padding: 10px 18px;
+  border-radius: 5px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
 }
 
 /* De Start-knop */

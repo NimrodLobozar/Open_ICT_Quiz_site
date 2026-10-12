@@ -10,6 +10,10 @@ export default defineConfig({
     watch: { usePolling: process.env.VITE_USE_POLLING === 'true', interval: 300 },
     proxy: {
       '/api': process.env.API_PROXY_TARGET || 'http://localhost:3000',
+      '/socket.io': {
+        target: process.env.API_PROXY_TARGET || 'http://localhost:3000',
+        ws: true,
+      },
     },
   },
 })

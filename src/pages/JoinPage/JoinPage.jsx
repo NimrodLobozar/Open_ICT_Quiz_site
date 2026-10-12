@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import './JoinPage.css'
 
-const skills = [
+const skillDefinitions = [
   { label: 'SD', color: '#f59e0b' },
   { label: 'AI', color: '#14b8a6' },
   { label: 'TI', color: '#facc15' },
@@ -12,19 +12,46 @@ const skills = [
   { label: 'BI', color: '#3b82f6' },
 ]
 
-const demoGame = {
-  quizTitle: 'Open ICT Quiz',
-  locked: false,
-}
-
 export default function JoinPage() {
   const { code } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
   const [locationNotice, setLocationNotice] = useState('')
   const [isNoticeClosing, setIsNoticeClosing] = useState(false)
+  const [quiz, setQuiz] = useState(null)
   const isInvalidCode = code && !/^\d{6}$/.test(code)
   const [codeStatus, setCodeStatus] = useState(code ? 'checking' : 'idle')
+
+  // Check when someone presses join on the namepage, send data to backend endpoint
+  const handleJoin = async (nickname) => {
+    if (!code) return
+    const joinData = {
+      nickname,
+      skills: skills.reduce((acc, skill) => {
+        acc[skill.label] = skill.value || 0
+        return acc
+      }, {}),
+    }
+
+    try {
+      const response = await fetch(`/api/quiz/${code}/join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(joinData),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to join quiz with status ${response.status}`)
+      }
+
+      const data = await response.json()
+      console.log('Joined quiz:', data)
+    } catch (error) {
+      console.error('Error joining quiz:', error)
+    }
+  }
 
   useEffect(() => {
     if (isInvalidCode) {
@@ -60,6 +87,7 @@ export default function JoinPage() {
           return
         }
 
+        setQuiz(data.quiz)
         setCodeStatus('valid')
       } catch (error) {
         if (error.name === 'AbortError') return
@@ -124,7 +152,9 @@ export default function JoinPage() {
           description={locationNotice}
         />
       )}
-      {code && !isInvalidCode && codeStatus === 'valid' ? <NicknameStep key={code} code={code} /> : <CodeStep />}
+      {code && !isInvalidCode && codeStatus === 'valid' && quiz ? (
+        <NicknameStep key={code} code={code} quiz={quiz} />
+      ) : <CodeStep />}
     </div>
   )
 }
@@ -204,27 +234,46 @@ function CodeForm() {
   )
 }
 
-function SkillSlider({ label, color }) {
-  const [value, setValue] = useState(5)
-
+function SkillSlider({ label, color, value, onChange }) {
   return (
     <div className="skill-slider">
       <span className="skill-label">
         <span className="skill-dot" style={{ backgroundColor: color }} aria-hidden="true" />
         {label}
       </span>
-      <Slider value={value} onChange={setValue} min={0} max={5} style={{ flex: 1 }} />
+      <Slider value={value} onChange={onChange} min={0} max={5} style={{ flex: 1 }} />
       <strong>{value}</strong>
     </div>
   )
 }
 
-function NicknameStep({ code }) {
+function NicknameStep({ code, quiz }) {
   const [form] = Form.useForm()
   const [joined, setJoined] = useState(false)
+  const [skillValues, setSkillValues] = useState(
+    () => Object.fromEntries(skillDefinitions.map(({ label }) => [label, 5])),
+  )
+  const [joinError, setJoinError] = useState('')
 
-  function join({ nickname }) {
-    setJoined(nickname)
+  async function join({ nickname }) {
+    setJoinError('')
+
+    try {
+      const response = await fetch(`/api/code/${code}/join`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nickname, skills: skillValues }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}))
+        throw new Error(data.error || 'Aanmelden is mislukt.')
+      }
+
+      setJoined(nickname)
+    } catch (error) {
+      setJoinError(error.message)
+    }
   }
 
   if (joined) {
@@ -233,7 +282,7 @@ function NicknameStep({ code }) {
         type="success"
         showIcon
         message={`Welkom, ${joined}!`}
-        description={`Je bent lokaal toegevoegd aan ${demoGame.quizTitle} (${code}).`}
+        description={`Je bent lokaal toegevoegd aan ${quiz.title} (${code}).`}
       />
     )
   }
@@ -243,7 +292,7 @@ function NicknameStep({ code }) {
       <Card className="join-card">
         <header className="join-header">
           <Typography.Text type="secondary" className="join-header-text">
-            {demoGame.quizTitle}
+            {quiz.title}
           </Typography.Text>
           <Typography.Text type="secondary" className="join-header-text">
             {code}
@@ -257,9 +306,10 @@ function NicknameStep({ code }) {
             Vul je gegevens in
           </Typography.Title>
         </div>
-        {demoGame.locked && (
+        {quiz.locked && (
           <Alert type="warning" showIcon message="Deze lobby is gesloten." style={{ marginBottom: 16 }} />
         )}
+        {joinError && <Alert type="error" showIcon message={joinError} style={{ marginBottom: 16 }} />}
         <Form form={form} layout="vertical" onFinish={join}>
           <Form.Item
             label="Gebruikersnaam:"
@@ -271,7 +321,14 @@ function NicknameStep({ code }) {
           </Form.Item>
           <Form.Item label="Vul hier jouw vaardigheden in: (0-5)" required style={{ marginBottom: '2.5vh' }}>
             <div className="skills-list">
-              {skills.map((skill) => <SkillSlider key={skill.label} {...skill} />)}
+              {skillDefinitions.map((skill) => (
+                <SkillSlider
+                  key={skill.label}
+                  {...skill}
+                  value={skillValues[skill.label]}
+                  onChange={(value) => setSkillValues((current) => ({ ...current, [skill.label]: value }))}
+                />
+              ))}
             </div>
           </Form.Item>
           <Button type="primary" htmlType="submit" size="large" block>

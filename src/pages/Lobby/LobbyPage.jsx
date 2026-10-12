@@ -1,3 +1,5 @@
+import Slotknop from "./../../components/LockButton.jsx";
+      <Slotknop />
 export default function LobbyPage(){
     return (
     <div style={{ 

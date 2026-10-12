@@ -1,20 +1,19 @@
 import React from "react";
+import './LobbyPlayer.css';
 
 export default function LobbyPlayer() {
   return (
-    <div
-      style={{
-        backgroundColor: "#ffedd5" /* Mooie zachte lichtoranje achtergrond */,
-        minHeight: "100vh",
-        color: "#7c2d12" /* Donkeroranje/bruine tekst voor goed contrast */,
-        fontFamily: "Arial, sans-serif",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: "20px",
-        boxSizing: "border-box",
-      }}
-    ></div>
+    <>
+    <div className="navBalk">
+      <h2 className="navBalkText">OPEN ICT QUIZ</h2>
+      <h2 className="joinCode">123456</h2>
+      <button className="accountButton">test</button>
+    </div>
+    <div className="background">
+      <h1 className="binnenKomst">JE BENT BINNEN,
+        NAAM
+      </h1>
+    </div>
+    </>
   );
 }

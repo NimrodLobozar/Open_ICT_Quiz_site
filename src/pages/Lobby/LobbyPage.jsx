@@ -7,8 +7,12 @@ export default function LobbyPage() {
   return (
     <div className="lobby-container">
       {/* Terug naar home knop linksboven */}
-      <div style={{ width: "100%", display: "flex", justifyContent: "flex-start" }}>
-        <Link to="/" className="lobby-home-btn">
+     <div style={{ width: "100%", display: "flex", justifyContent: "flex-start", paddingBottom: "10px" }}>
+  <Link 
+    to="/" 
+    className="lobby-start-btn" 
+    style={{ textDecoration: "none", display: "inline-block" }}
+  >
           Terug naar Home
         </Link>
       </div>

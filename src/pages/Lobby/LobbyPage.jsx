@@ -1,11 +1,18 @@
-import { useNavigate } from 'react-router-dom';
-import './LobbyPage.css'; // Importeer je stijlen hier
+import { useNavigate, Link } from 'react-router-dom';
+import './LobbyPage.css';
 
 export default function LobbyPage() {
   const navigate = useNavigate();
 
   return (
     <div className="lobby-container">
+      {/* Terug naar home knop linksboven */}
+      <div style={{ width: "100%", display: "flex", justifyContent: "flex-start" }}>
+        <Link to="/" className="lobby-home-btn">
+          Terug naar Home
+        </Link>
+      </div>
+
       {/* Bovenste balk met instructie en de PIN */}
       <div className="lobby-header-box">
         <div className="lobby-instruction">

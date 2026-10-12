@@ -15,7 +15,7 @@ export default function App() {
             <>
               <h1>Welcome to the Quiz</h1>
               <Link to="/end">Naar het eindscherm (test)</Link>
-              <a href="/lobbyhost">
+              <a href="/lobby">
                 <button>Kom maar hier heen</button>
               </a>
             </>

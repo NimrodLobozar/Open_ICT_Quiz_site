@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Button } from "antd";
 
-function slotknop() {
-  const [isvergrendeld, setIsvergrendeld] = useState(false);
+function LockButton() {
+  const [isLocked, setIsLocked] = useState(false);
 
-  return <Button>{String(isvergrendeld)}</Button>
+  return <Button onClick={() => setIsLocked(!isLocked)}>{String(isLocked)}</Button>
 }
-export default slotknop;
+export default LockButton;

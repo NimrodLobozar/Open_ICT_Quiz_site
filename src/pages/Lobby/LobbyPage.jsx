@@ -1,18 +1,20 @@
-import { useNavigate, Link } from 'react-router-dom';
-import './LobbyPage.css';
+import { useNavigate, Link } from "react-router-dom";
+import "./LobbyPage.css";
+import LockButton from "./../../components/LockButton.jsx";
 
-import Slotknop from "./../../components/LockButton.jsx";
-      <Slotknop />
 export default function LobbyPage() {
   const navigate = useNavigate();
 
   return (
     <div className="lobby-container">
       {/* Terug naar home knop linksboven */}
-      <div style={{ width: "100%", display: "flex", justifyContent: "flex-start" }}>
-        <Link to="/" className="lobby-home-btn">
+      <div
+        style={{ width: "100%", display: "flex", justifyContent: "flex-start" }}
+      >
+        <Link to="/" className="lobby-start-btn">
           Terug naar Home
         </Link>
+        <LockButton />
       </div>
 
       {/* Bovenste balk met instructie en de PIN */}
@@ -27,16 +29,11 @@ export default function LobbyPage() {
       </div>
 
       {/* Midden: Wachten op deelnemers */}
-      <div className="lobby-status-box">
-        Wachten op deelnemers
-      </div>
+      <div className="lobby-status-box">Wachten op deelnemers</div>
 
       {/* Rechtsonder knop */}
       <div className="lobby-footer">
-        <button 
-          onClick={() => navigate('/end')}
-          className="lobby-start-btn"
-        >
+        <button onClick={() => navigate("/end")} className="lobby-start-btn">
           Start
         </button>
       </div>

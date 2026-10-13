@@ -1,0 +1,314 @@
+/* Zelfde oranje kleuren als het eindscherm van de host (design "Oranje", .claude/designs/eindscherm-quizshow).
+   Alle tekstkleuren halen WCAG AA (minstens 4,5:1) op hun achtergrond. */
+.player-end {
+  --quiz-bg: #ffedd5;
+  --quiz-surface: #fff7ed;
+  --quiz-border: #fdba74;
+  --quiz-accent: #fdba74;
+  --quiz-primary: #c2410c;
+  --quiz-muted: #9a4a22;
+  --quiz-text: #7c2d12;
+
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh; /* dvh = juiste hoogte op telefoons, ook met de adresbalk in beeld */
+  background: var(--quiz-bg);
+  color: var(--quiz-text);
+  font-family: 'Rubik', sans-serif;
+}
+
+/* Desktop: links jij (+ knoppen eronder), rechts de eindstand over de volle hoogte. */
+.player-end__main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-areas:
+    'me standings'
+    'actions standings';
+  grid-template-rows: auto 1fr;
+  gap: 24px 56px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 40px 32px 56px;
+}
+
+.player-end__me {
+  grid-area: me;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  min-width: 0;
+  text-align: center;
+}
+
+.player-end__standings {
+  grid-area: standings;
+  min-width: 0;
+  /* Hoogte van de scrollbare lijst: het scherm min header, kop en padding. */
+  --scoreboard-max-height: calc(100dvh - 240px);
+}
+
+.player-end__actions {
+  grid-area: actions;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  justify-content: center;
+  gap: 12px;
+}
+
+/* De kop is één zin, maar ziet eruit als een titel + een grote balk met je plek. */
+.player-end__title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  margin: 0;
+  font-weight: 400;
+  color: inherit;
+}
+
+.player-end__intro {
+  max-width: 100%;
+  font-family: 'Anton', sans-serif;
+  font-size: 48px;
+  line-height: 1.05;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--quiz-primary);
+  overflow-wrap: anywhere; /* lange namen breken af in plaats van uit beeld te lopen */
+}
+
+.player-end__banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 200px;
+  background: var(--quiz-accent);
+  color: var(--quiz-text);
+  clip-path: polygon(48px 0, calc(100% - 48px) 0, 100% 50%, calc(100% - 48px) 100%, 48px 100%, 0 50%);
+}
+
+.player-end__place {
+  font-family: 'Anton', sans-serif;
+  font-size: 140px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.player-end__count {
+  font-size: 20px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+/* Drie kaarten naast elkaar. <dl>: een label (dt) met een waarde (dd), zo leest een schermlezer ze ook. */
+.player-end__cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+  margin: 0;
+}
+
+.player-end__card {
+  display: flex;
+  flex-direction: column;
+  padding: 14px;
+  border: 2px solid var(--quiz-border);
+  border-radius: 12px;
+  background: var(--quiz-surface);
+  text-align: left;
+}
+
+.player-end__card dt {
+  font-size: 14px;
+  color: var(--quiz-muted);
+}
+
+.player-end__card dd {
+  margin: 0;
+  font-family: 'Anton', sans-serif;
+  font-size: 34px;
+  font-variant-numeric: tabular-nums;
+}
+
+.player-end__card--win {
+  border-color: var(--quiz-primary);
+  background: var(--quiz-accent);
+}
+
+.player-end__card--win dt {
+  color: var(--quiz-text);
+}
+
+.player-end__subtitle {
+  margin: 0 0 12px;
+  font-family: 'Anton', sans-serif;
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: 0.04em;
+  color: var(--quiz-primary);
+}
+
+.player-end__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 54px;
+  padding: 0 32px;
+  border: 2px solid var(--quiz-muted);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--quiz-text);
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  text-align: center; /* lange tekst die afbreekt, blijft gecentreerd */
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.player-end__button--primary {
+  border-color: var(--quiz-accent);
+  background: var(--quiz-accent);
+  font-weight: 800;
+}
+
+/* antd's reset kleurt links blauw bij hover; hier houden we de eigen kleur. */
+.player-end__button:hover {
+  color: var(--quiz-text);
+  filter: brightness(0.95);
+}
+
+.player-end__button:focus-visible {
+  outline: 3px solid var(--quiz-primary);
+  outline-offset: 3px;
+}
+
+.player-end__button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+/* Op desktop staat de gastmelding ónder de knoppen, zoals in het design. */
+.player-end__guest-note {
+  order: 1;
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 15px;
+  color: var(--quiz-muted);
+  text-align: center;
+}
+
+.player-end__error {
+  order: 2;
+  flex-basis: 100%;
+  margin: 0;
+  font-weight: 700;
+  text-align: center;
+}
+
+.player-end__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Tablet en kleiner: alles onder elkaar. Volgorde: jij, eindstand, knoppen. */
+@media (max-width: 900px) {
+  .player-end__main {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      'me'
+      'standings'
+      'actions';
+    grid-template-rows: auto;
+    gap: 24px;
+  }
+
+  .player-end__standings {
+    --scoreboard-max-height: 60dvh;
+  }
+}
+
+/* Telefoon: kleinere letters, kaarten onder elkaar, knoppen over de volle breedte. */
+@media (max-width: 640px) {
+  .player-end__main {
+    padding: 24px 16px 28px;
+  }
+
+  .player-end__me,
+  .player-end__title {
+    gap: 14px;
+  }
+
+  .player-end__intro {
+    font-size: 34px;
+  }
+
+  .player-end__banner {
+    min-height: 150px;
+    clip-path: polygon(36px 0, calc(100% - 36px) 0, 100% 50%, calc(100% - 36px) 100%, 36px 100%, 0 50%);
+  }
+
+  .player-end__place {
+    font-size: 100px;
+  }
+
+  .player-end__count {
+    font-size: 16px;
+  }
+
+  /* Kaarten onder elkaar, als rij: label links, getal rechts. Dat scheelt hoogte. */
+  .player-end__cards {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .player-end__card {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 14px;
+  }
+
+  .player-end__card dt {
+    font-size: 15px;
+  }
+
+  .player-end__card dd {
+    font-size: 26px;
+  }
+
+  .player-end__subtitle {
+    font-size: 26px;
+  }
+
+  .player-end__actions {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 10px;
+  }
+
+  .player-end__button {
+    width: 100%;
+  }
+
+  /* Op de telefoon staat de melding boven de knoppen, zoals in het design. */
+  .player-end__guest-note {
+    order: -1;
+    font-size: 14px;
+  }
+}

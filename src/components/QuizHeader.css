@@ -1,0 +1,108 @@
+.quiz-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 24px;
+  padding: 14px 32px;
+  background: var(--quiz-surface);
+  border-bottom: 2px solid var(--quiz-border);
+}
+
+.quiz-header__logo {
+  font-family: 'Anton', sans-serif;
+  font-size: 26px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: var(--quiz-primary);
+  text-decoration: none;
+}
+
+.quiz-header__right {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.quiz-header__code {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 18px;
+  border: 2px solid var(--quiz-border);
+  border-radius: 999px;
+  background: var(--quiz-bg);
+  color: var(--quiz-muted);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.quiz-header__code strong {
+  color: var(--quiz-text);
+  font-size: 20px;
+  letter-spacing: 0.12em;
+}
+
+.quiz-header__account {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px; /* minimaal 44px: goed te raken met een vinger */
+  padding: 0 18px;
+  border: 2px solid var(--quiz-muted);
+  border-radius: 999px;
+  color: var(--quiz-text);
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* antd's reset kleurt links blauw bij hover; hier houden we de eigen kleur. */
+.quiz-header__logo:hover,
+.quiz-header__account:hover {
+  color: var(--quiz-text);
+}
+
+.quiz-header__logo:focus-visible,
+.quiz-header__account:focus-visible {
+  outline: 3px solid var(--quiz-primary);
+  outline-offset: 3px;
+}
+
+/* Telefoon: kleiner, het woord "Code" alleen voor schermlezers, en van "Inloggen" alleen het icoon. */
+@media (max-width: 640px) {
+  .quiz-header {
+    padding: 10px 16px;
+  }
+  .quiz-header__logo {
+    font-size: 20px;
+  }
+  .quiz-header__right {
+    gap: 8px;
+  }
+  .quiz-header__code {
+    min-height: 40px;
+    padding: 0 12px;
+  }
+  .quiz-header__code strong {
+    font-size: 16px;
+  }
+  .quiz-header__code-label,
+  .quiz-header__account-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .quiz-header__account {
+    justify-content: center;
+    width: 44px;
+    padding: 0;
+  }
+}

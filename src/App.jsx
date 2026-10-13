@@ -10,6 +10,8 @@ import LobbyPage from "./pages/Lobby/LobbyPage.jsx";
 import LobbyPlayer from "./pages/Lobby/LobbyPlayer.jsx";
 import PlaceholderPage from "./pages/PlaceholderPage.jsx";
 import PlayerGamePage from "./pages/PlayerGamePage/PlayerGamePage.jsx";
+import QuestionAnswersPage from "./pages/QuestionPage_Host/QuestionAnswersPage.jsx";
+import QuestionPreviewPage from "./pages/QuestionPage_Host/QuestionPreviewPage.jsx";
 
 export default function App() {
   return (
@@ -29,6 +31,12 @@ export default function App() {
               <Link to="/end-player">Naar het Eindscherm - Player</Link>
               <br />
               <Link to="/lobby">Kom hierheen</Link>
+              <br />
+              <Link to="/question">Naar het vraagscherm - Host</Link>
+              <br />
+              <Link to="/question-answers">
+                Naar vraag + antwoorden - Host
+              </Link>
             </>
           }
         />
@@ -43,6 +51,8 @@ export default function App() {
         {/* Demo's met nepdata, om de designs te bekijken. */}
         <Route path="/end" element={<EndScreenPageHost />} />
         <Route path="/end-player" element={<EndScreenPagePlayer />} />
+        <Route path="/question" element={<QuestionPreviewPage />} />
+        <Route path="/question-answers" element={<QuestionAnswersPage />} />
         {/* TODO(team, L1): echte pagina's zodra er accounts zijn. */}
         <Route path="/login" element={<PlaceholderPage title="Inloggen" />} />
         <Route

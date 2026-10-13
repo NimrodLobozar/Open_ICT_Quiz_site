@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Button } from "antd";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../../api/http.js";
 import { useSocketEvent } from "../../hooks/useSocketEvent.js";
@@ -6,6 +7,7 @@ import { EVENTS } from "../../socket/events.js";
 import { connectSocket, emitWithAck, socket } from "../../socket/socket.js";
 import { HostEndScreen } from "../EndScreenPage_Host/EndScreenPage.jsx";
 import "./HostGamePage.css";
+import { LockOutlined, UnlockOutlined } from "@ant-design/icons";
 
 /** /host/new: maakt een game aan (de server zet de host-cookie) en gaat door naar /host/:code. */
 export function HostCreatePage() {
@@ -39,6 +41,8 @@ export default function HostGamePage() {
   const [game, setGame] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+
+  const [isLocked, setIsLocked] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -79,6 +83,17 @@ export default function HostGamePage() {
     if (!response?.ok)
       setError(response?.message ?? "Geen antwoord van de server.");
     setBusy(false);
+  }
+
+  async function handleLock(lock) {
+    setIsLocked(lock);
+    try {
+      const response = await api(`/lock/${code}/${lock}`);
+      console.log(response);
+    } catch (apiError) {
+      setIsLocked(!lock);
+      setError(apiError.message);
+    }
   }
 
   async function restart() {
@@ -128,6 +143,10 @@ export default function HostGamePage() {
         Ga naar {window.location.host}/join en vul in:
       </p>
       <p className="host-game__code">{code}</p>
+      <Button
+        icon={isLocked ? <LockOutlined /> : <UnlockOutlined />}
+        onClick={() => handleLock(!isLocked)}
+      />
       <h1 className="host-game__title">
         {playerCount} {playerCount === 1 ? "speler" : "spelers"}
       </h1>

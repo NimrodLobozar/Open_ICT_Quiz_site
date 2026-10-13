@@ -1,10 +1,10 @@
 import { Alert, Button, Card, Form, Input, Slider, Typography } from 'antd'
 import { useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../api/http.js'
 import './JoinPage.css'
 
-const skills = [
+const skillDefinitions = [
   { label: 'SD', color: '#f59e0b' },
   { label: 'AI', color: '#14b8a6' },
   { label: 'TI', color: '#facc15' },
@@ -18,12 +18,108 @@ const QUIZ_TITLE = 'Open ICT Quiz'
 
 export default function JoinPage() {
   const { code } = useParams()
-  const locationNotice = null
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [locationNotice, setLocationNotice] = useState('')
+  const [isNoticeClosing, setIsNoticeClosing] = useState(false)
+  const [game, setGame] = useState(null)
+  const isInvalidCode = code && !/^\d{6}$/.test(code)
+  const [codeStatus, setCodeStatus] = useState(code ? 'checking' : 'idle')
+
+  useEffect(() => {
+    if (isInvalidCode) {
+      navigate('/join', {
+        replace: true,
+        state: { locationNotice: 'Ongeldige code. Voer een 6-cijferige code in.' },
+      })
+      return
+    }
+
+    if (!code) {
+      setCodeStatus('idle')
+      return
+    }
+
+    // Voorkomt dat een oud antwoord nog iets doet als de code intussen veranderd is.
+    let cancelled = false
+
+    // Games leven in het geheugen van de server (aangemaakt door de host), dus we vragen het daar na.
+    async function checkCode() {
+      try {
+        const data = await api(`/games/${code}`)
+        if (cancelled) return
+        setGame(data)
+        setCodeStatus('valid')
+      } catch (error) {
+        if (cancelled) return
+        navigate('/join', {
+          replace: true,
+          state: {
+            locationNotice: error.status === 404
+              ? 'Ongeldige code. Voer een 6-cijferige code in.'
+              : 'De quizcode kon niet worden gecontroleerd.',
+          },
+        })
+      }
+    }
+
+    checkCode()
+
+    return () => {
+      cancelled = true
+    }
+  }, [code, isInvalidCode, navigate])
+
+  useEffect(() => {
+    const notice = location.state?.locationNotice
+
+    if (!notice) return
+
+    setLocationNotice(notice)
+    setIsNoticeClosing(false)
+    navigate(location.pathname, { replace: true, state: null })
+  }, [location.pathname, location.state?.locationNotice, navigate])
+
+  useEffect(() => {
+    if (!locationNotice) return
+
+    const closeTimeout = setTimeout(() => {
+      setIsNoticeClosing(true)
+    }, 5000)
+    const removeTimeout = setTimeout(() => {
+      setLocationNotice('')
+    }, 5300)
+
+    return () => {
+      clearTimeout(closeTimeout)
+      clearTimeout(removeTimeout)
+    }
+  }, [locationNotice])
 
   return (
     <div className="join-page">
-      {locationNotice && <Alert type="info" showIcon message={locationNotice} style={{ marginBottom: 16 }} />}
-      {code ? <NicknameStep key={code} code={code} /> : <CodeStep />}
+      <header className="join-nav">
+        <span className="join-brand">OPEN ICT QUIZ</span>
+        <a className="join-login-button" href="/login">
+          <svg className="join-login-icon" viewBox="0 0 16 16" aria-hidden="true">
+            <circle cx="8" cy="5" r="2.5" />
+            <path d="M3.5 14c.4-2.4 2-3.6 4.5-3.6s4.1 1.2 4.5 3.6" />
+          </svg>
+          Inloggen
+        </a>
+      </header>
+      {locationNotice && (
+        <Alert
+          className={`join-notice ${isNoticeClosing ? 'join-notice-closing' : ''}`}
+          type="error"
+          showIcon
+          message="Ongeldige quizcode"
+          description={locationNotice}
+        />
+      )}
+      {code && !isInvalidCode && codeStatus === 'valid' && game ? (
+        <NicknameStep key={code} code={code} locked={game.locked} />
+      ) : <CodeStep />}
     </div>
   )
 }
@@ -116,26 +212,27 @@ function CodeForm() {
   )
 }
 
-function SkillSlider({ label, color }) {
-  const [value, setValue] = useState(5)
-
+function SkillSlider({ label, color, value, onChange }) {
   return (
     <div className="skill-slider">
       <span className="skill-label">
         <span className="skill-dot" style={{ backgroundColor: color }} aria-hidden="true" />
         {label}
       </span>
-      <Slider value={value} onChange={setValue} min={0} max={5} style={{ flex: 1 }} />
+      <Slider value={value} onChange={onChange} min={0} max={5} style={{ flex: 1 }} />
       <strong>{value}</strong>
     </div>
   )
 }
 
-function NicknameStep({ code }) {
+function NicknameStep({ code, locked }) {
   const [form] = Form.useForm()
   const navigate = useNavigate()
   const [error, setError] = useState(null)
   const [sending, setSending] = useState(false)
+  const [skillValues, setSkillValues] = useState(
+    () => Object.fromEntries(skillDefinitions.map(({ label }) => [label, 5])),
+  )
 
   // Rejoin: heeft deze browser al een speler-cookie voor deze game, dan meteen door naar het spel.
   useEffect(() => {
@@ -145,11 +242,12 @@ function NicknameStep({ code }) {
   }, [code, navigate])
 
   // De server checkt de naam en zet de cookie. Daarna weet /play/:code wie we zijn.
+  // TODO(team): skills gaan al mee, maar de server slaat ze nog niet op.
   async function join({ nickname }) {
     setError(null)
     setSending(true)
     try {
-      await api(`/games/${code}/players`, { method: 'POST', body: { nickname } })
+      await api(`/games/${code}/players`, { method: 'POST', body: { nickname, skills: skillValues } })
       navigate(`/play/${code}`)
     } catch (apiError) {
       setError(apiError.message)
@@ -172,10 +270,13 @@ function NicknameStep({ code }) {
           <Typography.Text type="secondary" className="join-title-text">
             Je bent er bijna!
           </Typography.Text>
-          <Typography.Title level={3} className="join-title-title">
+          <Typography.Title className="join-title-title">
             Vul je gegevens in
           </Typography.Title>
         </div>
+        {locked && (
+          <Alert type="warning" showIcon message="Deze lobby is gesloten." style={{ marginBottom: 16 }} />
+        )}
         {error && <Alert type="error" showIcon message={error} style={{ marginBottom: 16 }} />}
         <Form form={form} layout="vertical" onFinish={join}>
           <Form.Item
@@ -186,9 +287,16 @@ function NicknameStep({ code }) {
           >
             <Input placeholder="Vul hier in..." size="large" maxLength={20} autoComplete="off" autoFocus />
           </Form.Item>
-          <Form.Item label="Vul hier jouw vaardigheden in:" required style={{ marginBottom: '2.5vh' }}>
+          <Form.Item label="Vul hier jouw vaardigheden in: (0-5)" required style={{ marginBottom: '2.5vh' }}>
             <div className="skills-list">
-              {skills.map((skill) => <SkillSlider key={skill.label} {...skill} />)}
+              {skillDefinitions.map((skill) => (
+                <SkillSlider
+                  key={skill.label}
+                  {...skill}
+                  value={skillValues[skill.label]}
+                  onChange={(value) => setSkillValues((current) => ({ ...current, [skill.label]: value }))}
+                />
+              ))}
             </div>
           </Form.Item>
           <Button type="primary" htmlType="submit" size="large" block loading={sending}>

@@ -12,7 +12,6 @@ COPY backend ./backend
 COPY src/utils ./src/utils
 
 ENV DATABASE_URL=postgresql://quiz:quiz@db:5432/quiz
-RUN npx prisma generate
 
 EXPOSE 3000
 

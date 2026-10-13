@@ -11,6 +11,7 @@ model Quiz {
   code      String   @unique
   title     String
   locked    Boolean  @default(false)
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   players   Player[]
 }
@@ -18,6 +19,7 @@ model Quiz {
 model Player {
   id        Int      @id @default(autoincrement())
   nickname  String
+  skills    Json     @default("{}")
   quiz      Quiz     @relation(fields: [quizId], references: [id])
   quizId    Int
   createdAt DateTime @default(now())

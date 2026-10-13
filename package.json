@@ -9,6 +9,9 @@
     "preview": "vite preview --host",
     "server": "node backend/index.js",
     "prisma:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:seed": "node prisma/seed.js",
+    "backend:start": "npm run prisma:generate && npm run db:push && npm run server",
     "db:migrate": "prisma migrate dev",
     "test": "vitest run"
   },

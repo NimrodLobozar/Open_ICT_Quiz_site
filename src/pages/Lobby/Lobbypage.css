@@ -1,0 +1,99 @@
+/* De achtergrond en algemene opmaak van de hele pagina */
+.lobby-container {
+  background-color: #ffedd5;
+  min-height: 100vh;
+  color: #7c2d12;
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column; /* Let op: in CSS schrijf je dit als flex-direction */
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* De witte balk bovenin met instructie en PIN */
+.lobby-header-box {
+  background-color: white;
+  color: #333;
+  display: flex;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+}
+
+.lobby-instruction {
+  padding: 15px 25px;
+  border-right: 2px solid #eee;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.lobby-pin-section {
+  padding: 15px 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.lobby-pin-label {
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #666;
+}
+
+.lobby-pin-code {
+  font-size: 2.5rem;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: #ea580c;
+}
+
+/* Het middelste vak ("Wachten op deelnemers") */
+.lobby-status-box {
+  background-color: #f97316;
+  color: white;
+  padding: 12px 35px;
+  border-radius: 8px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+}
+
+/* De knop container rechtsonder */
+.lobby-footer {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  padding-bottom: 20px;
+}
+
+/* De Start-knop */
+.lobby-start-btn {
+  background-color: #c2410c;
+  color: white;
+  border: none;
+  padding: 10px 25px;
+  border-radius: 5px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.lobby-home-btn {
+  background-color: white;
+  color: #7c2d12;
+  padding: 8px 16px;
+  border-radius: 5px;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.lobby-home-btn:hover {
+  background-color: #fff7ed;
+}

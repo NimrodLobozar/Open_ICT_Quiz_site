@@ -1,5 +1,5 @@
 import { useNavigate, Link } from 'react-router-dom';
-import './LobbyPage.css';
+import './Lobbypage.css';
 
 export default function LobbyPage() {
   const navigate = useNavigate();

@@ -1,7 +1,9 @@
 import { gameManager } from '../game/GameManager.js'
 import { sendLobbyUpdate } from './broadcast.js'
 import { EVENTS } from './events.js'
+import { afterAnswer } from './gameLoop.js'
 import { registerHostHandlers } from './hostHandlers.js'
+import { registerPlayerHandlers } from './playerHandlers.js'
 import { gameRoom, hostRoom, playerRoom } from './rooms.js'
 import { sessionMiddleware } from './sessionMiddleware.js'
 import { buildSyncState } from './syncState.js'
@@ -22,6 +24,7 @@ export function registerSocketHandlers(io) {
       registerHostHandlers(io, socket, game)
     } else {
       socket.join(playerRoom(code, playerId))
+      registerPlayerHandlers(io, socket, game)
       game.setConnected(playerId, true)
       sendLobbyUpdate(io, game)
     }
@@ -39,6 +42,8 @@ export function registerSocketHandlers(io) {
       if (!stillOpen) {
         game.setConnected(playerId, false)
         sendLobbyUpdate(io, game)
+        // Viel de laatste speler weg die nog moest antwoorden? Dan niet op de timer wachten.
+        afterAnswer(io, game)
       }
     })
   })

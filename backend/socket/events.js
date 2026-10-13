@@ -7,11 +7,18 @@
 export const EVENTS = {
   // Client → server
   GAME_SYNC: "game:sync",
+  HOST_START: "host:start", // lobby → vraag 1 (minimaal 2 spelers)
+  HOST_NEXT: "host:next", // één stap verder: leestijd overslaan, tijd stoppen, volgende vraag
   HOST_RESTART: "host:restart",
+  PLAYER_ANSWER: "player:answer",
   DEV_FINISH: "dev:finish", // alleen in development: quiz nep-afspelen en naar het podium
 
   // Server → client
   LOBBY_UPDATE: "lobby:update",
+  QUESTION_SHOW: "question:show", // nieuwe vraag, of dezelfde vraag in een nieuwe fase (leestijd → antwoorden)
+  QUESTION_PROGRESS: "question:progress", // alleen host: hoeveel spelers al geantwoord hebben
+  QUESTION_END: "question:end", // goede antwoord, aantallen per antwoord en de tussenstand
+  QUESTION_MY_RESULT: "question:my-result", // alleen naar één speler: goed/fout en punten erbij
   GAME_PODIUM: "game:podium",
   PLAYER_RESULT: "player:result",
   GAME_RESTARTED: "game:restarted",

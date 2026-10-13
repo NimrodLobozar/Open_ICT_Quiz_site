@@ -25,9 +25,11 @@ import "./PlayerQuestion.css";
  * Speler, fases QUESTION_PREVIEW en QUESTION_ACTIVE: de vraag met vier antwoordknoppen.
  * De vraagtekst staat er ook, zodat je niet per se naar het bord hoeft te kijken (projectplan 3.2).
  * @param {{ code: string, question: import("../QuestionPage_Host/QuestionPreviewPage.jsx").QuestionShow,
- *   nickname: string, score: number, chosenOptionId: number | null, onAnswer: (optionId: number) => void }} props
+ *   nickname: string, score: number, chosenOptionId: number | null, onAnswer: (optionId: number) => void,
+ *   error?: string | null }} props
  *   question = de payload van question:show. chosenOptionId = wat je al gekozen hebt (null = nog niets).
- *   onAnswer stuurt straks player:answer. Of het goed was, hoor je pas bij de uitslag.
+ *   onAnswer stuurt player:answer. Of het goed was, hoor je pas bij de uitslag.
+ *   error = melding als je antwoord niet aankwam (bijv. te laat).
  */
 export function PlayerQuestion({
   code,
@@ -36,6 +38,7 @@ export function PlayerQuestion({
   score,
   chosenOptionId,
   onAnswer,
+  error = null,
 }) {
   const limitMs = question.timeLimitSec * 1000;
   // Eerst leestijd (tot startsAt), daarna loopt de tijd voor het antwoorden.
@@ -90,11 +93,12 @@ export function PlayerQuestion({
 
         {/* role="status": een schermlezer leest dit voor zodra het verschijnt. */}
         <p className="player-question__feedback" role="status">
-          {answered
-            ? "Antwoord verstuurd! Wachten op de anderen…"
-            : timeUp && !reading
-              ? "De tijd is op."
-              : ""}
+          {error ??
+            (answered
+              ? "Antwoord verstuurd! Wachten op de anderen…"
+              : timeUp && !reading
+                ? "De tijd is op."
+                : "")}
         </p>
 
         <div className="player-question__footer">

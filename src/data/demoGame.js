@@ -4,6 +4,7 @@
 // en de host-demo en de speler-demo zijn het met elkaar eens.
 // TODO(team, fase 4): weg zodra de server question:show, question:end en leaderboard:show stuurt.
 import { getRanking } from '../utils/ranking.js'
+import { calculatePoints } from '../utils/scoring.js'
 import { answerOptions, gameResults, gameSessions, questions } from './dummyDatabase.js'
 
 export const DEMO_CODE = gameSessions[0].code
@@ -42,14 +43,11 @@ export function demoIndexFromSearch(searchParams) {
 }
 
 /**
- * Punten voor een goed antwoord, met de formule uit projectplan 13.1:
- * direct = 1000, op de valreep = 500. Fout of geen antwoord = 0.
+ * Punten met dezelfde formule als de server (src/utils/scoring.js).
  * In het echt rekent de server dit uit (de client kan liegen over zijn tijd).
  */
 export function demoPoints(correct, responseMs, timeLimitSec) {
-  if (!correct) return 0
-  const part = Math.min(1, responseMs / (timeLimitSec * 1000))
-  return Math.round(1000 * (1 - part / 2))
+  return calculatePoints({ correct, responseMs, timeLimitSec })
 }
 
 export function isDemoOptionCorrect(optionId) {

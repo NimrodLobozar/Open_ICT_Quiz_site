@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { GameError } from '../game/GameError.js'
 import { gameManager } from '../game/GameManager.js'
 import { sendLobbyUpdate } from '../socket/broadcast.js'
+import { afterAnswer } from '../socket/gameLoop.js'
 import { playerRoom } from '../socket/rooms.js'
 import {
   clearSessionCookie,
@@ -97,6 +98,8 @@ router.delete('/:code/players/me', (request, response) => {
     // Open sockets van deze speler (bijv. een tweede tabblad) verbreken: die horen nergens meer bij.
     io.in(playerRoom(code, session.playerId)).disconnectSockets(true)
     sendLobbyUpdate(io, game)
+    // Vertrekt iemand midden in een vraag, dan klopt "x van y geantwoord" niet meer, en misschien is iedereen nu klaar.
+    afterAnswer(io, game)
   }
   response.json({ ok: true })
 })

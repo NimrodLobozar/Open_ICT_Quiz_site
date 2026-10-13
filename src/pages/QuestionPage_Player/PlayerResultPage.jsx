@@ -17,19 +17,19 @@ import "./PlayerQuestion.css";
  * Speler, na een vraag (QUESTION_RESULT / LEADERBOARD): goed of fout, je plek en wie er om je heen staan.
  * @param {{ code: string, question: import("../QuestionPage_Host/QuestionPreviewPage.jsx").QuestionShow,
  *   correctOptionId: number, ranking: Array<{ id: number, nickname: string, score: number, rank: number,
- *   correctCount: number, isVerified: boolean, pointsGained: number, answered: boolean, correct: boolean }>,
- *   myPlayerId: number }} props
- *   correctOptionId komt uit question:end, ranking uit getRanking() (via de server).
- *   Hier wordt niets berekend dat niet ook uit ranking te halen is, net als op het eindscherm.
+ *   isVerified: boolean, pointsGained: number }>,
+ *   myResult: { answered: boolean, correct: boolean, pointsGained: number }, myPlayerId: number }} props
+ *   correctOptionId en ranking komen uit question:end (ranking via getRanking op de server),
+ *   myResult uit question:my-result. Hier wordt niets berekend dat niet uit ranking te halen is.
  */
 export function PlayerQuestionResult({
   code,
   question,
   correctOptionId,
   ranking,
+  myResult,
   myPlayerId,
 }) {
-  const me = ranking.find((row) => row.id === myPlayerId);
   // Zelfde functie als het eindscherm: plek, "nog X punten tot de Ye plek".
   const standing = buildPlayerResult(ranking, myPlayerId, question.total);
   const correctOption = question.options.find(
@@ -42,7 +42,7 @@ export function PlayerQuestionResult({
       <QuizHeader code={code} />
 
       <main className="player-question__main player-question__main--result">
-        <Verdict me={me} />
+        <Verdict myResult={myResult} />
         {correctOption && (
           <p className="player-question__answer-was">
             Het goede antwoord was <strong>{correctOption.text}</strong>.
@@ -81,10 +81,14 @@ export function PlayerQuestionResult({
 }
 
 /** Groen bij goed, rood bij fout, neutraal als je niet antwoordde. Altijd met tekst én icoon, niet alleen kleur. */
-function Verdict({ me }) {
-  const kind = !me.answered ? "none" : me.correct ? "correct" : "wrong";
+function Verdict({ myResult }) {
+  const kind = !myResult.answered
+    ? "none"
+    : myResult.correct
+      ? "correct"
+      : "wrong";
   const text = {
-    correct: `GOED! +${formatScore(me.pointsGained)}`,
+    correct: `GOED! +${formatScore(myResult.pointsGained)}`,
     wrong: "FOUT",
     none: "GEEN ANTWOORD",
   }[kind];
@@ -130,6 +134,8 @@ export default function PlayerResultPage() {
   const { correctOptionId, ranking } = getDemoRound(index, {
     myAnswer: readMyAnswer(searchParams),
   });
+  // De demo-ranking heeft per speler ook answered/correct. Bij de echte server komt dit los (question:my-result).
+  const me = ranking.find((row) => row.id === DEMO_PLAYER_ID);
 
   return (
     <PlayerQuestionResult
@@ -137,6 +143,7 @@ export default function PlayerResultPage() {
       question={question}
       correctOptionId={correctOptionId}
       ranking={ranking}
+      myResult={me}
       myPlayerId={DEMO_PLAYER_ID}
     />
   );

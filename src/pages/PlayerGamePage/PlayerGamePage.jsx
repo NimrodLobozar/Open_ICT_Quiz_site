@@ -2,10 +2,14 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../../api/http.js";
 import QuizHeader from "../../components/QuizHeader.jsx";
+import { useQuestionEvents } from "../../hooks/useQuestionEvents.js";
 import { useSocketEvent } from "../../hooks/useSocketEvent.js";
 import { EVENTS } from "../../socket/events.js";
+import { withLocalStartsAt } from "../../socket/serverTime.js";
 import { connectSocket, emitWithAck, socket } from "../../socket/socket.js";
 import { PlayerEndScreen } from "../EndScreenPage_Player/EndScreenPage.jsx";
+import { PlayerQuestion } from "../QuestionPage_Player/PlayerQuestionPage.jsx";
+import { PlayerQuestionResult } from "../QuestionPage_Player/PlayerResultPage.jsx";
 import "../EndScreenPage_Player/EndScreenPage.css";
 import "./PlayerGamePage.css";
 
@@ -25,6 +29,7 @@ export default function PlayerGamePage() {
   const [connected, setConnected] = useState(socket.connected);
   const [leaving, setLeaving] = useState(false);
   const [leaveError, setLeaveError] = useState(null);
+  const [answerError, setAnswerError] = useState(null);
 
   // Eerst via REST checken of deze browser een speler-sessie heeft, pas dan de socket openen.
   useEffect(() => {
@@ -51,7 +56,11 @@ export default function PlayerGamePage() {
     setConnected(true);
     try {
       const response = await emitWithAck(EVENTS.GAME_SYNC);
-      if (response.ok) setGame(response.state);
+      if (response.ok)
+        setGame({
+          ...response.state,
+          question: withLocalStartsAt(response.state.question),
+        });
     } catch {
       // Geen antwoord binnen de timeout: de volgende reconnect probeert het opnieuw.
     }
@@ -85,9 +94,48 @@ export default function PlayerGamePage() {
   useSocketEvent(EVENTS.GAME_RESTARTED, () => {
     setGame(
       (current) =>
-        current && { ...current, phase: "LOBBY", podium: null, result: null },
+        current && {
+          ...current,
+          phase: "LOBBY",
+          podium: null,
+          result: null,
+          question: null,
+          questionEnd: null,
+          myQuestionResult: null,
+          myAnswer: null,
+          me: current.me && { ...current.me, score: 0 },
+        },
     );
   });
+
+  // question:show, question:end en question:my-result.
+  useQuestionEvents(setGame);
+
+  // Antwoord kiezen. We tonen je keuze meteen (anders voelt het traag op slechte wifi),
+  // en draaien dat terug als de server het weigert.
+  async function answer(optionId) {
+    const questionIndex = game.question.index;
+    setAnswerError(null);
+    setGame((current) => current && { ...current, myAnswer: optionId });
+    const response = await emitWithAck(EVENTS.PLAYER_ANSWER, {
+      questionIndex,
+      optionId,
+    }).catch(() => null);
+    if (response?.ok || response?.error === "ALREADY_ANSWERED") return;
+    // Alleen terugdraaien als we nog bij dezelfde vraag zijn.
+    setGame((current) =>
+      current?.question?.index === questionIndex
+        ? { ...current, myAnswer: null }
+        : current,
+    );
+    setAnswerError(
+      response?.message ?? "Je antwoord kwam niet aan. Probeer het opnieuw.",
+    );
+  }
+
+  // Bij een nieuwe vraag hoort een oude foutmelding er niet meer bij.
+  const questionIndex = game?.question?.index;
+  useEffect(() => setAnswerError(null), [questionIndex]);
 
   async function leaveGame() {
     setLeaving(true);
@@ -118,13 +166,58 @@ export default function PlayerGamePage() {
         onLeave={leaveGame}
         leaving={leaving}
         leaveError={leaveError}
+        onAnswer={answer}
+        answerError={answerError}
       />
     </>
   );
 }
 
-function PhaseScreen({ game, code, onLeave, leaving, leaveError }) {
+function PhaseScreen({
+  game,
+  code,
+  onLeave,
+  leaving,
+  leaveError,
+  onAnswer,
+  answerError,
+}) {
   if (!game) return <WaitScreen code={code} title="Verbinden…" />;
+
+  const inQuestion =
+    game.phase === "QUESTION_PREVIEW" || game.phase === "QUESTION_ACTIVE";
+  if (inQuestion && game.question) {
+    return (
+      <PlayerQuestion
+        // key: bij een nieuwe vraag een vers scherm, zonder resten van de vorige.
+        key={game.question.index}
+        code={code}
+        question={game.question}
+        nickname={game.me?.nickname}
+        score={game.me?.score ?? 0}
+        chosenOptionId={game.myAnswer}
+        onAnswer={onAnswer}
+        error={answerError}
+      />
+    );
+  }
+
+  if (game.phase === "QUESTION_RESULT") {
+    // question:end en question:my-result komen vlak na elkaar. Even wachten tot ze er allebei zijn.
+    if (!game.questionEnd || !game.myQuestionResult) {
+      return <WaitScreen code={code} title="Uitslag laden…" />;
+    }
+    return (
+      <PlayerQuestionResult
+        code={code}
+        question={game.question}
+        correctOptionId={game.questionEnd.correctOptionId}
+        ranking={game.questionEnd.ranking}
+        myResult={game.myQuestionResult}
+        myPlayerId={game.me?.playerId}
+      />
+    );
+  }
 
   if (game.phase === "PODIUM" && game.podium) {
     return (
@@ -154,8 +247,8 @@ function PhaseScreen({ game, code, onLeave, leaving, leaveError }) {
     );
   }
 
-  // TODO(team, fase 4): schermen voor de vraag, het resultaat per vraag en de tussenstand.
-  return <WaitScreen code={code} title="De quiz is bezig…" />;
+  // Bijv. PODIUM terwijl de eindstand nog onderweg is.
+  return <WaitScreen code={code} title="Even wachten…" />;
 }
 
 function WaitScreen({ code, title, children }) {

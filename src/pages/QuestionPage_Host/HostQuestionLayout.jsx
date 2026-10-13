@@ -1,14 +1,15 @@
 import { Link } from "react-router-dom";
+import QuestionProgress from "../../components/QuestionProgress.jsx";
 import "./QuestionPage.css";
 
 // De vier cirkels op de achtergrond (straal in procenten van het vierkant), net als op het eindscherm.
 const RINGS = [48, 38, 28, 18];
 
 /**
- * Wat beide vraagschermen van de host delen: achtergrond, bovenbalk en "Vraag 3 van 8".
- * @param {{ code: string, index: number, total: number, aside?: React.ReactNode,
- *   actions?: React.ReactNode, variant: "preview" | "answers", children: React.ReactNode }} props
- *   index telt vanaf 0, net als questionIndex in de socket-events. Op het scherm tellen we vanaf 1.
+ * Wat de vraagschermen van de host delen: achtergrond, bovenbalk en "Vraag 3 van 8".
+ * @param {{ code: string, index?: number, total?: number, aside?: React.ReactNode,
+ *   actions?: React.ReactNode, variant: "preview" | "answers" | "leaderboard", children: React.ReactNode }} props
+ *   index telt vanaf 0, net als questionIndex in de socket-events. Zonder index geen "Vraag 3 van 8".
  */
 export default function HostQuestionLayout({
   code,
@@ -42,30 +43,15 @@ export default function HostQuestionLayout({
       </nav>
 
       <main className={`host-question__main host-question__main--${variant}`}>
-        <div className="host-question__top">
-          <QuestionProgress index={index} total={total} />
-          {aside}
-        </div>
+        {index != null && (
+          <div className="host-question__top">
+            <QuestionProgress index={index} total={total} size="large" />
+            {aside}
+          </div>
+        )}
         {children}
         {actions && <div className="host-question__actions">{actions}</div>}
       </main>
-    </div>
-  );
-}
-
-/** "Vraag 3 van 8" met een streepje per vraag. Gedaan en huidig zijn donker, de rest licht. */
-function QuestionProgress({ index, total }) {
-  return (
-    <div className="host-question__progress">
-      <span className="host-question__progress-label">
-        Vraag {index + 1} van {total}
-      </span>
-      {/* aria-hidden: de tekst hierboven zegt al hetzelfde, de streepjes zijn alleen voor het oog. */}
-      <div className="host-question__progress-bars" aria-hidden="true">
-        {Array.from({ length: total }, (_, i) => (
-          <span key={i} className={i <= index ? "is-done" : undefined} />
-        ))}
-      </div>
     </div>
   );
 }

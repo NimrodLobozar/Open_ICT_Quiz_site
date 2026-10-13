@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useCountdown } from "../../hooks/useCountdown.js";
-import { demoIndexFromSearch, getDemoQuestion } from "./demoQuestion.js";
+import {
+  DEMO_CODE,
+  demoIndexFromSearch,
+  getDemoQuestion,
+} from "../../data/demoGame.js";
 import HostQuestionLayout from "./HostQuestionLayout.jsx";
 
 /**
@@ -87,7 +91,7 @@ export default function QuestionPreviewPage() {
 
   return (
     <HostQuestionPreview
-      code="482913"
+      code={DEMO_CODE}
       question={question}
       onShowAnswers={() => navigate(answersUrl)}
     />

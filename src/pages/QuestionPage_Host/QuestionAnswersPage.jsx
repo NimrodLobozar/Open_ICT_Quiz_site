@@ -1,20 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import AnswerShape, { answerColorClass } from "../../components/AnswerShape.jsx";
+import TimerRing from "../../components/TimerRing.jsx";
+import {
+  DEMO_CODE,
+  demoIndexFromSearch,
+  getDemoQuestion,
+} from "../../data/demoGame.js";
+import { gameResults } from "../../data/dummyDatabase.js";
 import { useCountdown } from "../../hooks/useCountdown.js";
-import { demoIndexFromSearch, getDemoQuestion } from "./demoQuestion.js";
 import HostQuestionLayout from "./HostQuestionLayout.jsx";
-
-// Elk antwoord heeft een eigen kleur én vorm. Alleen kleur is niet genoeg:
-// kleurenblinde spelers herkennen hun knop dan aan de vorm (dezelfde volgorde als op de telefoon).
-const OPTION_STYLES = [
-  { name: "driehoek", shape: <polygon points="12,3 22,21 2,21" /> },
-  { name: "ruit", shape: <polygon points="12,2 22,12 12,22 2,12" /> },
-  { name: "cirkel", shape: <circle cx="12" cy="12" r="10" /> },
-  { name: "vierkant", shape: <rect x="3" y="3" width="18" height="18" rx="2" /> },
-];
-
-// Omtrek van de timerring (r = 20): 2 × π × 20.
-const RING_LENGTH = 2 * Math.PI * 20;
 
 /**
  * Host, fase QUESTION_ACTIVE: vraag + antwoorden, timer en hoeveel spelers al geantwoord hebben.
@@ -32,7 +27,6 @@ export function HostQuestionAnswers({
 }) {
   const limitMs = question.timeLimitSec * 1000;
   const msLeft = useCountdown(question.startsAt + limitMs);
-  const secondsLeft = Math.ceil(msLeft / 1000);
   const timeUp = msLeft === 0;
 
   return (
@@ -50,26 +44,11 @@ export function HostQuestionAnswers({
             </span>
             <span className="host-question__answered-label">antwoorden</span>
           </div>
-          <div className="host-question__timer">
-            <svg aria-hidden="true" viewBox="0 0 48 48">
-              <circle className="host-question__timer-track" cx="24" cy="24" r="20" />
-              <circle
-                className="host-question__timer-left"
-                cx="24"
-                cy="24"
-                r="20"
-                strokeDasharray={RING_LENGTH}
-                // Hoe meer tijd voorbij is, hoe meer van de ring we "wegschuiven".
-                strokeDashoffset={RING_LENGTH * (1 - msLeft / limitMs)}
-              />
-            </svg>
-            <span
-              role="timer"
-              aria-label={timeUp ? "Tijd is op" : `Nog ${secondsLeft} seconden`}
-            >
-              {secondsLeft}
-            </span>
-          </div>
+          <TimerRing
+            msLeft={msLeft}
+            limitMs={limitMs}
+            className="host-question__timer"
+          />
         </div>
       }
       actions={
@@ -101,27 +80,22 @@ export function HostQuestionAnswers({
     >
       <h1 className="host-question__text">{question.text}</h1>
       <ol className="host-question__options" aria-label="Antwoorden">
-        {question.options.map((option, i) => {
-          const style = OPTION_STYLES[i % OPTION_STYLES.length];
-          return (
-            <li
-              key={option.id}
-              className={`host-question__option host-question__option--${style.name}`}
-            >
-              <svg aria-hidden="true" viewBox="0 0 24 24">
-                {style.shape}
-              </svg>
-              <span>{option.text}</span>
-            </li>
-          );
-        })}
+        {question.options.map((option, i) => (
+          <li
+            key={option.id}
+            className={`host-question__option ${answerColorClass(i)}`}
+          >
+            <AnswerShape index={i} />
+            <span>{option.text}</span>
+          </li>
+        ))}
       </ol>
     </HostQuestionLayout>
   );
 }
 
-// Demo op /question-answers?vraag=3 met nepdata: 12 nepspelers die één voor één antwoorden.
-const DEMO_PLAYER_COUNT = 12;
+// Demo op /question-answers?vraag=3 met nepdata: de nepspelers antwoorden één voor één.
+const DEMO_PLAYER_COUNT = gameResults.length;
 
 export default function QuestionAnswersPage() {
   const navigate = useNavigate();
@@ -159,20 +133,14 @@ export default function QuestionAnswersPage() {
     if (answeredCount === DEMO_PLAYER_COUNT) stopTime();
   }, [answeredCount]);
 
-  function next() {
-    const isLast = index + 1 >= question.total;
-    // TODO(team, fase 5): eerst de tussenstand. Die is er nog niet, dus meteen de volgende vraag.
-    navigate(isLast ? "/end" : `/question?vraag=${index + 2}`);
-  }
-
   return (
     <HostQuestionAnswers
-      code="482913"
+      code={DEMO_CODE}
       question={shownQuestion}
       answeredCount={answeredCount}
       playerCount={DEMO_PLAYER_COUNT}
       onStopTime={stopTime}
-      onNext={next}
+      onNext={() => navigate(`/leaderboard?vraag=${index + 1}`)}
     />
   );
 }

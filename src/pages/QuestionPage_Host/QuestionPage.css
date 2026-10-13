@@ -108,39 +108,6 @@
   gap: 24px;
 }
 
-.host-question__progress {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.host-question__progress-label {
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--quiz-muted);
-}
-
-.host-question__progress-bars {
-  display: flex;
-  gap: 6px;
-}
-
-/* Eén rij. Bij veel vragen of een smal scherm worden de streepjes smaller in plaats van uit beeld te lopen. */
-.host-question__progress-bars span {
-  flex: 0 1 44px;
-  width: 44px;
-  min-width: 12px;
-  height: 8px;
-  border-radius: 4px;
-  background: var(--quiz-border);
-}
-
-.host-question__progress-bars span.is-done {
-  background: var(--quiz-primary);
-}
-
 /* ---------- Fase 1: alleen de vraag (leestijd) ---------- */
 .host-question__preview {
   flex: 1;
@@ -224,45 +191,11 @@
   color: var(--quiz-muted);
 }
 
-.host-question__timer {
-  position: relative;
-  flex: none;
+/* Groot scherm: grotere timer dan de standaardmaat van TimerRing. Twee klassen, zodat dit altijd wint. */
+.timer-ring.host-question__timer {
   width: 110px;
   height: 110px;
-}
-
-/* -90°: de ring begint bovenaan, zoals een klok. */
-.host-question__timer svg {
-  width: 100%;
-  height: 100%;
-  transform: rotate(-90deg);
-}
-
-.host-question__timer circle {
-  stroke-width: 4;
-}
-
-.host-question__timer-track {
-  fill: var(--quiz-surface);
-  stroke: var(--quiz-border);
-}
-
-.host-question__timer-left {
-  fill: none;
-  stroke: var(--quiz-primary);
-  stroke-linecap: round;
-  transition: stroke-dashoffset 0.1s linear;
-}
-
-.host-question__timer [role='timer'] {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Anton', sans-serif;
   font-size: 42px;
-  color: var(--quiz-text);
 }
 
 .host-question__text {
@@ -295,36 +228,15 @@
   min-height: 150px;
   padding: 16px 40px;
   border-radius: 20px;
-  color: #ffffff;
   font-size: clamp(26px, 3.2vw, 48px);
   font-weight: 800;
   line-height: 1.15;
   overflow-wrap: anywhere;
 }
 
-.host-question__option svg {
-  flex: none;
+.host-question__option .answer-shape {
   width: 56px;
   height: 56px;
-  fill: currentColor;
-}
-
-.host-question__option--driehoek {
-  background: var(--quiz-primary);
-}
-
-.host-question__option--ruit {
-  background: #0f766e;
-}
-
-/* Lichte achtergrond, dus donkere tekst: wit op #FDBA74 is slecht leesbaar. */
-.host-question__option--cirkel {
-  background: var(--quiz-accent);
-  color: var(--quiz-text);
-}
-
-.host-question__option--vierkant {
-  background: var(--quiz-text);
 }
 
 /* ---------- Knoppen ---------- */
@@ -407,18 +319,240 @@
     gap: 16px;
     padding: 12px 20px;
   }
-  .host-question__option svg {
+  .host-question__option .answer-shape {
     width: 36px;
     height: 36px;
   }
-  .host-question__timer {
+  .timer-ring.host-question__timer {
     width: 84px;
     height: 84px;
-  }
-  .host-question__timer [role='timer'] {
     font-size: 32px;
   }
   .host-question__answered-count {
     font-size: 44px;
+  }
+}
+
+/* ---------- Fase 3: tussenstand ---------- */
+.host-question__main--leaderboard {
+  gap: 24px;
+  padding-top: 40px;
+}
+
+/* Links de uitslag van de vraag, rechts de tussenstand. Past het niet naast elkaar, dan onder elkaar. */
+.host-question__leaderboard {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+}
+
+.host-question__outcome {
+  flex: 1 1 300px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.host-question__outcome-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--quiz-muted);
+}
+
+.host-question__outcome-summary {
+  margin: 0 0 6px;
+  font-size: 22px;
+}
+
+.host-question__counts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.host-question__count {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 8px 18px;
+  border-radius: 14px;
+  font-size: 22px;
+  font-weight: 800;
+  /* De foute antwoorden vallen weg, zodat het goede antwoord eruit springt. */
+  opacity: 0.55;
+}
+
+.host-question__count.is-correct {
+  opacity: 1;
+}
+
+.host-question__count .answer-shape {
+  width: 26px;
+  height: 26px;
+}
+
+.host-question__count-text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.host-question__check {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.host-question__standings {
+  flex: 999 1 640px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.host-question__standings-title {
+  margin: 0;
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(56px, 6vw, 88px);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: 0.04em;
+  color: var(--quiz-primary);
+}
+
+.host-question__ranking {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Puntvorm zoals op het podium: de buitenste laag is de rand, de binnenste de vulling. */
+.host-question__rank-row {
+  width: 90%;
+  padding: 4px;
+  background: var(--quiz-accent);
+  clip-path: polygon(32px 0, calc(100% - 32px) 0, 100% 50%, calc(100% - 32px) 100%, 32px 100%, 0 50%);
+}
+
+.host-question__rank-row.is-first {
+  width: 100%;
+}
+
+.host-question__rank-bar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  min-height: 72px;
+  padding: 6px 60px;
+  background: var(--quiz-surface);
+  clip-path: polygon(30px 0, calc(100% - 30px) 0, 100% 50%, calc(100% - 30px) 100%, 30px 100%, 0 50%);
+}
+
+.host-question__rank-row.is-first .host-question__rank-bar {
+  min-height: 92px;
+  background: var(--quiz-accent);
+}
+
+.host-question__rank {
+  flex: none;
+  width: 40px;
+  font-family: 'Anton', sans-serif;
+  font-size: 44px;
+  line-height: 1;
+}
+
+.host-question__rank-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 32px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.host-question__rank-row.is-first .host-question__rank {
+  font-size: 56px;
+}
+
+.host-question__rank-row.is-first .host-question__rank-name {
+  font-size: 40px;
+}
+
+.host-question__rank-gain {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--quiz-muted);
+}
+
+.host-question__rank-row.is-first .host-question__rank-gain {
+  color: var(--quiz-text); /* muted is te licht op de oranje balk */
+}
+
+.host-question__rank-score {
+  min-width: 96px;
+  font-size: 28px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.host-question__button--large {
+  min-height: 58px;
+  font-size: 20px;
+}
+
+/* Alleen voor schermlezers: onzichtbaar, maar wel voorgelezen. */
+.host-question__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .host-question__rank-row {
+    width: 100%;
+  }
+  .host-question__rank-bar {
+    gap: 12px;
+    min-height: 56px;
+    padding: 6px 36px;
+  }
+  .host-question__rank,
+  .host-question__rank-row.is-first .host-question__rank {
+    width: 28px;
+    font-size: 30px;
+  }
+  .host-question__rank-name,
+  .host-question__rank-row.is-first .host-question__rank-name {
+    font-size: 22px;
+  }
+  .host-question__rank-gain {
+    font-size: 15px;
+  }
+  .host-question__rank-score {
+    min-width: 0;
+    font-size: 20px;
   }
 }

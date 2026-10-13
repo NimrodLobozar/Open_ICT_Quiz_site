@@ -49,10 +49,10 @@ export function PlayerQuestion({
   const answered = chosenOptionId != null;
 
   return (
-    <div className="player-question">
+    <div className="page player-question">
       <QuizHeader code={code} />
 
-      <main className="player-question__main">
+      <main className="page__main player-question__main">
         <div className="player-question__top">
           <QuestionProgress index={question.index} total={question.total} />
           {/* Tijdens de leestijd staat de ring nog vol. */}

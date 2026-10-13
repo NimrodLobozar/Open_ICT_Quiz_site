@@ -2,6 +2,7 @@ import { Alert, Button, Card, Form, Input, Slider, Typography } from 'antd'
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../api/http.js'
+import QuizHeader from '../../components/QuizHeader.jsx'
 import './JoinPage.css'
 
 const skillDefinitions = [
@@ -97,17 +98,8 @@ export default function JoinPage() {
   }, [locationNotice])
 
   return (
-    <div className="join-page">
-      <header className="join-nav">
-        <span className="join-brand">OPEN ICT QUIZ</span>
-        <a className="join-login-button" href="/login">
-          <svg className="join-login-icon" viewBox="0 0 16 16" aria-hidden="true">
-            <circle cx="8" cy="5" r="2.5" />
-            <path d="M3.5 14c.4-2.4 2-3.6 4.5-3.6s4.1 1.2 4.5 3.6" />
-          </svg>
-          Inloggen
-        </a>
-      </header>
+    <div className="page join-page">
+      <QuizHeader />
       {locationNotice && (
         <Alert
           className={`join-notice ${isNoticeClosing ? 'join-notice-closing' : ''}`}

@@ -10,7 +10,6 @@ import { connectSocket, emitWithAck, socket } from "../../socket/socket.js";
 import { PlayerEndScreen } from "../EndScreenPage_Player/EndScreenPage.jsx";
 import { PlayerQuestion } from "../QuestionPage_Player/PlayerQuestionPage.jsx";
 import { PlayerQuestionResult } from "../QuestionPage_Player/PlayerResultPage.jsx";
-import "../EndScreenPage_Player/EndScreenPage.css";
 import "./PlayerGamePage.css";
 
 /**
@@ -253,9 +252,9 @@ function PhaseScreen({
 
 function WaitScreen({ code, title, children }) {
   return (
-    <div className="player-end">
+    <div className="page">
       <QuizHeader code={code} />
-      <main className="player-game__wait">
+      <main className="page__main player-game__wait">
         <h1 className="player-game__title">{title}</h1>
         {children}
       </main>

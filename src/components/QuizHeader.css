@@ -3,6 +3,7 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  align-self: stretch; /* altijd over de volle breedte, ook als de pagina zijn inhoud centreert */
   gap: 10px 24px;
   padding: 14px 32px;
   background: var(--quiz-surface);
@@ -71,6 +72,24 @@
 .quiz-header__account:focus-visible {
   outline: 3px solid var(--quiz-primary);
   outline-offset: 3px;
+}
+
+/* Groot scherm van de host: alles iets groter, zodat je het achter in de klas nog leest.
+   Alleen breder dan 640px; op een telefoon gelden de kleine maten hieronder. */
+@media (min-width: 641px) {
+  .quiz-header--large {
+    padding: 18px 40px;
+  }
+  .quiz-header--large .quiz-header__logo {
+    font-size: 30px;
+  }
+  .quiz-header--large .quiz-header__code {
+    min-height: 48px;
+    font-size: 16px;
+  }
+  .quiz-header--large .quiz-header__code strong {
+    font-size: 24px;
+  }
 }
 
 /* Telefoon: kleiner, het woord "Code" alleen voor schermlezers, en van "Inloggen" alleen het icoon. */

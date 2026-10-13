@@ -39,32 +39,77 @@ Elke actie heeft een ack: `{ ok: true, ... }` of `{ ok: false, error, message }`
 | Event | Van | Payload | Ack |
 |---|---|---|---|
 | `game:sync` | host/speler | `{}` | `{ ok, state }`, zie hieronder |
-| `dev:finish` | host, **alleen development** | `{ bots?: number }` | `{ ok }`; speelt 8 nepvragen en gaat naar `PODIUM` |
+| `host:start` | host | `{}` | `{ ok }`; alleen in `LOBBY`. Minimaal 2 spelers, anders `NOT_ENOUGH_PLAYERS`. Daarna kan niemand meer joinen |
+| `host:next` | host | `{ phase, questionIndex }` (het scherm waarop de host klikte) | `{ ok }`; één stap verder, zie [Fases](#fases). Hoort de klik bij een scherm dat al voorbij is (dubbelklik, timer was eerder), dan `WRONG_PHASE` |
+| `player:answer` | speler | `{ questionIndex, optionId }` | `{ ok }` (zegt **niet** of het goed is). Fouten: `WRONG_PHASE`, `ALREADY_ANSWERED`, `TOO_LATE`, `INVALID_OPTION` |
 | `host:restart` | host | `{}` | `{ ok }`; alleen in fase `PODIUM`, anders `WRONG_PHASE`. Zelfde spelers en namen, scores 0, terug naar `LOBBY` |
+| `dev:finish` | host, **alleen development** | `{ bots?: number }` | `{ ok }`; vanuit de lobby: speelt 8 nepvragen en gaat meteen naar `PODIUM` (om het eindscherm met veel spelers te testen) |
+
+### Fases
+
+```
+LOBBY ─host:start─▶ QUESTION_PREVIEW ─(leestijd voorbij, of host:next)─▶ QUESTION_ACTIVE
+                          ▲                                                    │
+                          │                 tijd op, iedereen online heeft geantwoord, of host:next
+                          │                                                    ▼
+                          └──────── host:next (niet de laatste vraag) ── QUESTION_RESULT
+                                                                               │ host:next (laatste vraag)
+                                                                               ▼
+                                                                            PODIUM
+```
+
+- De server houdt de tijd bij (`backend/socket/gameLoop.js`). Leestijd: 5 seconden, antwoordtijd: `timeLimitSec` van de vraag (20).
+- `QUESTION_RESULT` toont de uitslag van de vraag én de tussenstand (één scherm, zoals in het design). `LEADERBOARD` uit het projectplan wordt (nog) niet gebruikt.
+- Punten: `src/utils/scoring.js`, goed = 1000 (direct) tot 500 (op de valreep), fout of geen antwoord = 0.
 
 ### `state` van `game:sync`
 
 ```js
 {
   code: '482913',
-  phase: 'LOBBY' | 'PODIUM' | ...,
+  phase: 'LOBBY' | 'QUESTION_PREVIEW' | 'QUESTION_ACTIVE' | 'QUESTION_RESULT' | 'PODIUM',
   lobby: { players: [{ id, nickname, connected, isVerified }], playerCount, locked },
-  me: { playerId, nickname } | null,   // alleen voor spelers
+  me: { playerId, nickname, score } | null,  // alleen voor spelers
+  question: <zelfde als question:show> | null,          // in de vraag-fases
+  progress: <zelfde als question:progress> | null,      // alleen host, in QUESTION_ACTIVE
+  questionEnd: <zelfde als question:end> | null,        // in QUESTION_RESULT
+  myQuestionResult: <zelfde als question:my-result> | null, // alleen speler, in QUESTION_RESULT
+  myAnswer: optionId | null,                 // alleen speler: wat je bij deze vraag al koos
   podium: <zelfde als game:podium> | null,   // alleen in PODIUM
   result: <zelfde als player:result> | null, // alleen in PODIUM, alleen voor spelers
 }
 ```
 
-Zo krijgt een speler na verversen of verbindingsverlies precies hetzelfde eindscherm terug.
+Zo krijgt een speler na verversen of verbindingsverlies precies hetzelfde scherm terug, ook midden in een vraag.
 
 ## Server → client
 
 | Event | Naar | Payload |
 |---|---|---|
 | `lobby:update` | room (iedereen) | `{ players: [{ id, nickname, connected, isVerified }], playerCount, locked }` |
+| `question:show` | room (iedereen) | zie hieronder. Bij een nieuwe vraag én als de leestijd voorbij is (dan met `phase: 'QUESTION_ACTIVE'`) |
+| `question:progress` | host-room | `{ answeredCount, playerCount }`; na elk antwoord |
+| `question:end` | room (iedereen) | `{ questionIndex, correctOptionId, answerCounts: { [optionId]: n }, ranking: [{ id, nickname, score, rank, isVerified, pointsGained }] }` |
+| `question:my-result` | room van één speler | `{ questionIndex, answered, optionId, correct, pointsGained }`; direct na `question:end` |
 | `game:podium` | room (iedereen) | `{ top3, ranking: [{ id, nickname, score, rank, isVerified }], totalQuestions }` |
 | `player:result` | room van één speler | zie hieronder |
 | `game:restarted` | room (iedereen) | `{}`; direct daarna volgt `lobby:update`. Clients gaan terug naar het lobby-wachtscherm |
+
+### `question:show`
+
+```js
+{
+  phase: 'QUESTION_PREVIEW' | 'QUESTION_ACTIVE',
+  index: 2, total: 8,                 // index telt vanaf 0 → "Vraag 3 van 8"
+  text: 'Welke HTTP-statuscode …?',
+  options: [{ id: 1, text: '200' }, …], // NOOIT isCorrect: dat hoort de client pas bij question:end
+  timeLimitSec: 20, previewSeconds: 5,
+  startsAt: 1760000000000,            // servertijd (ms) waarop je mag antwoorden
+  serverTime: 1759999995000,          // servertijd bij het versturen
+}
+```
+
+De klok van een laptop of telefoon kan afwijken van de server. De client rekent `startsAt` daarom om naar zijn eigen klok met `serverTime` ([`src/socket/serverTime.js`](../src/socket/serverTime.js)). De tijd is op bij `startsAt + timeLimitSec * 1000`.
 
 ### `player:result` (na de laatste vraag)
 

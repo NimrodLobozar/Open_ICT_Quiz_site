@@ -4,13 +4,14 @@ import { GameError } from "../game/GameError.js";
 import { PHASES } from "../game/phases.js";
 import { sendLobbyUpdate, sendPodium } from "./broadcast.js";
 import { EVENTS } from "./events.js";
+import { afterPhaseChange } from "./gameLoop.js";
 import { gameRoom } from "./rooms.js";
 
 // Events die alleen de host mag sturen. Deze functie wordt alleen aangeroepen voor host-sockets
 // (zie socket/index.js), dus een speler die 'dev:finish' stuurt, wordt nergens gehoord.
 export function registerHostHandlers(io, socket, game) {
-  // ALLEEN DEVELOPMENT: zolang er geen echte vragen zijn, speelt dit de quiz nep af en toont het podium.
-  // Straks doet host:next dit na de laatste tussenstand (projectplan 8.3).
+  // ALLEEN DEVELOPMENT: speelt de quiz nep af en toont meteen het podium, met tot 100 testspelers.
+  // Handig om het eindscherm te testen zonder 8 vragen te spelen. De echte weg is host:start + host:next.
   if (process.env.NODE_ENV !== "production") {
     socket.on(EVENTS.DEV_FINISH, ({ bots = 0 } = {}, ack) => {
       try {
@@ -30,6 +31,34 @@ export function registerHostHandlers(io, socket, game) {
       }
     });
   }
+
+  // Quiz starten: de lobby gaat dicht (Game.addPlayer weigert nu nieuwe spelers) en vraag 1 verschijnt.
+  socket.on(EVENTS.HOST_START, (_payload, ack) => {
+    try {
+      game.start();
+      afterPhaseChange(io, game);
+      ack?.({ ok: true });
+    } catch (error) {
+      ack?.(toErrorResponse(error));
+    }
+  });
+
+  // Eén knop voor de host, met per fase een andere betekenis (zie Game.next):
+  // "Antwoorden nu tonen", "Tijd stoppen" en "Volgende vraag" / "Naar de eindstand".
+  // De client stuurt mee op welk scherm hij klikte. Klikt de host twee keer op "Volgende vraag",
+  // of gaat de timer net af tijdens de klik, dan hoort die klik bij een scherm dat al voorbij is:
+  // zonder deze check zou de tweede klik meteen de leestijd van de volgende vraag overslaan.
+  socket.on(EVENTS.HOST_NEXT, ({ phase, questionIndex } = {}, ack) => {
+    try {
+      if (phase !== game.phase || questionIndex !== game.questionIndex)
+        throw new GameError("WRONG_PHASE", "Dit scherm is al voorbij.");
+      game.next();
+      afterPhaseChange(io, game);
+      ack?.({ ok: true });
+    } catch (error) {
+      ack?.(toErrorResponse(error));
+    }
+  });
 
   socket.on(EVENTS.HOST_RESTART, (_payload, ack) => {
     try {

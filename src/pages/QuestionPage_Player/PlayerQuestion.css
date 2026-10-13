@@ -1,0 +1,285 @@
+/* Vraag- en uitslagscherm van de speler. Zelfde oranje kleuren als de rest (design "Oranje").
+   Alle tekstkleuren halen WCAG AA (minstens 4,5:1) op hun achtergrond. */
+.player-question {
+  --quiz-bg: #ffedd5;
+  --quiz-surface: #fff7ed;
+  --quiz-border: #fdba74;
+  --quiz-accent: #fdba74;
+  --quiz-primary: #c2410c;
+  --quiz-muted: #9a4a22;
+  --quiz-text: #7c2d12;
+
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh; /* dvh = juiste hoogte op telefoons, ook met de adresbalk in beeld */
+  background: var(--quiz-bg);
+  color: var(--quiz-text);
+  font-family: 'Rubik', sans-serif;
+}
+
+.player-question__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 32px;
+}
+
+.player-question__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.player-question__text {
+  margin: 0;
+  font-size: clamp(22px, 3vw, 36px);
+  font-weight: 800;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.player-question__reading {
+  margin: 0;
+  padding: 32px;
+  border: 2px dashed var(--quiz-border);
+  border-radius: 18px;
+  font-size: 20px;
+  text-align: center;
+  color: var(--quiz-muted);
+}
+
+.player-question__reading strong {
+  color: var(--quiz-text);
+}
+
+/* ---------- Antwoordknoppen ---------- */
+.player-question__options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.player-question__option {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-height: 150px;
+  padding: 16px 32px;
+  border: 0;
+  border-radius: 18px;
+  font-family: inherit;
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 800;
+  line-height: 1.15;
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.player-question__option .answer-shape {
+  width: 40px;
+  height: 40px;
+}
+
+.player-question__option:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.player-question__option:focus-visible {
+  outline: 4px solid var(--quiz-text);
+  outline-offset: 3px;
+}
+
+/* Na je keuze: de rest valt weg, jouw knop krijgt een dikke rand. Niet alleen kleur: ook aria-pressed + tekst eronder. */
+.player-question__option:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.player-question__option.is-chosen {
+  opacity: 1;
+  outline: 5px solid var(--quiz-text);
+  outline-offset: 3px;
+}
+
+.player-question__feedback {
+  min-height: 1.4em; /* ruimte vasthouden, zodat de pagina niet verspringt als de tekst verschijnt */
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.player-question__footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-top: auto;
+  font-size: 17px;
+  color: var(--quiz-muted);
+}
+
+.player-question__footer strong {
+  color: var(--quiz-text);
+}
+
+/* ---------- Uitslag na de vraag ---------- */
+.player-question__main--result {
+  align-items: center;
+  gap: 26px;
+  max-width: 760px;
+  padding-top: 56px;
+  padding-bottom: 56px;
+  text-align: center;
+}
+
+.player-question__verdict {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  width: 100%;
+  padding: 24px;
+  border: 2px solid currentColor;
+  border-radius: 20px;
+}
+
+.player-question__verdict svg {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.player-question__verdict span {
+  font-family: 'Anton', sans-serif;
+  font-size: 52px;
+  line-height: 1;
+  letter-spacing: 0.04em;
+}
+
+.player-question__verdict--correct {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.player-question__verdict--wrong {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.player-question__verdict--none {
+  background: var(--quiz-surface);
+  color: var(--quiz-muted);
+}
+
+.player-question__answer-was {
+  margin: 0;
+  font-size: 18px;
+  color: var(--quiz-muted);
+}
+
+.player-question__answer-was strong {
+  color: var(--quiz-text);
+}
+
+/* Banner met puntvorm, net als het podium. */
+.player-question__place {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 170px;
+  margin: 0;
+  background: var(--quiz-accent);
+  font-size: 18px;
+  font-weight: 800;
+  text-transform: uppercase;
+  clip-path: polygon(44px 0, calc(100% - 44px) 0, 100% 50%, calc(100% - 44px) 100%, 44px 100%, 0 50%);
+}
+
+.player-question__place-rank {
+  font-family: 'Anton', sans-serif;
+  font-size: 112px;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.player-question__to-next {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+/* Maar 4 rijen: de lijst hoeft niet te scrollen. */
+.player-question__main--result .scoreboard {
+  --scoreboard-max-height: none;
+  text-align: left;
+}
+
+.player-question__next {
+  margin: auto 0 0;
+  font-size: 17px;
+  color: var(--quiz-muted);
+}
+
+/* ---------- Telefoon ---------- */
+@media (max-width: 640px) {
+  .player-question__main {
+    gap: 16px;
+    padding: 18px 16px 20px;
+  }
+  .player-question__options {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .player-question__option {
+    min-height: 112px;
+    gap: 14px;
+    padding: 12px 18px;
+  }
+  .player-question__option .answer-shape {
+    width: 30px;
+    height: 30px;
+  }
+  .player-question__footer {
+    font-size: 15px;
+  }
+  .player-question__main--result {
+    gap: 18px;
+    padding: 24px 16px;
+  }
+  .player-question__verdict {
+    padding: 18px;
+  }
+  .player-question__verdict svg {
+    width: 32px;
+    height: 32px;
+  }
+  .player-question__verdict span {
+    font-size: 36px;
+  }
+  .player-question__place {
+    min-height: 130px;
+    font-size: 15px;
+    clip-path: polygon(32px 0, calc(100% - 32px) 0, 100% 50%, calc(100% - 32px) 100%, 32px 100%, 0 50%);
+  }
+  .player-question__place-rank {
+    font-size: 80px;
+  }
+  .player-question__to-next {
+    font-size: 17px;
+  }
+}

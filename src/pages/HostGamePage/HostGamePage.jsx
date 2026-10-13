@@ -1,11 +1,26 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../../api/http.js";
+import { useQuestionEvents } from "../../hooks/useQuestionEvents.js";
 import { useSocketEvent } from "../../hooks/useSocketEvent.js";
 import { EVENTS } from "../../socket/events.js";
+import { withLocalStartsAt } from "../../socket/serverTime.js";
 import { connectSocket, emitWithAck, socket } from "../../socket/socket.js";
 import { HostEndScreen } from "../EndScreenPage_Host/EndScreenPage.jsx";
+import { HostLeaderboard } from "../QuestionPage_Host/LeaderboardPage.jsx";
+import { HostQuestionAnswers } from "../QuestionPage_Host/QuestionAnswersPage.jsx";
+import { HostQuestionPreview } from "../QuestionPage_Host/QuestionPreviewPage.jsx";
 import "./HostGamePage.css";
+
+// Zelfde grens als MIN_PLAYERS in backend/game/Game.js. De server controleert het ook;
+// hier is het alleen om de knop al uit te zetten.
+const MIN_PLAYERS = 2;
+
+// "localhost" betekent op elk apparaat "dit apparaat zelf". Staat dat in de join-link,
+// dan zoekt een telefoon de quiz op de telefoon. Daarom waarschuwen we de host.
+const isLocalhost = ["localhost", "127.0.0.1", "[::1]"].includes(
+  window.location.hostname,
+);
 
 /** /host/new: maakt een game aan (de server zet de host-cookie) en gaat door naar /host/:code. */
 export function HostCreatePage() {
@@ -31,7 +46,8 @@ export function HostCreatePage() {
 
 /**
  * /host/:code: het grote scherm van de host.
- * Nu: lobby (spelers live) en podium. TODO(team, fase 4): vragen en tussenstand.
+ * Lobby → per vraag: leestijd, antwoorden, tussenstand → podium.
+ * Welk scherm hangt af van game.phase, die de server stuurt.
  */
 export default function HostGamePage() {
   const { code } = useParams();
@@ -57,8 +73,15 @@ export default function HostGamePage() {
 
   useSocketEvent("connect", async () => {
     const response = await emitWithAck(EVENTS.GAME_SYNC).catch(() => null);
-    if (response?.ok) setGame(response.state);
+    if (response?.ok)
+      setGame({
+        ...response.state,
+        question: withLocalStartsAt(response.state.question),
+      });
   });
+
+  // question:show, question:progress en question:end.
+  useQuestionEvents(setGame);
 
   useSocketEvent(EVENTS.LOBBY_UPDATE, (lobby) => {
     setGame((current) => current && { ...current, lobby });
@@ -81,6 +104,27 @@ export default function HostGamePage() {
     setBusy(false);
   }
 
+  async function startQuiz() {
+    setBusy(true);
+    setError(null);
+    const response = await emitWithAck(EVENTS.HOST_START).catch(() => null);
+    if (!response?.ok)
+      setError(response?.message ?? "Geen antwoord van de server.");
+    setBusy(false);
+  }
+
+  // Eén actie voor "Antwoorden nu tonen", "Tijd stoppen" en "Volgende vraag" (zie Game.next op de server).
+  async function next() {
+    setError(null);
+    const response = await emitWithAck(EVENTS.HOST_NEXT, {
+      phase: game.phase,
+      questionIndex: game.question?.index,
+    }).catch(() => null);
+    // WRONG_PHASE: dubbelklik of de timer was net eerder. Het nieuwe scherm komt vanzelf, dus geen melding.
+    if (!response?.ok && response?.error !== "WRONG_PHASE")
+      setError(response?.message ?? "Geen antwoord van de server.");
+  }
+
   async function restart() {
     setError(null);
     const response = await emitWithAck(EVENTS.HOST_RESTART).catch(() => null);
@@ -92,7 +136,15 @@ export default function HostGamePage() {
   useSocketEvent(EVENTS.GAME_RESTARTED, () => {
     setGame(
       (current) =>
-        current && { ...current, phase: "LOBBY", podium: null, result: null },
+        current && {
+          ...current,
+          phase: "LOBBY",
+          podium: null,
+          result: null,
+          question: null,
+          progress: null,
+          questionEnd: null,
+        },
     );
   });
 
@@ -121,9 +173,71 @@ export default function HostGamePage() {
     );
   }
 
+  const errorBanner = error && (
+    <p className="host-game__error host-game__error--top" role="alert">
+      {error}
+    </p>
+  );
+
+  if (game.phase === "QUESTION_PREVIEW" && game.question) {
+    return (
+      <>
+        {errorBanner}
+        <HostQuestionPreview
+          code={code}
+          question={game.question}
+          onShowAnswers={next}
+        />
+      </>
+    );
+  }
+
+  if (game.phase === "QUESTION_ACTIVE" && game.question) {
+    return (
+      <>
+        {errorBanner}
+        <HostQuestionAnswers
+          code={code}
+          question={game.question}
+          answeredCount={game.progress?.answeredCount ?? 0}
+          playerCount={game.progress?.playerCount ?? game.lobby.playerCount}
+          onStopTime={next}
+        />
+      </>
+    );
+  }
+
+  if (game.phase === "QUESTION_RESULT" && game.question && game.questionEnd) {
+    return (
+      <>
+        {errorBanner}
+        <HostLeaderboard
+          code={code}
+          question={game.question}
+          correctOptionId={game.questionEnd.correctOptionId}
+          answerCounts={game.questionEnd.answerCounts}
+          playerCount={game.questionEnd.ranking.length}
+          ranking={game.questionEnd.ranking}
+          onNext={next}
+        />
+      </>
+    );
+  }
+
   const { players, playerCount } = game.lobby;
+  const canStart = playerCount >= MIN_PLAYERS;
   return (
     <main className="host-game">
+      {isLocalhost && (
+        <p className="host-game__warning" role="alert">
+          <strong>Let op:</strong> je opent deze pagina via{" "}
+          <code>{window.location.hostname}</code>. Een telefoon kan dat adres
+          niet openen. Open de site op deze computer via zijn netwerkadres
+          (bijv. <code>http://192.168.x.x:{window.location.port}</code>, je
+          vindt het IP-adres met <code>ipconfig</code>) en maak daar een nieuwe
+          lobby.
+        </p>
+      )}
       <p className="host-game__label">
         Ga naar {window.location.host}/join en vul in:
       </p>
@@ -143,11 +257,25 @@ export default function HostGamePage() {
         ))}
       </ul>
 
+      <button
+        type="button"
+        className="host-game__start"
+        disabled={busy || !canStart}
+        onClick={startQuiz}
+      >
+        Quiz starten
+      </button>
+      {!canStart && (
+        <p className="host-game__hint">
+          Er zijn minimaal {MIN_PLAYERS} spelers nodig om te starten.
+        </p>
+      )}
+
       {import.meta.env.DEV && (
         <section className="host-game__dev" aria-label="Alleen voor testen">
           <p>
-            <strong>Alleen voor testen:</strong> er zijn nog geen vragen. Deze
-            knoppen spelen 8 nepvragen voor iedereen en tonen dan het podium.
+            <strong>Alleen voor testen:</strong> sla de vragen over. Deze
+            knoppen spelen 8 nepvragen voor iedereen en tonen meteen het podium.
           </p>
           <button
             type="button"

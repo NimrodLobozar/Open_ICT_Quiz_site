@@ -1,5 +1,5 @@
 import { EVENTS } from './events.js'
-import { gameRoom, playerRoom } from './rooms.js'
+import { gameRoom, hostRoom, playerRoom } from './rooms.js'
 
 // Berichten die de server uit zichzelf naar clients stuurt.
 // Los van de handlers, omdat zowel REST-routes als socket-handlers ze gebruiken.
@@ -12,6 +12,31 @@ export function sendLobbyUpdate(io, game) {
     playerCount: players.length,
     locked: game.locked,
   })
+}
+
+/** De huidige vraag naar iedereen (zonder het goede antwoord, zie Game.getQuestionPayload). */
+export function sendQuestion(io, game) {
+  io.to(gameRoom(game.code)).emit(EVENTS.QUESTION_SHOW, game.getQuestionPayload())
+}
+
+/** "9/12 antwoorden": alleen naar de host. Spelers hoeven niet te zien hoe snel de rest is. */
+export function getProgressPayload(game) {
+  return { answeredCount: game.getAnsweredCount(), playerCount: game.players.size }
+}
+
+export function sendProgress(io, game) {
+  io.to(hostRoom(game.code)).emit(EVENTS.QUESTION_PROGRESS, getProgressPayload(game))
+}
+
+/**
+ * Vraag voorbij: eerst voor iedereen het goede antwoord en de tussenstand,
+ * daarna ieder zijn eigen uitslag via zijn eigen room (net als bij het podium).
+ */
+export function sendQuestionEnd(io, game) {
+  io.to(gameRoom(game.code)).emit(EVENTS.QUESTION_END, game.getQuestionEndPayload())
+  for (const id of game.players.keys()) {
+    io.to(playerRoom(game.code, id)).emit(EVENTS.QUESTION_MY_RESULT, game.getMyQuestionResult(id))
+  }
 }
 
 /** Data van het podium, voor iedereen gelijk. Ook gebruikt door game:sync na verversen. */

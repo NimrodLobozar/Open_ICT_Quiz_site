@@ -28,9 +28,7 @@ export default function App() {
               <br />
               <Link to="/end-player">Naar het Eindscherm - Player</Link>
               <br />
-              <a href="/lobby">
-                <button>Kom maar hier heen</button>
-              </a>
+              <Link to="/lobby">Kom hierheen</Link>
             </>
           }
         />

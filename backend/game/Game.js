@@ -19,10 +19,13 @@ export class Game {
     // De eindstand wordt één keer vastgezet bij het podium.
     // Verlaat iemand daarna het spel, dan blijft de eindstand van de rest gelijk.
     this.finalRanking = null
+    // Voor de database: welke ronde dit is (+1 bij herstart) en wanneer de lobby openging.
+    this.round = 1
+    this.startedAt = new Date()
   }
 
   /** Nieuwe speler in de lobby. Gooit een GameError als het niet mag. */
-  addPlayer(rawNickname, { isBot = false } = {}) {
+  addPlayer(rawNickname, { isBot = false, skills } = {}) {
     if (this.phase !== PHASES.LOBBY) throw new GameError('WRONG_PHASE', 'De quiz is al begonnen.', 403)
     if (this.locked) throw new GameError('LOBBY_LOCKED', 'Deze lobby is gesloten.', 403)
 
@@ -45,6 +48,7 @@ export class Game {
       connected: false,
       isVerified: false, // pas true met een account (L1)
       isBot,
+      skills: cleanSkills(skills),
     }
     this.players.set(player.id, player)
     return player
@@ -130,11 +134,50 @@ export class Game {
     }
     this.finalRanking = null
     this.phase = PHASES.LOBBY
+    this.round += 1
+    this.startedAt = new Date()
   }
+
+  /**
+   * De eindstand als rijen voor de database (GameSession + GameResult).
+   * Alleen een vertaling, zonder Prisma: zo is het te testen zonder database.
+   */
+  toSessionRecord(endedAt = new Date()) {
+    if (!this.finalRanking) return null
+    return {
+      code: this.code,
+      round: this.round,
+      startedAt: this.startedAt,
+      endedAt,
+      results: this.finalRanking.map(({ id, nickname, score, rank, correctCount }) => {
+        // skills en isBot staan niet in de ranking, dus die komen uit players.
+        // Is de speler al vertrokken, dan zijn die extra's weg, maar de score blijft.
+        const player = this.getPlayer(id)
+        return {
+          nickname,
+          score,
+          rank,
+          correctCount,
+          skills: player?.skills ?? {},
+          isBot: player?.isBot ?? false,
+        }
+      }),
+    }
+  }
+}
+
+// De client stuurt { "Frontend": 3, ... } mee bij het joinen. Nooit blind opslaan wat een
+// browser stuurt: alleen een paar korte namen met een getal van 0 t/m 5 (het bereik van de slider).
+function cleanSkills(skills) {
+  if (!skills || typeof skills !== 'object' || Array.isArray(skills)) return {}
+  const entries = Object.entries(skills)
+    .filter(([label, value]) => label.length <= 40 && Number.isInteger(value) && value >= 0 && value <= 5)
+    .slice(0, 10)
+  return Object.fromEntries(entries)
 }
 
 /**
  * @typedef {{ id: number, nickname: string, score: number, correctCount: number,
  *   answers: Array<{ questionIndex: number, correct: boolean, points: number }>,
- *   connected: boolean, isVerified: boolean, isBot: boolean }} Player
+ *   connected: boolean, isVerified: boolean, isBot: boolean, skills: Record<string, number> }} Player
  */

@@ -1,212 +1,112 @@
 # Database
 
-> Stand van zaken op 8 oktober 2026 (branch `feature_Eindscherm`, gelijk aan `dev` wat het schema betreft).
+> Stand van zaken op 13 oktober 2026 (branch `feature_Eindscherm`).
 
 ## In het kort
 
-- **PostgreSQL 16** in Docker (service `db`), gebruiker/wachtwoord/database: `quiz` / `quiz` / `quiz`, poort `5432`.
+- **PostgreSQL 16** in Docker (service `db`), gebruiker/wachtwoord/database: `quiz` / `quiz` / `quiz`.
+  Vanaf je laptop op poort **`5433`**, binnen Docker op `db:5432`.
+- **Bekijken in de browser:** Adminer op http://localhost:8080 (systeem PostgreSQL, server `db`, gebruiker/wachtwoord/database `quiz`).
 - **Prisma 7** met de `@prisma/adapter-pg`-adapter. De client staat in [`backend/db/prisma.js`](../backend/db/prisma.js); importeer altijd díé `prisma`, maak geen tweede `PrismaClient` aan.
-- Het schema staat in [`prisma/schema.prisma`](../prisma/schema.prisma). Er zijn **nog geen migraties**: de backend draait bij het opstarten `npx prisma db push` (zie [`Dockerfile.backend`](../Dockerfile.backend)), dat zet de tabellen gelijk aan het schema.
-- Er zijn **2 tabellen** en ze zijn allebei **leeg** (0 rijen). Er is nog geen seed.
-- De enige query in de code is `SELECT 1` in de health-check ([`backend/routes/health.js`](../backend/routes/health.js)).
-- Het eindscherm gebruikt nu nepdata uit [`src/data/dummyDatabase.js`](../src/data/dummyDatabase.js), niet de database.
+- Het schema staat in [`prisma/schema.prisma`](../prisma/schema.prisma). Er zijn **nog geen migraties**: nodemon draait `npx prisma db push` bij het opstarten en bij elke schemawijziging.
 
-## Tabellen die nu bestaan
+## Wat staat waar?
 
-### `Quiz`
-
-Ondanks de naam is dit eigenlijk een **lobby / gespeelde game**: er staat een joincode en een slot op, maar geen vragen.
-
-| Kolom | Type | Regels |
+| | Waar | Waarom |
 |---|---|---|
-| `id` | `integer` | primary key, auto-increment |
-| `code` | `text` | **uniek** (de lobbycode, bijv. `482913`) |
-| `title` | `text` | verplicht |
-| `locked` | `boolean` | standaard `false` |
-| `createdAt` | `timestamp(3)` | standaard `now()` |
+| Lopende game (lobby, spelers, scores tijdens het spel) | geheugen van de server ([`backend/game/`](../backend/game/)) | snel: een antwoord kost geen databasequery (projectplan 6) |
+| Uitslag van een gespeelde ronde | database (`GameSession` + `GameResult`) | blijft bewaard, ook als de server herstart |
 
-### `Player`
+De server schrijft **één keer per ronde**, op het moment van het podium:
 
-| Kolom | Type | Regels |
+1. `game.finish()` zet de eindstand vast met `getRanking()`.
+2. `sendPodium()` stuurt de eindstand naar iedereen.
+3. `saveGameResultsInBackground(game)` ([`backend/db/gameResults.js`](../backend/db/gameResults.js)) slaat hem op.
+
+Stap 3 komt ná het podium en wacht niemand op: ligt de database eruit, dan zien spelers gewoon hun eindstand en staat de fout in `docker compose logs backend`.
+
+Nu gebeurt dit alleen in `dev:finish` ([`backend/socket/hostHandlers.js`](../backend/socket/hostHandlers.js)). **Bouw je `host:next` na de laatste vraag, roep daar dan ook `saveGameResultsInBackground(game)` aan.**
+
+## Tabellen
+
+### `GameSession`: één gespeelde ronde
+
+| Kolom | Type | Uitleg |
 |---|---|---|
-| `id` | `integer` | primary key, auto-increment |
-| `nickname` | `text` | verplicht (nog **geen** uniek-regel per quiz) |
-| `quizId` | `integer` | foreign key → `Quiz.id` (`ON DELETE RESTRICT`) |
-| `createdAt` | `timestamp(3)` | standaard `now()` |
+| `id` | `integer` | primary key |
+| `code` | `text` | de lobbycode. **Niet uniek**: herstart geeft een nieuwe rij met dezelfde code, en codes worden later opnieuw uitgedeeld |
+| `round` | `integer` | 1, en +1 bij elke `host:restart` |
+| `startedAt` | `timestamp` | moment dat de lobby (opnieuw) openging |
+| `endedAt` | `timestamp` | moment van het podium |
 
-**Relatie:** één `Quiz` heeft veel `Player`s. Omdat de foreign key `RESTRICT` is, kun je een `Quiz` pas verwijderen als de spelers eerst weg zijn.
+### `GameResult`: eindstand van één speler in één ronde
 
-**Wat ontbreekt voor het scoreboard:** er staat **nergens een score**. Er zijn ook geen vragen, antwoorden of resultaten.
+| Kolom | Type | Uitleg |
+|---|---|---|
+| `id` | `integer` | primary key |
+| `sessionId` | `integer` | foreign key → `GameSession.id` (`ON DELETE CASCADE`: sessie weg = resultaten weg) |
+| `nickname` | `text` | |
+| `score` | `integer` | totaal aantal punten |
+| `rank` | `integer` | plek uit `getRanking()` (gelijke score = gedeelde plek) |
+| `correctCount` | `integer` | aantal goede antwoorden |
+| `skills` | `jsonb` | de ervaring-sliders van de joinpagina, bijv. `{"Frontend": 4}`. De server houdt alleen getallen 0 t/m 5 over |
+| `isBot` | `boolean` | testspelers van `dev:finish`; filter ze weg met `WHERE NOT "isBot"` |
+
+**Waarom staat `rank` er wél in?** Het is een momentopname van wat de spelers op het podium zagen. Rekenen doe je in de app altijd met `getRanking()` uit [`src/utils/ranking.js`](../src/utils/ranking.js), niet zelf in SQL.
+
+De vertaling van een `Game` naar deze rijen staat in `Game.toSessionRecord()`, zonder Prisma, zodat je hem kunt testen zonder database ([`backend/tests/gameResults.test.js`](../backend/tests/gameResults.test.js)).
 
 ## Verschil met het projectplan
 
-Hoofdstuk 12 van het projectplan beschrijft een groter schema. Dit is ervan gebouwd:
+Dit volgt hoofdstuk 12 van het projectplan, maar nog niet alles:
 
-| Projectplan | Nu in de database |
+| Projectplan | Nu |
 |---|---|
-| `Quiz` = de vragenset (titel, omschrijving, vragen) | `Quiz` = een lobby met `code` + `locked` (lijkt meer op `GameSession`) |
-| `Question`, `AnswerOption` | ontbreekt |
-| `GameSession` (code, ronde, start/eind) | ontbreekt, deels vervangen door `Quiz` |
-| `GameResult` (nickname, score, rank, correctCount) | ontbreekt |
+| `GameSession`, `GameResult` | ✅ gebouwd. `GameSession.quizId` ontbreekt nog, want er is nog geen vragenset |
+| `Quiz` (= de vragenset), `Question`, `AnswerOption` | ontbreekt; komt met de game loop |
 | `Role`, `User`, `UserRole`, `PlayerAnswer` (later) | ontbreekt |
-| (niet in plan) | `Player` (speler in een lobby) |
+| (niet in plan) | `GameResult.skills`, `GameResult.isBot` |
 
-Let op de **naamverwarring**: als iemand "Quiz" zegt, vraag of ze de vragenset (plan) of de lobby (huidige code) bedoelen. Het is handig om dit met het team recht te trekken voordat er vragen bij komen, bijvoorbeeld door de huidige `Quiz` later te hernoemen naar `GameSession`.
+De oude tabellen `Quiz` (eigenlijk een lobby) en `Player` en de route `/api/code` zijn weg: de app gebruikte ze niet, de lobby draait helemaal op het geheugen.
 
-## Wat het scoreboard nodig heeft
-
-Het eindscherm (`Podium` + het nog te bouwen scoreboard) heeft per speler nodig:
-
-```js
-{ id, nickname, score, correctCount }  // rank berekent getRanking() zelf
-```
-
-Dat is precies de vorm van `gameResults` in `dummyDatabase.js`, zodat je de nepdata straks één-op-één kunt vervangen.
-
-### Voorstel: score op `Player` zetten (kleinste stap)
-
-De snelste weg naar een echt scoreboard met wat er al is: twee kolommen aan `Player` toevoegen.
-
-```prisma
-model Player {
-  id           Int      @id @default(autoincrement())
-  nickname     String
-  quiz         Quiz     @relation(fields: [quizId], references: [id])
-  quizId       Int
-  score        Int      @default(0) // totaal aantal punten in deze game
-  correctCount Int      @default(0) // aantal goede antwoorden, voor "7/8 goed" op het eindscherm
-  createdAt    DateTime @default(now())
-
-  // Twee spelers met dezelfde naam in één lobby is verwarrend op het scoreboard.
-  @@unique([quizId, nickname])
-}
-```
-
-Daarna: `docker compose up --build backend` (de backend doet `prisma db push` bij het starten) of lokaal `npx prisma db push`.
-
-**Bewust géén `rank`-kolom:** de plek wordt altijd berekend met `getRanking()` uit [`src/utils/ranking.js`](../src/utils/ranking.js). Zo kunnen podium, scoreboard en database het nooit oneens zijn. Zie ook `CLAUDE.md`.
-
-> Alternatief volgens het projectplan: een aparte tabel `GameResult` die pas aan het eind van de game gevuld wordt, terwijl de scores tijdens het spel in het geheugen van de server staan. Dat is netter als je later "opnieuw spelen" (meerdere rondes) wilt bewaren. Begin gerust met het voorstel hierboven en stap later over; de vorm van de data voor het eindscherm blijft hetzelfde.
-
-## Queries voor het eindscherm
-
-Alle voorbeelden gaan uit van het voorstel hierboven (`score` en `correctCount` op `Player`).
+## Queries
 
 ### Prisma (in de backend)
 
 ```js
 import { prisma } from '../db/prisma.js'
-import { getRanking } from '../../src/utils/ranking.js'
 
-// Uitslag van één lobby ophalen via de code die spelers ook intypen.
-export async function getResults(code) {
-  const quiz = await prisma.quiz.findUnique({
-    where: { code },
-    select: {
-      id: true,
-      title: true,
-      players: {
-        // Alleen de velden die het eindscherm nodig heeft, zodat er niets extra's uitlekt.
-        select: { id: true, nickname: true, score: true, correctCount: true },
-      },
-    },
-  })
-
-  if (!quiz) return null
-
-  // De database sorteert niet: getRanking doet sorteren én plekken, net als in de frontend.
-  return { title: quiz.title, ranking: getRanking(quiz.players) }
-}
-```
-
-Waarom `getRanking` op de server importeren uit `src/`? Het is gewoon JavaScript zonder React, dus Node kan het ook draaien. Eén bestand = één waarheid.
-
-> **Let op bij Docker:** [`Dockerfile.backend`](../Dockerfile.backend) kopieert nu alleen `backend/` en `prisma/`. Voeg `COPY src/utils ./src/utils` toe, anders vindt de backend-container `ranking.js` niet.
-
-**Score bijwerken na een antwoord:**
-
-```js
-await prisma.player.update({
-  where: { id: playerId },
-  data: {
-    // increment voorkomt dat twee gelijktijdige updates elkaar overschrijven.
-    score: { increment: pointsGained },
-    correctCount: { increment: correct ? 1 : 0 },
-  },
+// De laatste ronde van een lobby, met de uitslag op volgorde.
+const session = await prisma.gameSession.findFirst({
+  where: { code: '482913' },
+  orderBy: { round: 'desc' },
+  include: { results: { orderBy: [{ rank: 'asc' }, { nickname: 'asc' }] } },
 })
 ```
 
-**Alle scores tegelijk opslaan aan het eind** (als je de scores tijdens het spel in het geheugen bijhoudt):
+### SQL (in Adminer → "SQL-opdracht", of met `docker compose exec db psql -U quiz -d quiz`)
 
-```js
-// $transaction: of alles wordt opgeslagen, of niets. Geen half scoreboard.
-await prisma.$transaction(
-  players.map((player) =>
-    prisma.player.update({
-      where: { id: player.id },
-      data: { score: player.score, correctCount: player.correctCount },
-    }),
-  ),
-)
-```
-
-**Lobby + spelers aanmaken** (handig om te testen):
-
-```js
-const quiz = await prisma.quiz.create({
-  data: {
-    code: '482913',
-    title: 'ICT algemeen',
-    players: {
-      create: [
-        { nickname: 'Sanne', score: 7420, correctCount: 8 },
-        { nickname: 'Mo', score: 6150, correctCount: 7 },
-        { nickname: 'Fatima', score: 6150, correctCount: 7 },
-      ],
-    },
-  },
-})
-```
-
-### SQL (om zelf in de database te kijken)
-
-Openen:
-
-```bash
-docker compose exec db psql -U quiz -d quiz
-```
-
-Tabelnamen met hoofdletters moeten tussen dubbele quotes (`"Player"`), anders zoekt Postgres naar `player`.
+Tabel- en kolomnamen met hoofdletters moeten tussen dubbele quotes (`"GameResult"`, `"isBot"`), anders zoekt Postgres naar kleine letters.
 
 ```sql
--- Welke tabellen zijn er, en hoe zien ze eruit?
-\dt
-\d "Player"
+-- Alle gespeelde rondes, nieuwste eerst
+SELECT id, code, round, "startedAt", "endedAt" FROM "GameSession" ORDER BY id DESC;
 
--- Hoeveel rijen?
-SELECT COUNT(*) FROM "Quiz";
-SELECT COUNT(*) FROM "Player";
+-- Uitslag van één lobby, zonder bots
+SELECT s.round, r.rank, r.nickname, r.score, r."correctCount", r.skills
+FROM "GameResult" r
+JOIN "GameSession" s ON s.id = r."sessionId"
+WHERE s.code = '482913' AND NOT r."isBot"
+ORDER BY s.round, r.rank, r.nickname;
 
--- Scoreboard van één lobby. RANK() geeft gelijke scores dezelfde plek (1, 2, 2, 4),
--- precies zoals getRanking().
-SELECT
-  RANK() OVER (ORDER BY p.score DESC) AS rank,
-  p.nickname,
-  p.score,
-  p."correctCount"
-FROM "Player" p
-JOIN "Quiz" q ON q.id = p."quizId"
-WHERE q.code = '482913'
-ORDER BY p.score DESC, p.nickname;
+-- Testdata opruimen (resultaten gaan mee door de cascade)
+DELETE FROM "GameSession";
 ```
-
-De SQL-versie is om te controleren, niet om in de app te gebruiken: Postgres sorteert namen soms net iets anders dan JavaScript (`localeCompare`), en dan zou de volgorde bij gelijke scores verschillen van het podium.
 
 ## Handige commando's
 
 | Wat | Commando |
 |---|---|
-| Database bekijken in de browser | `npx prisma studio` (lokaal, met `DATABASE_URL` in `.env` naar `localhost:5432`) |
-| Schema naar de database zetten | `npx prisma db push` |
-| Prisma-client opnieuw genereren na een schemawijziging | `npm run prisma:generate` |
+| Database bekijken | http://localhost:8080 (Adminer), of `npx prisma studio` met `DATABASE_URL=postgresql://quiz:quiz@localhost:5433/quiz` |
+| Schema naar de database zetten | gaat vanzelf (nodemon), of `npx prisma db push` |
 | Alles leeg en opnieuw | `docker compose down -v` en daarna `docker compose up --build` |

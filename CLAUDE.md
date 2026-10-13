@@ -10,12 +10,12 @@ Stack: React 19 + Vite + antd + react-router (frontend, `src/`), Express 5 + Soc
 
 ## Commands
 
-- `docker compose up --build`: the normal way to run everything. Frontend http://localhost:5173, API http://localhost:3000, Postgres on 5432. Code is mounted, so no rebuild needed for code changes (Vite HMR; nodemon restarts the backend and runs `prisma db push` + `prisma generate` on schema changes).
+- `docker compose up --build`: the normal way to run everything. Frontend http://localhost:5173, API http://localhost:3000, Postgres on host port 5433 (5432 inside Docker), Adminer http://localhost:8080 (server `db`, user/password/database `quiz`). Code is mounted, so no rebuild needed for code changes (Vite HMR; nodemon restarts the backend and runs `prisma db push` + `prisma generate` on schema changes).
 - After `package.json` changes: `docker compose up -d --build -V` (`-V` is required, otherwise the old `node_modules` volume is kept).
 - Reset the database: `docker compose down -v`. Backend/schema errors show in `docker compose logs backend`.
 - Without Docker: `npm run server` (API, needs `DATABASE_URL`, see `.env.example`) and `npm run dev` (Vite proxies `/api` and `/socket.io` to `API_PROXY_TARGET`, default `http://localhost:3000`).
 - Tests: `npm test`. Single file: `npx vitest run backend/tests/ranking.test.js`; single test: add `-t "<test name>"`.
-- There are no migrations yet: the schema is applied with `prisma db push`. The DB is barely used so far (only the health check); games are in memory. See `docs/DATABASE.md`.
+- There are no migrations yet: the schema is applied with `prisma db push`. Live games are in memory; the DB only stores finished rounds (`GameSession` + `GameResult`), written once at the podium by `backend/db/gameResults.js`. See `docs/DATABASE.md`.
 
 ## Conventions
 

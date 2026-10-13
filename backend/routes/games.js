@@ -57,7 +57,7 @@ router.post('/:code/players', (request, response) => {
     return response.json({ playerId: existingPlayer.id, nickname: existingPlayer.nickname })
   }
 
-  const player = game.addPlayer(request.body?.nickname)
+  const player = game.addPlayer(request.body?.nickname, { skills: request.body?.skills })
   const token = gameManager.createSession({ code, role: 'player', playerId: player.id })
   setSessionCookie(response, PLAYER_COOKIE, token)
   sendLobbyUpdate(getIo(request), game)

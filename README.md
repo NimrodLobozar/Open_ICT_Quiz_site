@@ -8,7 +8,9 @@ React + Vite frontend with an Express API and PostgreSQL database.
 docker compose up --build
 ```
 
-Open the frontend at http://localhost:5173. The API is available at http://localhost:3000 and PostgreSQL is exposed on port 5432.
+Open the frontend at http://localhost:5173. The API is available at http://localhost:3000 and PostgreSQL is exposed on port 5433.
+
+To look inside the database, open Adminer at http://localhost:8080 and log in with system **PostgreSQL**, server **db**, user/password/database **quiz**. Port 5433 is not a web page: use it only in a database tool such as DBeaver or pgAdmin (`localhost:5433`).
 
 The first backend start runs `prisma db push` to create the database tables from `prisma/schema.prisma`. PostgreSQL data is stored in the `postgres-data` Docker volume.
 

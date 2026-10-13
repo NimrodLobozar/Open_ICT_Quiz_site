@@ -242,7 +242,7 @@ function NicknameStep({ code, locked }) {
   }, [code, navigate])
 
   // De server checkt de naam en zet de cookie. Daarna weet /play/:code wie we zijn.
-  // TODO(team): skills gaan al mee, maar de server slaat ze nog niet op.
+  // De skills bewaart de server bij de speler; ze komen in de database bij de eindstand (GameResult).
   async function join({ nickname }) {
     setError(null)
     setSending(true)

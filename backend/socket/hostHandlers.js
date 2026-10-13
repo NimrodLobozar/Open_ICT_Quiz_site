@@ -1,3 +1,4 @@
+import { saveGameResultsInBackground } from "../db/gameResults.js";
 import { addBots, simulateAnswers } from "../game/devSimulation.js";
 import { GameError } from "../game/GameError.js";
 import { PHASES } from "../game/phases.js";
@@ -20,6 +21,9 @@ export function registerHostHandlers(io, socket, game) {
         game.finish();
         sendLobbyUpdate(io, game);
         sendPodium(io, game);
+        // Na het podium, zodat de spelers niet op de database wachten.
+        // Straks moet host:next na de laatste vraag dit ook doen.
+        saveGameResultsInBackground(game);
         ack?.({ ok: true });
       } catch (error) {
         ack?.(toErrorResponse(error));

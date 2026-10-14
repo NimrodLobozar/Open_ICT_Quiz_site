@@ -113,6 +113,18 @@ export default function HostGamePage() {
     setBusy(false);
   }
 
+  async function kickPlayer(playerId) {
+    setError(null);
+    const response = await emitWithAck(EVENTS.HOST_KICK_PLAYER, {
+      playerId,
+    }).catch(() => null);
+    if (!response?.ok) {
+      setError(
+        response?.message ?? response?.error ?? "Kon speler niet verwijderen.",
+      );
+    }
+  }
+
   // Eén actie voor "Antwoorden nu tonen", "Tijd stoppen" en "Volgende vraag" (zie Game.next op de server).
   async function next() {
     setError(null);
@@ -245,14 +257,23 @@ export default function HostGamePage() {
       <h1 className="host-game__title">
         {playerCount} {playerCount === 1 ? "speler" : "spelers"}
       </h1>
+
       <ul className="host-game__players">
         {players.map((player) => (
           <li
             key={player.id}
             className={player.connected ? "" : "host-game__player--offline"}
           >
-            {player.nickname}
+            <span>{player.nickname}</span>
             {!player.connected && <span> (offline)</span>}
+
+            <button
+              type="button"
+              className="host-game__kick-btn"
+              onClick={() => kickPlayer(player.id)}
+            >
+              Verwijder
+            </button>
           </li>
         ))}
       </ul>

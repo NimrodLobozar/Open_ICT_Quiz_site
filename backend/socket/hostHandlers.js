@@ -80,6 +80,16 @@ export function registerHostHandlers(io, socket, game) {
       ack?.(toErrorResponse(error));
     }
   });
+
+  socket.on(EVENTS.HOST_KICK_PLAYER, ({ playerId } = {}, ack) => {
+    try {
+      game.removePlayer(playerId);
+      sendLobbyUpdate(io, game);
+      ack?.({ ok: true });
+    } catch (error) {
+      ack?.(toErrorResponse(error));
+    }
+  });
 }
 
 // Elke ack heeft dezelfde vorm: { ok: true, ... } of { ok: false, error, message } (projectplan 8).

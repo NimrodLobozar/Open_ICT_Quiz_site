@@ -9,7 +9,7 @@
   padding: 40px 16px;
   background: #ffedd5;
   color: #7c2d12;
-  font-family: 'Rubik', sans-serif;
+  font-family: "Rubik", sans-serif;
   text-align: center;
 }
 
@@ -20,7 +20,7 @@
 
 .host-game__code {
   margin: 0;
-  font-family: 'Anton', sans-serif;
+  font-family: "Anton", sans-serif;
   font-size: clamp(64px, 12vw, 120px);
   line-height: 1;
   letter-spacing: 0.08em;
@@ -95,7 +95,7 @@
   padding: 10px 16px;
   background: #7c2d12;
   color: #fff7ed;
-  font-family: 'Rubik', sans-serif;
+  font-family: "Rubik", sans-serif;
   text-align: center;
 }
 
@@ -151,4 +151,20 @@
 .host-game__warning code {
   font-weight: 700;
   overflow-wrap: anywhere;
+}
+
+.host-game__kick-btn {
+  background-color: #ff4d4d; /* Een mooie rode kleur voor verwijderen */
+  color: white;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  margin-left: 10px; /* Zorgt voor wat ruimte tussen de naam en de knop */
+  transition: background-color 0.2s;
+}
+
+.host-game__kick-btn:hover {
+  background-color: #cc0000; /* Donkerder rood als je er met je muis overgaat */
 }

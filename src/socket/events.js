@@ -8,6 +8,7 @@ export const EVENTS = {
   HOST_RESTART: "host:restart",
   PLAYER_ANSWER: "player:answer",
   DEV_FINISH: "dev:finish", // alleen in development
+  HOST_KICK_PLAYER: "host:kick-player",
 
   // Server → client
   LOBBY_UPDATE: "lobby:update",

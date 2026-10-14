@@ -1,0 +1,334 @@
+/* Achtergrond, kleuren en navigatiebalk komen uit src/index.css en QuizHeader. */
+.join-page {
+  align-items: center;
+}
+
+.join-notice {
+  position: fixed;
+  top: 32px;
+  left: 50%;
+  z-index: 1000;
+  width: min(560px, calc(100% - 32px));
+  transform: translateX(-50%);
+  font-size: 1rem;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 20%);
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+  transition: opacity 300ms ease, transform 300ms ease;
+}
+
+.join-notice-closing {
+  opacity: 0;
+  transform: translateX(-50%) translateY(-8px);
+}
+
+.join-card {
+  max-width: 35vw;
+  width: 100%;
+  margin: auto;
+  border: 1px solid #fb923c;
+  border-radius: 18px;
+  background: #fff7ed;
+  box-shadow: none;
+}
+
+.join-card .ant-card-body {
+  padding: 24px 28px 28px;
+}
+
+.join-card .ant-typography,
+.join-card .ant-form-item-label > label,
+.join-card .join-header-text {
+  color: #9a3412;
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+}
+
+.join-card .join-title-title {
+  color: #c2410c;
+}
+
+.join-card .ant-input {
+  border-color: #fb923c;
+  background: #fff;
+  color: #7c2d12;
+}
+
+.join-card .ant-input:hover,
+.join-card .ant-input:focus {
+  border-color: #c2410c;
+}
+
+.join-card .ant-btn-primary {
+  border: 0;
+  border-radius: 999px;
+  background: #fdba74;
+  color: #7c2d12;
+  font-weight: 700;
+  box-shadow: none;
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+.join-card .ant-btn-primary:hover,
+.join-card .ant-btn-primary:focus-visible,
+.join-card .ant-btn-primary:active {
+  background: #fb923c !important;
+  color: #7c2d12 !important;
+  box-shadow: none !important;
+}
+
+.join-card .ant-slider-track {
+  background: #fb923c;
+}
+
+.join-card .ant-slider-rail {
+  background: #fed7aa;
+}
+
+.join-card .ant-slider-handle::after {
+  background: #fff7ed;
+  box-shadow: 0 0 0 2px #c2410c;
+}
+
+.join-card .ant-slider:hover .ant-slider-track,
+.join-card .ant-slider:focus-within .ant-slider-track {
+  background: #c2410c;
+}
+
+.join-card .ant-slider:hover .ant-slider-rail,
+.join-card .ant-slider:focus-within .ant-slider-rail {
+  background: #fdba74;
+}
+
+.join-card .ant-slider:hover .ant-slider-handle::after,
+.join-card .ant-slider:focus-within .ant-slider-handle::after {
+  background: #fff7ed;
+  box-shadow: 0 0 0 2px #9a3412;
+}
+
+.skill-slider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.skill-slider > span {
+  width: 52px;
+}
+
+.skill-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.skill-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex: 0 0 12px;
+}
+
+.skill-slider > strong {
+  width: 44px;
+  text-align: right;
+}
+
+.skills-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 95%;
+  margin: 0 auto;
+  margin-top: 0.3vh;
+}
+
+.join-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.join-header-text {
+  font-size: 0.875rem;
+  font-weight: 0;
+  letter-spacing: 0.12em;
+}
+
+.join-title {
+  text-align: center;
+}
+
+.join-title-text {
+  font-size: 1.20rem;
+  color: rgb(124 45 18 / 58%);
+  border-bottom: 2px solid rgb(124 45 18 / 12%);
+  text-align: center;
+}
+
+.join-title .join-title-title {
+  font-size: 1.75rem;
+  font-weight: 400;
+  margin-top: 0 !important;
+  margin-bottom: 2vh !important;
+}
+
+.login-link {
+  display: block;
+  text-align: center;
+  margin-top: 0.5vh;
+  font-size: 0.875rem;
+  color: #9a3412;
+  text-decoration: underline;
+}
+
+.login-link:hover {
+  color: #461808;
+  text-decoration: underline;
+}
+
+.code-card {
+  max-width: 35vw;
+  width: 100%;
+  margin-inline: auto;
+  border: 1px solid #fb923c;
+  border-radius: 18px;
+  background: #fff7ed;
+  box-shadow: none;
+}
+
+.code-panel {
+  max-width: 35vw;
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-inline: auto;
+}
+
+.code-options {
+  display: flex;
+  gap: 8px;
+  height: 52px;
+  padding-inline: 8px;
+  margin: 0 0 0;
+}
+
+.code-title {
+  margin: 0 !important;
+  color: #c2410c !important;
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-size: 2rem !important;
+  font-weight: 400 !important;
+  letter-spacing: 0.02em;
+  line-height: 1.15 !important;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.code-form {
+  margin-top: 3vh;
+}
+
+.code-button {
+  height: 42px;
+  margin-top: 1.5vh;
+  border: 0;
+  border-radius: 999px;
+  background: #fdba74;
+  color: #7c2d12;
+  font-weight: 700;
+}
+
+.code-button:hover,
+.code-button:focus-visible {
+  background: #fb923c !important;
+  color: #7c2d12 !important;
+}
+
+.code-option {
+  appearance: none;
+  border: 1px solid #fb923c;
+  background: #fed7aa;
+  color: #7c2d12;
+  cursor: pointer;
+  flex: 1;
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 0 12px;
+  border-radius: 40px 40px 0 0;
+  transition:
+    background-color 200ms ease,
+    color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.code-option:hover,
+.code-option:focus-visible {
+  background: #fdba74;
+  color: #9a3412;
+}
+
+.code-option-active {
+  background: #fdba74;
+  color: #7c2d12;
+  box-shadow: 0 2px 6px rgb(124 45 18 / 16%);
+}
+
+.code-option-active:hover,
+.code-option-active:focus-visible {
+  background: #fdba74;
+  color: #7c2d12;
+}
+
+.code-card .ant-card-body {
+  padding: 24px 28px 28px;
+}
+
+.code-form .ant-form-item {
+  margin-bottom: 0;
+}
+
+.code-form .ant-form-item-label > label {
+  color: #9a3412;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.code-form .ant-input {
+  height: 56px;
+  border: 2px solid #c2410c;
+  border-radius: 11px;
+  background: #fff;
+  color: #7c2d12;
+  font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+  font-weight: 400;
+}
+
+.code-form .ant-input::placeholder {
+  color: #9a3412;
+  opacity: 0.7;
+}
+
+@media (max-width: 768px) {
+  .code-panel,
+  .code-card,
+  .join-card {
+    max-width: calc(100% - 32px);
+  }
+
+  .code-panel {
+    max-width: calc(100% - 32px);
+  }
+
+  .code-card .ant-card-body {
+    padding-inline: 22px;
+  }
+
+  .join-card .ant-card-body {
+    padding-inline: 22px;
+  }
+}

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Uitslag kleurblokken</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FF6B3D}
+a{color:#1A1033}a:hover{color:#000000}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: {{ground}}; color: #1A1033; font-family: 'Bricolage Grotesque', sans-serif; padding: 40px 24px 72px; box-sizing: border-box">
+<div style="max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column">
+
+<header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px">
+<span style="font-weight: 800; font-size: 24px">Open ICT Quiz</span>
+<span style="background: #1A1033; color: #FFFFFF; font-weight: 700; font-size: 18px; padding: 10px 18px; border-radius: 999px">Code 482913</span>
+</header>
+
+<h1 style="margin: 48px 0 0; font-weight: 800; font-size: clamp(64px, 9vw, 136px); line-height: 0.9; letter-spacing: -0.03em">Dat was 'm!</h1>
+<p style="margin: 16px 0 0; font-size: 24px; font-weight: 500">10 spelers, 8 vragen. Dit is de top 3.</p>
+
+<ol style="list-style: none; margin: 56px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; align-items: end">
+<sc-for list="{{podium}}" as="p" hint-placeholder-count="3">
+<li style="min-width: 0; height: {{p.height}}; background: {{p.bg}}; color: {{p.fg}}; border-radius: 28px; padding: 28px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; transform: rotate({{p.tilt}})">
+<span style="font-weight: 800; font-size: {{p.rankSize}}; line-height: 0.8">{{p.rank}}</span>
+<span style="display: flex; flex-direction: column; gap: 4px">
+<span style="font-weight: 800; font-size: {{p.nameSize}}; line-height: 1; overflow-wrap: anywhere">{{p.nickname}}</span>
+<span style="font-size: 20px; font-weight: 500">{{p.scoreText}} punten</span>
+</span>
+</li>
+</sc-for>
+</ol>
+
+<section aria-labelledby="rest-titel" style="margin-top: 64px; background: #FFFFFF; border-radius: 28px; padding: 28px; display: flex; flex-direction: column">
+<h2 id="rest-titel" style="margin: 0 0 12px; font-weight: 800; font-size: 32px">De rest van de klas</h2>
+<ol style="list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 24px">
+<sc-for list="{{rest}}" as="r" hint-placeholder-count="7">
+<li style="display: flex; align-items: center; gap: 14px; min-height: 56px; padding: 0 18px; background: #F3EEF8; border-radius: 16px; font-size: 20px">
+<span style="font-weight: 800; width: 28px">{{r.rank}}</span>
+<span style="flex: 1; min-width: 0; font-weight: 700; overflow-wrap: anywhere">{{r.nickname}}</span>
+<span style="font-weight: 500; font-variant-numeric: tabular-nums">{{r.scoreText}}</span>
+</li>
+</sc-for>
+</ol>
+</section>
+
+<div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 40px">
+<button type="button" style="min-height: 60px; padding: 0 32px; border: 0; border-radius: 999px; background: #1A1033; color: #FFFFFF; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 20px; cursor: pointer">Nog een ronde</button>
+<button type="button" style="min-height: 60px; padding: 0 32px; border: 3px solid #1A1033; border-radius: 999px; background: transparent; color: #1A1033; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 20px; cursor: pointer">Terug naar start</button>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"ground":{"editor":"color","default":"#FF6B3D","options":["#FF6B3D","#7CE0A3","#FFD84D","#8FB8FF"]},"$preview":{"width":1440,"height":1240}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const ground = this.props.ground ?? '#FF6B3D';
+    const results = [
+      { nickname: 'Sanne', score: 7420 },
+      { nickname: 'Daan', score: 5310 },
+      { nickname: 'Fatima', score: 6150 },
+      { nickname: 'Lucas', score: 2890 },
+      { nickname: 'Noah', score: 4480 },
+      { nickname: 'Mo', score: 6150 },
+      { nickname: 'Emma', score: 3720 },
+      { nickname: 'quizkoning', score: 1540 },
+      { nickname: 'Yara', score: 5880 },
+      { nickname: 'Tim_04', score: 0 }
+    ];
+    const sorted = results.slice().sort((a, b) => b.score - a.score || a.nickname.localeCompare(b.nickname));
+    const fmt = (n) => n.toLocaleString('nl-NL');
+    const ranked = sorted.map((r) => ({ ...r, rank: sorted.findIndex((o) => o.score === r.score) + 1, scoreText: fmt(r.score) }));
+    const look = {
+      1: { bg: '#1A1033', fg: '#FFFFFF', height: '420px', rankSize: '180px', nameSize: '56px' },
+      2: { bg: '#FFFFFF', fg: '#1A1033', height: '320px', rankSize: '128px', nameSize: '40px' },
+      3: { bg: '#FFC2D4', fg: '#1A1033', height: '260px', rankSize: '112px', nameSize: '36px' }
+    };
+    const tilts = ['-2deg', '0deg', '2deg'];
+    const top = ranked.slice(0, 3);
+    const podium = [top[1], top[0], top[2]].filter(Boolean).map((p, i) => ({ ...p, ...(look[p.rank] || look[3]), tilt: tilts[i] }));
+    return { ground, podium, rest: ranked.slice(3) };
+  }
+}
+</script>
+</body>
+</html>

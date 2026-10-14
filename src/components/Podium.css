@@ -1,0 +1,114 @@
+/* Top 3 onder elkaar, gecentreerd. De 1e plek is breder en hoger dan de rest.
+   De kleuren (--quiz-*) komen van de pagina, zodat elk scherm zijn eigen thema kan geven. */
+.podium {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* De buitenste laag is de rand: 4px padding in de randkleur, met dezelfde puntvorm als de balk.
+   clip-path knipt de rechthoek bij tot een zeshoek met punten links en rechts. */
+.podium__place {
+  width: 86%;
+  max-width: 100%;
+  padding: 4px;
+  background: var(--quiz-accent);
+  clip-path: polygon(36px 0, calc(100% - 36px) 0, 100% 50%, calc(100% - 36px) 100%, 36px 100%, 0 50%);
+  animation: podium-rise 0.6s ease-out both;
+}
+
+.podium__bar {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  min-height: 80px;
+  padding: 0 64px;
+  background: var(--quiz-surface);
+  color: var(--quiz-text);
+  clip-path: polygon(34px 0, calc(100% - 34px) 0, 100% 50%, calc(100% - 34px) 100%, 34px 100%, 0 50%);
+}
+
+.podium__rank {
+  font-family: 'Anton', sans-serif;
+  font-size: 48px;
+  line-height: 1;
+}
+
+/* flex: 1 + min-width: 0 zorgt dat een lange naam afbreekt in plaats van de balk op te rekken. */
+.podium__name {
+  flex: 1;
+  min-width: 0;
+  font-size: 32px;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.podium__score {
+  font-size: 26px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums; /* alle cijfers even breed, dan springen scores niet */
+}
+
+/* Plaats 1 valt op: volle breedte, gevulde balk en grotere letters. */
+.podium__place--first {
+  width: 100%;
+}
+
+.podium__place--first .podium__bar {
+  min-height: 104px;
+  background: var(--quiz-accent);
+}
+
+.podium__place--first .podium__rank {
+  font-size: 64px;
+}
+
+.podium__place--first .podium__name {
+  font-size: 44px;
+}
+
+/* De balken komen een voor een binnen, van boven naar beneden. */
+.podium__place:nth-child(2) { animation-delay: 0.15s; }
+.podium__place:nth-child(3) { animation-delay: 0.3s; }
+
+.podium__empty {
+  margin: 0;
+  padding: 32px 16px;
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+/* Op een smal scherm passen de grote letters en ruime padding niet. */
+@media (max-width: 640px) {
+  .podium__place {
+    width: 100%;
+  }
+  .podium__bar {
+    gap: 12px;
+    min-height: 64px;
+    padding: 0 40px;
+  }
+  .podium__rank { font-size: 32px; }
+  .podium__name { font-size: 20px; }
+  .podium__score { font-size: 18px; }
+  .podium__place--first .podium__bar { min-height: 80px; }
+  .podium__place--first .podium__rank { font-size: 44px; }
+  .podium__place--first .podium__name { font-size: 26px; }
+}
+
+@keyframes podium-rise {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Geen bewegende animaties voor mensen die dat in hun systeem hebben uitgezet. */
+@media (prefers-reduced-motion: reduce) {
+  .podium__place {
+    animation: none;
+  }
+}

@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eindscherm quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&amp;family=Barlow:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#111318}
+a{color:#F2F0EA}a:hover{color:#ffffff}
+</style>
+</head>
+<body>
+<div style="min-height: 100vh; background: #111318; color: #F2F0EA; font-family: 'Barlow', sans-serif; padding: 0 24px 64px; box-sizing: border-box">
+<div style="max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column">
+
+<header style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 16px; padding: 28px 0; border-bottom: 1px solid #2A2E37">
+<div style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 22px; letter-spacing: 0.08em; text-transform: uppercase">Open ICT Quiz</div>
+<div style="display: flex; flex-wrap: wrap; gap: 32px; font-size: 16px; color: #A3A8B3">
+<span>8 vragen</span>
+<span>10 spelers</span>
+<span>Code <strong style="color: #F2F0EA; font-weight: 600; letter-spacing: 0.06em">482913</strong></span>
+</div>
+</header>
+
+<section aria-labelledby="uitslag-titel" style="display: flex; flex-direction: column; padding-top: 56px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 16px">
+<h1 id="uitslag-titel" style="margin: 0; font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: clamp(64px, 9vw, 128px); line-height: 0.85; letter-spacing: -0.01em; text-transform: uppercase">Uitslag</h1>
+<p style="margin: 0 0 8px; font-size: 18px; color: #A3A8B3; max-width: 360px">Gelijke score betekent een gedeelde plek.</p>
+</div>
+
+<ol style="list-style: none; margin: 48px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: end">
+
+<li style="display: flex; flex-direction: column; min-width: 0">
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 0 4px 16px">
+<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 40px; line-height: 1; overflow-wrap: anywhere">Fatima</span>
+<span style="font-size: 18px; color: #A3A8B3; font-variant-numeric: tabular-nums">6.150 punten</span>
+</div>
+<div style="height: 240px; background: #D9DCE1; color: #111318; display: flex; flex-direction: column; justify-content: space-between; padding: 20px 24px; box-sizing: border-box">
+<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 88px; line-height: 0.8">2</span>
+<span style="font-size: 15px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase">Gedeeld 2e</span>
+</div>
+</li>
+
+<li style="display: flex; flex-direction: column; min-width: 0">
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 0 4px 16px">
+<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 56px; line-height: 1; overflow-wrap: anywhere">Sanne</span>
+<span style="font-size: 18px; color: #A3A8B3; font-variant-numeric: tabular-nums">7.420 punten</span>
+</div>
+<div style="height: 340px; background: #FFD23F; color: #111318; display: flex; flex-direction: column; justify-content: space-between; padding: 20px 24px; box-sizing: border-box">
+<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 120px; line-height: 0.8">1</span>
+<span style="font-size: 15px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase">1e plek</span>
+</div>
+</li>
+
+<li style="display: flex; flex-direction: column; min-width: 0">
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 0 4px 16px">
+<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 40px; line-height: 1; overflow-wrap: anywhere">Mo</span>
+<span style="font-size: 18px; color: #A3A8B3; font-variant-numeric: tabular-nums">6.150 punten</span>
+</div>
+<div style="height: 240px; background: #D9DCE1; color: #111318; display: flex; flex-direction: column; justify-content: space-between; padding: 20px 24px; box-sizing: border-box">
+<span style="font-family: 'Barlow Condensed', sans-serif; font-weight: 800; font-size: 88px; line-height: 0.8">2</span>
+<span style="font-size: 15px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase">Gedeeld 2e</span>
+</div>
+</li>
+
+</ol>
+<div style="height: 6px; background: #F2F0EA"></div>
+</section>
+
+<section aria-labelledby="ranglijst-titel" style="display: flex; flex-direction: column; padding-top: 72px">
+<h2 id="ranglijst-titel" style="margin: 0 0 16px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 32px; text-transform: uppercase; letter-spacing: 0.04em">Alle spelers</h2>
+<div style="overflow-x: auto">
+<table style="width: 100%; min-width: 560px; border-collapse: collapse; font-size: 18px">
+<thead>
+<tr style="color: #A3A8B3; font-size: 14px; text-transform: uppercase; letter-spacing: 0.08em; text-align: left">
+<th scope="col" style="padding: 12px 8px; font-weight: 500; width: 72px">Plek</th>
+<th scope="col" style="padding: 12px 8px; font-weight: 500">Speler</th>
+<th scope="col" style="padding: 12px 8px; font-weight: 500; width: 240px">Goed</th>
+<th scope="col" style="padding: 12px 8px; font-weight: 500; width: 140px; text-align: right">Punten</th>
+</tr>
+</thead>
+<tbody>
+
+<tr style="border-top: 1px solid #2A2E37">
+<td style="padding: 16px 8px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 26px; color: #FFD23F">1</td>
+<td style="padding: 16px 8px">
+<span style="font-weight: 600">Sanne</span>
+
+</td>
+<td style="padding: 16px 8px">
+<div style="display: flex; align-items: center; gap: 12px">
+<div style="display: flex; gap: 3px" aria-hidden="true">
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+</div>
+<span style="font-variant-numeric: tabular-nums; color: #A3A8B3">8/8</span>
+</div>
+</td>
+<td style="padding: 16px 8px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600">7.420</td>
+</tr>
+
+<tr style="border-top: 1px solid #2A2E37">
+<td style="padding: 16px 8px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 26px; color: #F2F0EA">2</td>
+<td style="padding: 16px 8px">
+<span style="font-weight: 600">Fatima</span>
+
+</td>
+<td style="padding: 16px 8px">
+<div style="display: flex; align-items: center; gap: 12px">
+<div style="display: flex; gap: 3px" aria-hidden="true">
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+</div>
+<span style="font-variant-numeric: tabular-nums; color: #A3A8B3">7/8</span>
+</div>
+</td>
+<td style="padding: 16px 8px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600">6.150</td>
+</tr>
+
+<tr style="border-top: 1px solid #2A2E37">
+<td style="padding: 16px 8px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 26px; color: #F2F0EA">2</td>
+<td style="padding: 16px 8px">
+<span style="font-weight: 600">Mo</span>
+
+<span style="margin-left: 10px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: #A3A8B3; border: 1px solid #3A3F4A; padding: 2px 8px">Gast</span>
+
+</td>
+<td style="padding: 16px 8px">
+<div style="display: flex; align-items: center; gap: 12px">
+<div style="display: flex; gap: 3px" aria-hidden="true">
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+</div>
+<span style="font-variant-numeric: tabular-nums; color: #A3A8B3">7/8</span>
+</div>
+</td>
+<td style="padding: 16px 8px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600">6.150</td>
+</tr>
+
+<tr style="border-top: 1px solid #2A2E37">
+<td style="padding: 16px 8px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 26px; color: #F2F0EA">4</td>
+<td style="padding: 16px 8px">
+<span style="font-weight: 600">Yara</span>
+
+<span style="margin-left: 10px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: #A3A8B3; border: 1px solid #3A3F4A; padding: 2px 8px">Gast</span>
+
+</td>
+<td style="padding: 16px 8px">
+<div style="display: flex; align-items: center; gap: 12px">
+<div style="display: flex; gap: 3px" aria-hidden="true">
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+</div>
+<span style="font-variant-numeric: tabular-nums; color: #A3A8B3">7/8</span>
+</div>
+</td>
+<td style="padding: 16px 8px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600">5.880</td>
+</tr>
+
+<tr style="border-top: 1px solid #2A2E37">
+<td style="padding: 16px 8px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 26px; color: #F2F0EA">5</td>
+<td style="padding: 16px 8px">
+<span style="font-weight: 600">Daan</span>
+
+</td>
+<td style="padding: 16px 8px">
+<div style="display: flex; align-items: center; gap: 12px">
+<div style="display: flex; gap: 3px" aria-hidden="true">
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+</div>
+<span style="font-variant-numeric: tabular-nums; color: #A3A8B3">6/8</span>
+</div>
+</td>
+<td style="padding: 16px 8px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600">5.310</td>
+</tr>
+
+<tr style="border-top: 1px solid #2A2E37">
+<td style="padding: 16px 8px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 26px; color: #F2F0EA">6</td>
+<td style="padding: 16px 8px">
+<span style="font-weight: 600">Noah</span>
+
+</td>
+<td style="padding: 16px 8px">
+<div style="display: flex; align-items: center; gap: 12px">
+<div style="display: flex; gap: 3px" aria-hidden="true">
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+</div>
+<span style="font-variant-numeric: tabular-nums; color: #A3A8B3">5/8</span>
+</div>
+</td>
+<td style="padding: 16px 8px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600">4.480</td>
+</tr>
+
+<tr style="border-top: 1px solid #2A2E37">
+<td style="padding: 16px 8px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 26px; color: #F2F0EA">7</td>
+<td style="padding: 16px 8px">
+<span style="font-weight: 600">Emma</span>
+
+<span style="margin-left: 10px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: #A3A8B3; border: 1px solid #3A3F4A; padding: 2px 8px">Gast</span>
+
+</td>
+<td style="padding: 16px 8px">
+<div style="display: flex; align-items: center; gap: 12px">
+<div style="display: flex; gap: 3px" aria-hidden="true">
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+</div>
+<span style="font-variant-numeric: tabular-nums; color: #A3A8B3">5/8</span>
+</div>
+</td>
+<td style="padding: 16px 8px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600">3.720</td>
+</tr>
+
+<tr style="border-top: 1px solid #2A2E37">
+<td style="padding: 16px 8px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 26px; color: #F2F0EA">8</td>
+<td style="padding: 16px 8px">
+<span style="font-weight: 600">Lucas</span>
+
+</td>
+<td style="padding: 16px 8px">
+<div style="display: flex; align-items: center; gap: 12px">
+<div style="display: flex; gap: 3px" aria-hidden="true">
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+</div>
+<span style="font-variant-numeric: tabular-nums; color: #A3A8B3">4/8</span>
+</div>
+</td>
+<td style="padding: 16px 8px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600">2.890</td>
+</tr>
+
+<tr style="border-top: 1px solid #2A2E37">
+<td style="padding: 16px 8px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 26px; color: #F2F0EA">9</td>
+<td style="padding: 16px 8px">
+<span style="font-weight: 600">quizkoning</span>
+
+<span style="margin-left: 10px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: #A3A8B3; border: 1px solid #3A3F4A; padding: 2px 8px">Gast</span>
+
+</td>
+<td style="padding: 16px 8px">
+<div style="display: flex; align-items: center; gap: 12px">
+<div style="display: flex; gap: 3px" aria-hidden="true">
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #F2F0EA"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+</div>
+<span style="font-variant-numeric: tabular-nums; color: #A3A8B3">2/8</span>
+</div>
+</td>
+<td style="padding: 16px 8px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600">1.540</td>
+</tr>
+
+<tr style="border-top: 1px solid #2A2E37">
+<td style="padding: 16px 8px; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 26px; color: #F2F0EA">10</td>
+<td style="padding: 16px 8px">
+<span style="font-weight: 600">Tim_04</span>
+
+<span style="margin-left: 10px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: #A3A8B3; border: 1px solid #3A3F4A; padding: 2px 8px">Gast</span>
+
+</td>
+<td style="padding: 16px 8px">
+<div style="display: flex; align-items: center; gap: 12px">
+<div style="display: flex; gap: 3px" aria-hidden="true">
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+<span style="display: block; width: 14px; height: 14px; background: #2A2E37"></span>
+
+</div>
+<span style="font-variant-numeric: tabular-nums; color: #A3A8B3">0/8</span>
+</div>
+</td>
+<td style="padding: 16px 8px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600">0</td>
+</tr>
+
+</tbody>
+</table>
+</div>
+</section>
+
+<div style="display: flex; flex-wrap: wrap; gap: 12px; padding-top: 48px">
+<button type="button" style="min-height: 56px; padding: 0 32px; border: 0; background: #FFD23F; color: #111318; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 22px; text-transform: uppercase; letter-spacing: 0.04em; cursor: pointer">Nog een ronde</button>
+<button type="button" style="min-height: 56px; padding: 0 32px; border: 2px solid #F2F0EA; background: transparent; color: #F2F0EA; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; font-size: 22px; text-transform: uppercase; letter-spacing: 0.04em; cursor: pointer">Terug naar start</button>
+</div>
+
+</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,11 @@
+/* Stijl die alleen voor DEZE pagina geldt.
+   Achtergrond, kleuren en lettertype staan al in src/index.css; gebruik de kleuren met var(--quiz-...),
+   dan blijft alles gelijk als het team een kleur aanpast. */
+
+.template-page__title {
+  margin: 0 0 16px;
+  font-family: 'Anton', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: var(--quiz-primary);
+}

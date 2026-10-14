@@ -1,0 +1,5 @@
+/* Achtergrond, kleuren en navigatiebalk komen uit src/index.css en QuizHeader.
+   Hier alleen wat bij deze pagina hoort. */
+.binnenKomst {
+  color: var(--quiz-primary);
+}

@@ -1,0 +1,40 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Live games staan in het geheugen van de server (backend/game/). De database bewaart alleen
+// wat er gespeeld is: één GameSession per ronde, met één GameResult per speler (projectplan 12).
+// Zo kost elk antwoord geen databasequery, en raak je alleen een lopende game kwijt als de server herstart.
+
+// Eén gespeelde ronde. Herstart de host, dan komt er een nieuwe rij met dezelfde code en round + 1.
+model GameSession {
+  id        Int          @id @default(autoincrement())
+  code      String // de lobbycode; niet uniek, want codes worden later opnieuw uitgedeeld
+  round     Int          @default(1)
+  startedAt DateTime // moment dat de lobby (opnieuw) openging
+  endedAt   DateTime     @default(now()) // moment van het podium
+  results   GameResult[]
+
+  @@index([code])
+}
+
+// De eindstand van één speler in één ronde.
+model GameResult {
+  id           Int         @id @default(autoincrement())
+  sessionId    Int
+  session      GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  nickname     String
+  score        Int
+  // rank wordt hier wél opgeslagen: het is een momentopname van getRanking() op het podium,
+  // zodat de database precies laat zien wat de spelers zagen.
+  rank         Int
+  correctCount Int
+  skills       Json        @default("{}") // de ervaring-sliders van de joinpagina
+  isBot        Boolean     @default(false) // testspelers van dev:finish, zodat je ze kunt wegfilteren
+
+  @@index([sessionId])
+}

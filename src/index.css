@@ -1,0 +1,56 @@
+/* Globale stijl voor ELKE pagina. main.jsx importeert dit bestand één keer,
+   dus je hoeft het nergens anders te linken.
+   Hier staat alleen wat overal hetzelfde is: kleuren, achtergrond, lettertype.
+   Wat maar op één pagina hoort, zet je in de eigen CSS van die pagina. */
+
+/* De kleuren van het oranje design, als variabelen. Gebruik ze met var(--quiz-bg) enz.
+   Wil het team een andere kleur? Pas hem hier aan, dan verandert hij op alle pagina's.
+   Alle tekstkleuren halen WCAG AA (minstens 4,5:1) op hun achtergrond. */
+:root {
+  --quiz-bg: #ffedd5; /* achtergrond van de pagina */
+  --quiz-surface: #fff7ed; /* vlakken: navigatiebalk, kaarten */
+  --quiz-border: #fdba74; /* randen */
+  --quiz-accent: #fdba74; /* opvallende vlakken (podium, eigen rij) */
+  --quiz-primary: #c2410c; /* knoppen, logo, focusrand */
+  --quiz-muted: #9a4a22; /* minder belangrijke tekst */
+  --quiz-text: #7c2d12; /* gewone tekst */
+}
+
+/* Geen witte rand om de pagina. */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--quiz-bg);
+  color: var(--quiz-text);
+  font-family: 'Rubik', system-ui, sans-serif;
+}
+
+/* Basis-indeling van ELKE pagina: <div className="page"> met <QuizHeader /> en <main className="page__main">.
+   Zie src/pages/_Template/TemplatePage.jsx. Wil een pagina een andere breedte of padding,
+   zet dat dan in de eigen CSS van die pagina (die wint, want hij wordt na dit bestand geladen). */
+.page {
+  position: relative;
+  isolation: isolate; /* eigen laag: zo blijven de achtergrondcirkels (PageRings) áchter de inhoud */
+  overflow: clip; /* de grote cirkels mogen geen scrollbalk maken */
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh; /* dvh = juiste hoogte op telefoons, ook met de adresbalk in beeld */
+}
+
+.page__main {
+  flex: 1;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px;
+}
+
+@media (max-width: 640px) {
+  .page__main {
+    padding: 20px 16px;
+  }
+}

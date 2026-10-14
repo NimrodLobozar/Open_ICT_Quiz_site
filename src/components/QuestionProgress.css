@@ -1,0 +1,64 @@
+/* De kleuren (--quiz-*) komen van de pagina. */
+.question-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.question-progress__label {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--quiz-muted);
+}
+
+.question-progress__bars {
+  display: flex;
+  gap: 4px;
+}
+
+/* Eén rij. Bij veel vragen of een smal scherm worden de streepjes smaller in plaats van uit beeld te lopen. */
+.question-progress__bars span {
+  flex: 0 1 32px;
+  width: 32px;
+  min-width: 10px;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--quiz-border);
+}
+
+.question-progress__bars span.is-done {
+  background: var(--quiz-primary);
+}
+
+/* Groot scherm van de host: alles wat groter, zodat je het achter in de klas nog ziet. */
+.question-progress--large {
+  gap: 8px;
+}
+
+.question-progress--large .question-progress__label {
+  font-size: 20px;
+}
+
+.question-progress--large .question-progress__bars {
+  gap: 6px;
+}
+
+.question-progress--large .question-progress__bars span {
+  flex-basis: 44px;
+  width: 44px;
+  min-width: 12px;
+  height: 8px;
+  border-radius: 4px;
+}
+
+@media (max-width: 640px) {
+  .question-progress__label {
+    font-size: 13px;
+  }
+  .question-progress__bars span {
+    flex-basis: 20px;
+    width: 20px;
+  }
+}

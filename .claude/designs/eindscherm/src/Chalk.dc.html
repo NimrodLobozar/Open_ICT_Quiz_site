@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Uitslag schoolbord</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Gochi+Hand&amp;family=Patrick+Hand&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#6E4526}
+a{color:#FFE58A}a:hover{color:#FFFFFF}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #6E4526; padding: 20px; box-sizing: border-box">
+<div style="min-height: calc(100vh - 40px); background: {{board}}; color: #F4F1E8; font-family: 'Patrick Hand', cursive; border-radius: 6px; box-shadow: inset 0 0 0 6px #4E2F18; padding: 36px 24px 56px; box-sizing: border-box">
+<div style="max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column">
+
+<header style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; font-size: 24px; color: #D7E3D9">
+<span>Open ICT Quiz</span>
+<span>code: 482913</span>
+</header>
+
+<h1 style="align-self: center; margin: 24px 0 0; font-family: 'Gochi Hand', cursive; font-weight: 400; font-size: clamp(64px, 8vw, 112px); line-height: 1; border-bottom: 4px solid #F4F1E8; border-radius: 0 0 60% 40% / 0 0 12px 8px; padding: 0 24px 4px">Uitslag</h1>
+
+<ol style="list-style: none; margin: 56px 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; align-items: end">
+<sc-for list="{{podium}}" as="p" hint-placeholder-count="3">
+<li style="min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 8px">
+<span style="font-family: 'Gochi Hand', cursive; font-size: {{p.nameSize}}; color: {{p.color}}; overflow-wrap: anywhere; text-align: center; line-height: 1">{{p.nickname}}</span>
+<span style="font-size: 24px; color: #D7E3D9">{{p.scoreText}} punten</span>
+<div style="width: 100%; height: {{p.height}}; border: 4px solid {{p.color}}; border-bottom: 0; border-radius: 255px 15px 0 0 / 15px 225px 0 0; display: flex; justify-content: center; padding-top: 16px; box-sizing: border-box">
+<span style="font-family: 'Gochi Hand', cursive; font-size: {{p.rankSize}}; color: {{p.color}}; line-height: 1">{{p.rank}}</span>
+</div>
+</li>
+</sc-for>
+</ol>
+<div style="height: 4px; background: #F4F1E8; border-radius: 2px; opacity: 0.9"></div>
+
+<section aria-labelledby="rest" style="margin-top: 48px">
+<h2 id="rest" style="margin: 0 0 12px; font-family: 'Gochi Hand', cursive; font-weight: 400; font-size: 38px; color: {{chalk}}">En verder...</h2>
+<ol style="list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 56px">
+<sc-for list="{{rest}}" as="r" hint-placeholder-count="7">
+<li style="display: flex; align-items: baseline; gap: 16px; padding: 10px 4px; border-bottom: 2px dashed rgba(244,241,232,0.45); font-size: 28px">
+<span style="width: 36px; font-family: 'Gochi Hand', cursive; color: {{chalk}}">{{r.rank}}.</span>
+<span style="flex: 1; min-width: 0; overflow-wrap: anywhere">{{r.nickname}}</span>
+<span>{{r.scoreText}}</span>
+</li>
+</sc-for>
+</ol>
+</section>
+
+<div style="display: flex; flex-wrap: wrap; gap: 16px; margin-top: 48px">
+<button type="button" style="min-height: 58px; padding: 0 30px; border: 3px solid #F4F1E8; border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px; background: #F4F1E8; color: #23412F; font-family: 'Gochi Hand', cursive; font-size: 26px; cursor: pointer">Nog een ronde</button>
+<button type="button" style="min-height: 58px; padding: 0 30px; border: 3px solid #F4F1E8; border-radius: 15px 225px 15px 255px / 255px 15px 225px 15px; background: transparent; color: #F4F1E8; font-family: 'Gochi Hand', cursive; font-size: 26px; cursor: pointer">Terug naar start</button>
+</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"board":{"editor":"color","default":"#23412F","options":["#23412F","#1F2A2E","#2B3A55"]},"chalk":{"editor":"color","default":"#FFE58A","options":["#FFE58A","#F7A1C4","#A6E3F0"]},"$preview":{"width":1440,"height":1200}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const board = this.props.board ?? '#23412F';
+    const chalk = this.props.chalk ?? '#FFE58A';
+    const results = [
+      { nickname: 'Sanne', score: 7420 }, { nickname: 'Daan', score: 5310 }, { nickname: 'Fatima', score: 6150 },
+      { nickname: 'Lucas', score: 2890 }, { nickname: 'Noah', score: 4480 }, { nickname: 'Mo', score: 6150 },
+      { nickname: 'Emma', score: 3720 }, { nickname: 'quizkoning', score: 1540 }, { nickname: 'Yara', score: 5880 },
+      { nickname: 'Tim_04', score: 0 }
+    ];
+    const fmt = (n) => n.toLocaleString('nl-NL');
+    const sorted = results.slice().sort((a, b) => b.score - a.score || a.nickname.localeCompare(b.nickname));
+    const ranked = sorted.map((r) => ({ ...r, rank: sorted.findIndex((o) => o.score === r.score) + 1, scoreText: fmt(r.score) }));
+    const look = {
+      1: { height: '300px', color: chalk, rankSize: '128px', nameSize: '64px' },
+      2: { height: '210px', color: '#F4F1E8', rankSize: '96px', nameSize: '48px' },
+      3: { height: '150px', color: '#F7A1C4', rankSize: '80px', nameSize: '44px' }
+    };
+    const top = ranked.slice(0, 3);
+    const podium = [top[1], top[0], top[2]].filter(Boolean).map((p) => ({ ...p, ...(look[p.rank] || look[3]) }));
+    return { board, chalk, podium, rest: ranked.slice(3) };
+  }
+}
+</script>
+</body>
+</html>

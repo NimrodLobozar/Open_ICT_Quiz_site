@@ -1,0 +1,26 @@
+.answer-shape {
+  flex: none;
+  fill: currentColor;
+}
+
+/* De vier antwoordkleuren. Wit op #FDBA74 is slecht leesbaar, dus de cirkel krijgt donkere tekst. */
+.answer-color {
+  color: #ffffff;
+}
+
+.answer-color--driehoek {
+  background: var(--quiz-primary);
+}
+
+.answer-color--ruit {
+  background: #0f766e;
+}
+
+.answer-color--cirkel {
+  background: var(--quiz-accent);
+  color: var(--quiz-text);
+}
+
+.answer-color--vierkant {
+  background: var(--quiz-text);
+}

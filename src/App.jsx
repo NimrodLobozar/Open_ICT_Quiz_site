@@ -1,4 +1,4 @@
-import { Link, Route, Routes } from "react-router-dom";
+import { Link, Navigate, Route, Routes } from "react-router-dom";
 import QuizHeader from "./components/QuizHeader.jsx";
 import EndScreenPageHost from "./pages/EndScreenPage_Host/EndScreenPage.jsx";
 import EndScreenPagePlayer from "./pages/EndScreenPage_Player/EndScreenPage.jsx";
@@ -21,8 +21,13 @@ export default function App() {
   return (
     <>
       <Routes>
+        {/* TODO(team, volgende sprint): echte startpagina met keuze tussen hosten en meedoen.
+            Tot die er is, sturen we iedereen op de voorpagina door naar het joinformulier.
+            Werkt voor elk adres (localhost, IP of domein), want het kijkt alleen naar het pad. */}
+        <Route path="/" element={<Navigate to="/join" replace />} />
+        {/* Linkjes naar alle pagina's, voor het team. Niet gelinkt: je moet de URL kennen. */}
         <Route
-          path="/"
+          path="/dev"
           element={
             <div className="page">
               <QuizHeader />
@@ -78,6 +83,8 @@ export default function App() {
           path="/account/nieuw"
           element={<PlaceholderPage title="Account maken" />}
         />
+        {/* Onbekende URL: ook naar het joinformulier, in plaats van een lege pagina. */}
+        <Route path="*" element={<Navigate to="/join" replace />} />
       </Routes>
     </>
   );

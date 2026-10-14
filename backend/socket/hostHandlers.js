@@ -93,6 +93,19 @@ export function registerHostHandlers(io, socket, game) {
       ack?.(toErrorResponse(error));
     }
   });
+
+  // Lobby op slot of open. Het joinen zelf gaat via REST (POST /players); daar weigert
+  // Game.addPlayer dan met LOBBY_LOCKED. lobby:update vertelt iedereen de nieuwe stand,
+  // ook een tweede tabblad van de host.
+  socket.on(EVENTS.HOST_LOCK, ({ locked } = {}, ack) => {
+    try {
+      game.setLocked(locked);
+      sendLobbyUpdate(io, game);
+      ack?.({ ok: true, locked: game.locked });
+    } catch (error) {
+      ack?.(toErrorResponse(error));
+    }
+  });
 }
 
 // Elke ack heeft dezelfde vorm: { ok: true, ... } of { ok: false, error, message } (projectplan 8).

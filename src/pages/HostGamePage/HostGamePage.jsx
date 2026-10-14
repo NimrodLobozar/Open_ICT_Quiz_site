@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../../api/http.js";
+import LockButton from "../../components/LockButton.jsx";
 import QuizHeader from "../../components/QuizHeader.jsx";
 import { useQuestionEvents } from "../../hooks/useQuestionEvents.js";
 import { useSocketEvent } from "../../hooks/useSocketEvent.js";
@@ -129,6 +130,19 @@ export default function HostGamePage() {
     }
   }
 
+  // De server is de baas over het slot: we wachten op lobby:update in plaats van de knop
+  // meteen om te zetten. Zo kan de knop nooit iets anders laten zien dan de server.
+  async function toggleLock() {
+    setBusy(true);
+    setError(null);
+    const response = await emitWithAck(EVENTS.HOST_LOCK, {
+      locked: !game.lobby.locked,
+    }).catch(() => null);
+    if (!response?.ok)
+      setError(response?.message ?? "Geen antwoord van de server.");
+    setBusy(false);
+  }
+
   // Eén actie voor "Antwoorden nu tonen", "Tijd stoppen" en "Volgende vraag" (zie Game.next op de server).
   async function next() {
     setError(null);
@@ -243,7 +257,7 @@ export default function HostGamePage() {
     );
   }
 
-  const { players, playerCount } = game.lobby;
+  const { players, playerCount, locked } = game.lobby;
   const canStart = playerCount >= MIN_PLAYERS;
   return (
     <div className="page">
@@ -260,9 +274,12 @@ export default function HostGamePage() {
           </p>
         )}
         <p className="host-game__label">
-          Ga naar {window.location.host}/join en vul in:
+          {locked
+            ? "De lobby is op slot: nieuwe spelers kunnen niet meer meedoen."
+            : `Ga naar ${window.location.host}/join en vul in:`}
         </p>
         <p className="host-game__code">{code}</p>
+        <LockButton locked={locked} onToggle={toggleLock} disabled={busy} />
         <h1 className="host-game__title">
           {playerCount} {playerCount === 1 ? "speler" : "spelers"}
         </h1>

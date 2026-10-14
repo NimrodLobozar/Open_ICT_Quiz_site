@@ -104,6 +104,21 @@ export class Game {
     return this.removePlayer(playerId);
   }
 
+  /**
+   * De host zet de lobby op slot of weer open. Op slot = addPlayer weigert nieuwe spelers,
+   * maar wie al in de lobby zit, blijft erin (ook na verversen, want die heeft een cookie).
+   */
+  setLocked(locked) {
+    if (this.phase !== PHASES.LOBBY) {
+      throw new GameError(
+        "WRONG_PHASE",
+        "De lobby kan alleen voor de start op slot.",
+        409,
+      );
+    }
+    this.locked = Boolean(locked);
+  }
+
   setConnected(playerId, connected) {
     const player = this.getPlayer(playerId);
     if (player) player.connected = connected;

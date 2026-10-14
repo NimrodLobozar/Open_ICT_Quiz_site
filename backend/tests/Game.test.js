@@ -100,6 +100,16 @@ describe('Game: de vraag-lus', () => {
     expect(alone.phase).toBe(PHASES.LOBBY)
   })
 
+  it('weigert nieuwe spelers als de lobby op slot zit, en laat ze weer toe na openen', () => {
+    game.setLocked(true)
+    expect(() => game.addPlayer('Noah')).toThrow(expect.objectContaining({ code: 'LOBBY_LOCKED' }))
+    expect(game.getPlayer(emma.id)).not.toBeNull()
+    game.setLocked(false)
+    expect(() => game.addPlayer('Noah')).not.toThrow()
+    game.start(T0)
+    expect(() => game.setLocked(true)).toThrow(expect.objectContaining({ code: 'WRONG_PHASE' }))
+  })
+
   it('laat de host alleen in de lobby spelers verwijderen', () => {
     game.addPlayer('Noah') // zodat er na het verwijderen nog 2 spelers zijn om te starten
     game.kickPlayer(emma.id)

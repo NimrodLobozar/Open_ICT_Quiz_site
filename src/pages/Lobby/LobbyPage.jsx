@@ -1,5 +1,4 @@
 import { useNavigate, Link } from 'react-router-dom';
-import LockButton from '../../components/LockButton.jsx';
 import QuizHeader from '../../components/QuizHeader.jsx';
 import './Lobbypage.css';
 
@@ -19,7 +18,6 @@ export default function LobbyPage() {
     >
             Terug naar Home
           </Link>
-          <LockButton />
         </div>
 
         {/* Bovenste balk met instructie en de PIN */}

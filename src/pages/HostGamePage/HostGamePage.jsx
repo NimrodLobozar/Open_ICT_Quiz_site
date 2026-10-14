@@ -319,7 +319,7 @@ export default function HostGamePage() {
           </p>
         )}
 
-        {import.meta.env.DEV && (
+        {/* {import.meta.env.DEV && (
           <section className="host-game__dev" aria-label="Alleen voor testen">
             <p>
               <strong>Alleen voor testen:</strong> sla de vragen over. Deze
@@ -341,7 +341,7 @@ export default function HostGamePage() {
               Afronden met testspelers (tot 100)
             </button>
           </section>
-        )}
+        )} */}
         {error && (
           <p className="host-game__error" role="alert">
             {error}

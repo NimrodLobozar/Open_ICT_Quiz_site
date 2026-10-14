@@ -38,10 +38,10 @@ export function PlayerQuestionResult({
   const isLast = question.index + 1 >= question.total;
 
   return (
-    <div className="player-question">
+    <div className="page player-question">
       <QuizHeader code={code} />
 
-      <main className="player-question__main player-question__main--result">
+      <main className="page__main player-question__main player-question__main--result">
         <Verdict myResult={myResult} />
         {correctOption && (
           <p className="player-question__answer-was">

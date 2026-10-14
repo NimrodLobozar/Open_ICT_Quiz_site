@@ -22,6 +22,9 @@ Stack: React 19 + Vite + antd + react-router (frontend, `src/`), Express 5 + Soc
 - All UI text is in Dutch. Code comments are in Dutch too, written for students learning the codebase: short and explaining *why*.
 - Branches: `main` ← `dev` ← feature branches (`feature_<Naam>` or `<ticket>-<Naam>`). Open PRs against `dev`, not `main`.
 - Commit messages use Conventional Commits (`feat:`, `fix:`, `chore:`, `refactor:`).
+- Shared styling lives in `src/index.css` (imported once in `main.jsx`, so it applies to every page): the colour variables `--quiz-*`, page background, text colour and font, plus the `.page` / `.page__main` layout. Don't redefine the colours per page; use `var(--quiz-...)`. `index.css` is imported before `App` in `main.jsx`, so page CSS wins on equal selectors (pages override `.page__main` width/padding in their own CSS).
+- Every page is `<div className="page <name>">` + `<QuizHeader code={...} />` (add `large` on the host big screen) + `<main className="page__main <name>__main">`. Never build a page-specific nav bar or set the page background. Host big-screen pages also add `<PageRings />` (background circles) as the first child.
+- New pages start as a copy of `src/pages/_Template/` (nav bar `QuizHeader` already included; view it at `/template`). Rename the files and the `template-page` class, then add a route in `src/App.jsx`.
 
 ## Ranking
 

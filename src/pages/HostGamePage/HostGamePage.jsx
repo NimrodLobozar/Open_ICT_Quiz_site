@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../../api/http.js";
+import QuizHeader from "../../components/QuizHeader.jsx";
 import { useQuestionEvents } from "../../hooks/useQuestionEvents.js";
 import { useSocketEvent } from "../../hooks/useSocketEvent.js";
 import { EVENTS } from "../../socket/events.js";
@@ -38,9 +39,12 @@ export function HostCreatePage() {
   }, [navigate]);
 
   return (
-    <main className="host-game">
-      <p role="status">{error ?? "Lobby wordt aangemaakt…"}</p>
-    </main>
+    <div className="page">
+      <QuizHeader large />
+      <main className="page__main host-game">
+        <p role="status">{error ?? "Lobby wordt aangemaakt…"}</p>
+      </main>
+    </div>
   );
 }
 
@@ -162,9 +166,12 @@ export default function HostGamePage() {
 
   if (!game) {
     return (
-      <main className="host-game">
-        <p role="status">Verbinden…</p>
-      </main>
+      <div className="page">
+        <QuizHeader code={code} large />
+        <main className="page__main host-game">
+          <p role="status">Verbinden…</p>
+        </main>
+      </div>
     );
   }
 
@@ -239,86 +246,90 @@ export default function HostGamePage() {
   const { players, playerCount } = game.lobby;
   const canStart = playerCount >= MIN_PLAYERS;
   return (
-    <main className="host-game">
-      {isLocalhost && (
-        <p className="host-game__warning" role="alert">
-          <strong>Let op:</strong> je opent deze pagina via{" "}
-          <code>{window.location.hostname}</code>. Een telefoon kan dat adres
-          niet openen. Open de site op deze computer via zijn netwerkadres
-          (bijv. <code>http://192.168.x.x:{window.location.port}</code>, je
-          vindt het IP-adres met <code>ipconfig</code>) en maak daar een nieuwe
-          lobby.
+    <div className="page">
+      <QuizHeader code={code} large />
+      <main className="page__main host-game">
+        {isLocalhost && (
+          <p className="host-game__warning" role="alert">
+            <strong>Let op:</strong> je opent deze pagina via{" "}
+            <code>{window.location.hostname}</code>. Een telefoon kan dat adres
+            niet openen. Open de site op deze computer via zijn netwerkadres
+            (bijv. <code>http://192.168.x.x:{window.location.port}</code>, je
+            vindt het IP-adres met <code>ipconfig</code>) en maak daar een
+            nieuwe lobby.
+          </p>
+        )}
+        <p className="host-game__label">
+          Ga naar {window.location.host}/join en vul in:
         </p>
-      )}
-      <p className="host-game__label">
-        Ga naar {window.location.host}/join en vul in:
-      </p>
-      <p className="host-game__code">{code}</p>
-      <h1 className="host-game__title">
-        {playerCount} {playerCount === 1 ? "speler" : "spelers"}
-      </h1>
+        <p className="host-game__code">{code}</p>
+        <h1 className="host-game__title">
+          {playerCount} {playerCount === 1 ? "speler" : "spelers"}
+        </h1>
 
-      <ul className="host-game__players">
-        {players.map((player) => (
-          <li
-            key={player.id}
-            className={player.connected ? "" : "host-game__player--offline"}
-          >
-            <span>{player.nickname}</span>
-            {!player.connected && <span> (offline)</span>}
+        <ul className="host-game__players">
+          {players.map((player) => (
+            <li
+              key={player.id}
+              className={player.connected ? "" : "host-game__player--offline"}
+            >
+              <span>{player.nickname}</span>
+              {!player.connected && <span> (offline)</span>}
 
+              <button
+                type="button"
+                className="host-game__kick-btn"
+                onClick={() => kickPlayer(player.id)}
+              >
+                Verwijder
+              </button>
+            </li>
+          ))}
+        </ul>
+
+        <button
+          type="button"
+          className="host-game__start"
+          disabled={busy || !canStart}
+          onClick={startQuiz}
+        >
+          Quiz starten
+        </button>
+        {!canStart && (
+          <p className="host-game__hint">
+            Er zijn minimaal {MIN_PLAYERS} spelers nodig om te starten.
+          </p>
+        )}
+
+        {import.meta.env.DEV && (
+          <section className="host-game__dev" aria-label="Alleen voor testen">
+            <p>
+              <strong>Alleen voor testen:</strong> sla de vragen over. Deze
+              knoppen spelen 8 nepvragen voor iedereen en tonen meteen het
+              podium.
+            </p>
             <button
               type="button"
-              className="host-game__kick-btn"
-              onClick={() => kickPlayer(player.id)}
+              disabled={busy}
+              onClick={() => finishForTesting(0)}
             >
-              Verwijder
+              Quiz afronden
             </button>
-          </li>
-        ))}
-      </ul>
-
-      <button
-        type="button"
-        className="host-game__start"
-        disabled={busy || !canStart}
-        onClick={startQuiz}
-      >
-        Quiz starten
-      </button>
-      {!canStart && (
-        <p className="host-game__hint">
-          Er zijn minimaal {MIN_PLAYERS} spelers nodig om te starten.
-        </p>
-      )}
-
-      {import.meta.env.DEV && (
-        <section className="host-game__dev" aria-label="Alleen voor testen">
-          <p>
-            <strong>Alleen voor testen:</strong> sla de vragen over. Deze
-            knoppen spelen 8 nepvragen voor iedereen en tonen meteen het podium.
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => finishForTesting(100 - playerCount)}
+            >
+              Afronden met testspelers (tot 100)
+            </button>
+          </section>
+        )}
+        {error && (
+          <p className="host-game__error" role="alert">
+            {error}
           </p>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => finishForTesting(0)}
-          >
-            Quiz afronden
-          </button>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => finishForTesting(100 - playerCount)}
-          >
-            Afronden met testspelers (tot 100)
-          </button>
-        </section>
-      )}
-      {error && (
-        <p className="host-game__error" role="alert">
-          {error}
-        </p>
-      )}
-    </main>
+        )}
+      </main>
+    </div>
   );
 }

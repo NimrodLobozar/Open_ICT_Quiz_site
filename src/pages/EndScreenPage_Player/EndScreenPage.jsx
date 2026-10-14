@@ -24,10 +24,10 @@ import './EndScreenPage.css'
  */
 export function PlayerEndScreen({ code, ranking, result, onLeave, leaving = false, leaveError = null }) {
   return (
-    <div className="player-end">
+    <div className="page player-end">
       <QuizHeader code={code} />
 
-      <main className="player-end__main">
+      <main className="page__main player-end__main">
         <section className="player-end__me" aria-labelledby="player-end-title">
           {result ? <MyResult result={result} /> : <p role="status">Je resultaat wordt geladen…</p>}
         </section>

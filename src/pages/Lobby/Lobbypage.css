@@ -1,15 +1,10 @@
-/* De achtergrond en algemene opmaak van de hele pagina */
+/* Indeling van de inhoud. Achtergrond, kleuren, lettertype en navigatiebalk komen uit src/index.css en QuizHeader. */
 .lobby-container {
-  background-color: #ffedd5;
-  min-height: 100vh;
-  color: #7c2d12;
-  font-family: Arial, sans-serif;
   display: flex;
   flex-direction: column; /* Let op: in CSS schrijf je dit als flex-direction */
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  box-sizing: border-box;
 }
 
 /* De witte balk bovenin met instructie en PIN */

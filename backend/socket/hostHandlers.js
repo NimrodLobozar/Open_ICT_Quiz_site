@@ -5,7 +5,7 @@ import { PHASES } from "../game/phases.js";
 import { sendLobbyUpdate, sendPodium } from "./broadcast.js";
 import { EVENTS } from "./events.js";
 import { afterPhaseChange } from "./gameLoop.js";
-import { gameRoom } from "./rooms.js";
+import { gameRoom, playerRoom } from "./rooms.js";
 
 // Events die alleen de host mag sturen. Deze functie wordt alleen aangeroepen voor host-sockets
 // (zie socket/index.js), dus een speler die 'dev:finish' stuurt, wordt nergens gehoord.
@@ -83,7 +83,10 @@ export function registerHostHandlers(io, socket, game) {
 
   socket.on(EVENTS.HOST_KICK_PLAYER, ({ playerId } = {}, ack) => {
     try {
-      game.removePlayer(playerId);
+      game.kickPlayer(playerId);
+      // Open sockets van de speler verbreken, net als bij zelf vertrekken (routes/games.js).
+      // Bij een nieuwe verbinding weigert de sessionMiddleware hem, want de speler bestaat niet meer.
+      io.in(playerRoom(game.code, playerId)).disconnectSockets(true);
       sendLobbyUpdate(io, game);
       ack?.({ ok: true });
     } catch (error) {

@@ -87,8 +87,13 @@ export class Game {
     return this.players.get(playerId) ?? null;
   }
 
-  /** Speler verwijderen door de host of zelf vertrekken. */
+  /** Speler vertrekt zelf. Mag altijd, ook op het podium ("Terug naar start"). */
   removePlayer(playerId) {
+    return this.players.delete(playerId);
+  }
+
+  /** De host verwijdert een speler. Alleen in de lobby: midden in de quiz zou dat de stand verstoren. */
+  kickPlayer(playerId) {
     if (this.phase !== PHASES.LOBBY) {
       throw new GameError(
         "WRONG_PHASE",
@@ -96,7 +101,7 @@ export class Game {
         403,
       );
     }
-    return this.players.delete(playerId);
+    return this.removePlayer(playerId);
   }
 
   setConnected(playerId, connected) {

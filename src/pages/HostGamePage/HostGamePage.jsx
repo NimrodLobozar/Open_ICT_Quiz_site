@@ -273,15 +273,16 @@ export default function HostGamePage() {
               key={player.id}
               className={player.connected ? "" : "host-game__player--offline"}
             >
-              <span>{player.nickname}</span>
-              {!player.connected && <span> (offline)</span>}
-
+              {/* Een echte <button>, zodat verwijderen ook met het toetsenbord werkt. */}
               <button
                 type="button"
-                className="host-game__kick-btn"
+                className="host-game__kick"
+                title={`${player.nickname} verwijderen`}
+                aria-label={`${player.nickname} verwijderen`}
                 onClick={() => kickPlayer(player.id)}
               >
-                Verwijder
+                <span className="host-game__kick-name">{player.nickname}</span>
+                {!player.connected && <span> (offline)</span>}
               </button>
             </li>
           ))}

@@ -43,6 +43,7 @@ Elke actie heeft een ack: `{ ok: true, ... }` of `{ ok: false, error, message }`
 | `host:next` | host | `{ phase, questionIndex }` (het scherm waarop de host klikte) | `{ ok }`; één stap verder, zie [Fases](#fases). Hoort de klik bij een scherm dat al voorbij is (dubbelklik, timer was eerder), dan `WRONG_PHASE` |
 | `player:answer` | speler | `{ questionIndex, optionId }` | `{ ok }` (zegt **niet** of het goed is). Fouten: `WRONG_PHASE`, `ALREADY_ANSWERED`, `TOO_LATE`, `INVALID_OPTION` |
 | `host:restart` | host | `{}` | `{ ok }`; alleen in fase `PODIUM`, anders `WRONG_PHASE`. Zelfde spelers en namen, scores 0, terug naar `LOBBY` |
+| `host:kick-player` | host | `{ playerId }` | `{ ok }`; alleen in `LOBBY`, anders `WRONG_PHASE`. Speler weg (naam komt vrij), zijn open sockets worden verbroken en iedereen krijgt `lobby:update`. De speler-client gaat dan terug naar `/join/:code` |
 | `dev:finish` | host, **alleen development** | `{ bots?: number }` | `{ ok }`; vanuit de lobby: speelt 8 nepvragen en gaat meteen naar `PODIUM` (om het eindscherm met veel spelers te testen) |
 
 ### Fases

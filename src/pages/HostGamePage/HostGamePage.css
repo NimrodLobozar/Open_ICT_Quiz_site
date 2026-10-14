@@ -92,8 +92,8 @@
 
 .host-game__error--top {
   padding: 10px 16px;
-  background: #7c2d12;
-  color: #fff7ed;
+  background: var(--quiz-text);
+  color: var(--quiz-surface);
   font-family: "Rubik", sans-serif;
   text-align: center;
 }
@@ -152,18 +152,19 @@
   overflow-wrap: anywhere;
 }
 
-.host-game__kick-btn {
-  background-color: #ff4d4d; /* Een mooie rode kleur voor verwijderen */
-  color: white;
+/* De naam zelf is de verwijderknop: geen eigen knopstijl, hij neemt de stijl van de pil over. */
+.host-game__kick {
+  padding: 0;
   border: none;
-  padding: 4px 10px;
-  border-radius: 4px;
+  background: none;
+  color: inherit;
+  font: inherit;
   cursor: pointer;
-  font-size: 0.9rem;
-  margin-left: 10px; /* Zorgt voor wat ruimte tussen de naam en de knop */
-  transition: background-color 0.2s;
 }
 
-.host-game__kick-btn:hover {
-  background-color: #cc0000; /* Donkerder rood als je er met je muis overgaat */
+/* Doorgestreept = "klik en deze speler is weg". Ook bij toetsenbordfocus. */
+.host-game__kick:hover .host-game__kick-name,
+.host-game__kick:focus-visible .host-game__kick-name {
+  text-decoration: line-through;
+  text-decoration-thickness: 3px;
 }

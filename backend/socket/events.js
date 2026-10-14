@@ -10,6 +10,7 @@ export const EVENTS = {
   HOST_START: "host:start", // lobby → vraag 1 (minimaal 2 spelers)
   HOST_NEXT: "host:next", // één stap verder: leestijd overslaan, tijd stoppen, volgende vraag
   HOST_RESTART: "host:restart",
+  HOST_KICK_PLAYER: "host:kick-player", // alleen in de lobby: speler verwijderen
   PLAYER_ANSWER: "player:answer",
   DEV_FINISH: "dev:finish", // alleen in development: quiz nep-afspelen en naar het podium
 

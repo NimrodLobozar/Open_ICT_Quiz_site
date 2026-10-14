@@ -65,7 +65,13 @@ export default function PlayerGamePage() {
     }
   });
 
-  useSocketEvent("disconnect", () => setConnected(false));
+  useSocketEvent("disconnect", (reason) => {
+    setConnected(false);
+    // De server verbrak de verbinding zelf: de host heeft ons uit de lobby verwijderd.
+    // Socket.IO verbindt dan niet automatisch opnieuw, dus terug naar het join-scherm.
+    if (reason === "io server disconnect")
+      navigate(`/join/${code}`, { replace: true });
+  });
 
   // De middleware op de server weigerde ons (bijv. server herstart, sessie weg).
   useSocketEvent("connect_error", (error) => {

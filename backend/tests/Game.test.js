@@ -100,6 +100,15 @@ describe('Game: de vraag-lus', () => {
     expect(alone.phase).toBe(PHASES.LOBBY)
   })
 
+  it('laat de host alleen in de lobby spelers verwijderen', () => {
+    game.addPlayer('Noah') // zodat er na het verwijderen nog 2 spelers zijn om te starten
+    game.kickPlayer(emma.id)
+    expect(game.getPlayer(emma.id)).toBeNull()
+    game.start(T0)
+    expect(() => game.kickPlayer(sam.id)).toThrow(expect.objectContaining({ code: 'WRONG_PHASE' }))
+    expect(game.getPlayer(sam.id)).not.toBeNull()
+  })
+
   it('begint met leestijd en opent daarna de antwoorden', () => {
     game.start(T0)
     expect(game.phase).toBe(PHASES.QUESTION_PREVIEW)

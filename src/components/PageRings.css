@@ -1,0 +1,18 @@
+/* z-index -1: achter de navigatiebalk en de inhoud, maar binnen .page (die heeft isolation: isolate). */
+.page-rings {
+  position: absolute;
+  z-index: -1;
+  top: -620px;
+  left: 50%;
+  width: 1400px;
+  height: 1400px;
+  margin-left: -700px;
+  opacity: 0.18;
+  pointer-events: none;
+}
+
+.page-rings circle {
+  fill: none;
+  stroke: #fb923c;
+  stroke-width: 0.3;
+}

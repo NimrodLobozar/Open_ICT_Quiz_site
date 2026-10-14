@@ -1,6 +1,8 @@
 import { Alert, Button, Card, Form, Input, Slider, Typography } from 'antd'
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { api } from '../../api/http.js'
+import QuizHeader from '../../components/QuizHeader.jsx'
 import './JoinPage.css'
 
 const skillDefinitions = [
@@ -12,46 +14,18 @@ const skillDefinitions = [
   { label: 'BI', color: '#3b82f6' },
 ]
 
+// TODO(team): quiztitel van de server halen zodra games aan een echte quiz hangen.
+const QUIZ_TITLE = 'Open ICT Quiz'
+
 export default function JoinPage() {
   const { code } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
   const [locationNotice, setLocationNotice] = useState('')
   const [isNoticeClosing, setIsNoticeClosing] = useState(false)
-  const [quiz, setQuiz] = useState(null)
+  const [game, setGame] = useState(null)
   const isInvalidCode = code && !/^\d{6}$/.test(code)
   const [codeStatus, setCodeStatus] = useState(code ? 'checking' : 'idle')
-
-  // Check when someone presses join on the namepage, send data to backend endpoint
-  const handleJoin = async (nickname) => {
-    if (!code) return
-    const joinData = {
-      nickname,
-      skills: skills.reduce((acc, skill) => {
-        acc[skill.label] = skill.value || 0
-        return acc
-      }, {}),
-    }
-
-    try {
-      const response = await fetch(`/api/quiz/${code}/join`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(joinData),
-      })
-
-      if (!response.ok) {
-        throw new Error(`Failed to join quiz with status ${response.status}`)
-      }
-
-      const data = await response.json()
-      console.log('Joined quiz:', data)
-    } catch (error) {
-      console.error('Error joining quiz:', error)
-    }
-  }
 
   useEffect(() => {
     if (isInvalidCode) {
@@ -67,42 +41,34 @@ export default function JoinPage() {
       return
     }
 
-    const controller = new AbortController()
+    // Voorkomt dat een oud antwoord nog iets doet als de code intussen veranderd is.
+    let cancelled = false
 
+    // Games leven in het geheugen van de server (aangemaakt door de host), dus we vragen het daar na.
     async function checkCode() {
       try {
-        const response = await fetch(`/api/code/${code}`, { signal: controller.signal })
-
-        if (!response.ok) {
-          throw new Error(`Code check failed with status ${response.status}`)
-        }
-
-        const data = await response.json()
-
-        if (!data.exists) {
-          navigate('/join', {
-            replace: true,
-            state: { locationNotice: 'Ongeldige code. Voer een 6-cijferige code in.' },
-          })
-          return
-        }
-
-        setQuiz(data.quiz)
+        const data = await api(`/games/${code}`)
+        if (cancelled) return
+        setGame(data)
         setCodeStatus('valid')
       } catch (error) {
-        if (error.name === 'AbortError') return
-
-        console.error('Error checking quiz code:', error)
+        if (cancelled) return
         navigate('/join', {
           replace: true,
-          state: { locationNotice: 'De quizcode kon niet worden gecontroleerd.' },
+          state: {
+            locationNotice: error.status === 404
+              ? 'Ongeldige code. Voer een 6-cijferige code in.'
+              : 'De quizcode kon niet worden gecontroleerd.',
+          },
         })
       }
     }
 
     checkCode()
 
-    return () => controller.abort()
+    return () => {
+      cancelled = true
+    }
   }, [code, isInvalidCode, navigate])
 
   useEffect(() => {
@@ -132,17 +98,8 @@ export default function JoinPage() {
   }, [locationNotice])
 
   return (
-    <div className="join-page">
-      <header className="join-nav">
-        <span className="join-brand">OPEN ICT QUIZ</span>
-        <a className="join-login-button" href="/login">
-          <svg className="join-login-icon" viewBox="0 0 16 16" aria-hidden="true">
-            <circle cx="8" cy="5" r="2.5" />
-            <path d="M3.5 14c.4-2.4 2-3.6 4.5-3.6s4.1 1.2 4.5 3.6" />
-          </svg>
-          Inloggen
-        </a>
-      </header>
+    <div className="page join-page">
+      <QuizHeader />
       {locationNotice && (
         <Alert
           className={`join-notice ${isNoticeClosing ? 'join-notice-closing' : ''}`}
@@ -152,8 +109,8 @@ export default function JoinPage() {
           description={locationNotice}
         />
       )}
-      {code && !isInvalidCode && codeStatus === 'valid' && quiz ? (
-        <NicknameStep key={code} code={code} quiz={quiz} />
+      {code && !isInvalidCode && codeStatus === 'valid' && game ? (
+        <NicknameStep key={code} code={code} locked={game.locked} />
       ) : <CodeStep />}
     </div>
   )
@@ -204,13 +161,26 @@ function LoginForm() {
 
 function CodeForm() {
   const navigate = useNavigate()
+  const [error, setError] = useState(null)
+
+  // Eerst vragen of de game bestaat, zodat je bij een typfout meteen een melding krijgt.
+  async function checkCode({ code }) {
+    setError(null)
+    try {
+      await api(`/games/${code}`)
+      navigate(`/join/${code}`)
+    } catch (apiError) {
+      setError(apiError.message)
+    }
+  }
 
   return (
     <>
       <header className="code-header">
         <Typography.Title className="code-title" level={3}>Voer de code in</Typography.Title>
       </header>
-      <Form className="code-form" layout="vertical" onFinish={({ code }) => navigate(`/join/${code}`)}>
+      {error && <Alert type="error" showIcon message={error} style={{ marginBottom: 16 }} />}
+      <Form className="code-form" layout="vertical" onFinish={checkCode}>
         <Form.Item
           label="Code"
           name="code"
@@ -247,44 +217,34 @@ function SkillSlider({ label, color, value, onChange }) {
   )
 }
 
-function NicknameStep({ code, quiz }) {
+function NicknameStep({ code, locked }) {
   const [form] = Form.useForm()
-  const [joined, setJoined] = useState(false)
+  const navigate = useNavigate()
+  const [error, setError] = useState(null)
+  const [sending, setSending] = useState(false)
   const [skillValues, setSkillValues] = useState(
     () => Object.fromEntries(skillDefinitions.map(({ label }) => [label, 5])),
   )
-  const [joinError, setJoinError] = useState('')
 
+  // Rejoin: heeft deze browser al een speler-cookie voor deze game, dan meteen door naar het spel.
+  useEffect(() => {
+    api(`/games/${code}/me`)
+      .then(() => navigate(`/play/${code}`, { replace: true }))
+      .catch(() => {}) // geen sessie: gewoon het formulier tonen
+  }, [code, navigate])
+
+  // De server checkt de naam en zet de cookie. Daarna weet /play/:code wie we zijn.
+  // De skills bewaart de server bij de speler; ze komen in de database bij de eindstand (GameResult).
   async function join({ nickname }) {
-    setJoinError('')
-
+    setError(null)
+    setSending(true)
     try {
-      const response = await fetch(`/api/code/${code}/join`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nickname, skills: skillValues }),
-      })
-
-      if (!response.ok) {
-        const data = await response.json().catch(() => ({}))
-        throw new Error(data.error || 'Aanmelden is mislukt.')
-      }
-
-      setJoined(nickname)
-    } catch (error) {
-      setJoinError(error.message)
+      await api(`/games/${code}/players`, { method: 'POST', body: { nickname, skills: skillValues } })
+      navigate(`/play/${code}`)
+    } catch (apiError) {
+      setError(apiError.message)
+      setSending(false)
     }
-  }
-
-  if (joined) {
-    return (
-      <Alert
-        type="success"
-        showIcon
-        message={`Welkom, ${joined}!`}
-        description={`Je bent lokaal toegevoegd aan ${quiz.title} (${code}).`}
-      />
-    )
   }
 
   return (
@@ -292,7 +252,7 @@ function NicknameStep({ code, quiz }) {
       <Card className="join-card">
         <header className="join-header">
           <Typography.Text type="secondary" className="join-header-text">
-            {quiz.title}
+            {QUIZ_TITLE}
           </Typography.Text>
           <Typography.Text type="secondary" className="join-header-text">
             {code}
@@ -306,10 +266,10 @@ function NicknameStep({ code, quiz }) {
             Vul je gegevens in
           </Typography.Title>
         </div>
-        {quiz.locked && (
+        {locked && (
           <Alert type="warning" showIcon message="Deze lobby is gesloten." style={{ marginBottom: 16 }} />
         )}
-        {joinError && <Alert type="error" showIcon message={joinError} style={{ marginBottom: 16 }} />}
+        {error && <Alert type="error" showIcon message={error} style={{ marginBottom: 16 }} />}
         <Form form={form} layout="vertical" onFinish={join}>
           <Form.Item
             label="Gebruikersnaam:"
@@ -331,7 +291,7 @@ function NicknameStep({ code, quiz }) {
               ))}
             </div>
           </Form.Item>
-          <Button type="primary" htmlType="submit" size="large" block>
+          <Button type="primary" htmlType="submit" size="large" block loading={sending}>
             Join
           </Button>
           <a href="/login" className="login-link">

@@ -27,6 +27,14 @@ services:
     environment:
       DATABASE_URL: postgresql://quiz:quiz@db:5432/quiz
       NODE_ENV: development
+    volumes:
+      # Je backend-code live in de container, zodat nodemon wijzigingen ziet
+      # zonder rebuild. node_modules blijft die uit de image.
+      - ./backend:/app/backend
+      - ./src/utils:/app/src/utils
+      - ./prisma:/app/prisma
+      - ./prisma.config.ts:/app/prisma.config.ts
+      - ./nodemon.json:/app/nodemon.json
     depends_on:
       db:
         condition: service_healthy
@@ -46,6 +54,18 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  # De database bekijken in de browser: http://localhost:8080
+  # Inloggen met systeem PostgreSQL, server `db`, gebruiker/wachtwoord/database `quiz`.
+  # Server is `db` en niet localhost: Adminer draait zelf in Docker en praat via het Docker-netwerk.
+  adminer:
+    image: adminer:5
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: db
+    depends_on:
+      - db
 
 volumes:
   postgres-data:

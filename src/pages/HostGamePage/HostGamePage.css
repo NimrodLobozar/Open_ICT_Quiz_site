@@ -1,0 +1,170 @@
+/* Tijdelijke host-lobby, totdat de lobby-pagina van het team (LobbyPage) aan de server hangt.
+   Achtergrond, kleuren en navigatiebalk komen uit src/index.css en QuizHeader. */
+.host-game {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 16px;
+  background: #ffedd5;
+  color: #7c2d12;
+  font-family: "Rubik", sans-serif;
+  text-align: center;
+}
+
+.host-game__label {
+  margin: 0;
+  font-size: 20px;
+}
+
+.host-game__code {
+  margin: 0;
+  font-family: "Anton", sans-serif;
+  font-size: clamp(64px, 12vw, 120px);
+  line-height: 1;
+  letter-spacing: 0.08em;
+  color: var(--quiz-primary);
+}
+
+.host-game__title {
+  margin: 16px 0 0;
+  font-size: 28px;
+}
+
+.host-game__players {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  max-width: 900px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.host-game__players li {
+  padding: 8px 18px;
+  border: 2px solid var(--quiz-border);
+  border-radius: 999px;
+  background: var(--quiz-surface);
+  font-size: 20px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.host-game__player--offline {
+  opacity: 0.6;
+}
+
+.host-game__dev {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  max-width: 640px;
+  margin-top: 32px;
+  padding: 16px;
+  border: 2px dashed var(--quiz-muted);
+  border-radius: 12px;
+}
+
+.host-game__dev p {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.host-game__dev button {
+  min-height: 44px;
+  padding: 0 20px;
+  border: 2px solid var(--quiz-muted);
+  border-radius: 999px;
+  background: var(--quiz-accent);
+  color: var(--quiz-text);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.host-game__error {
+  margin: 0;
+  font-weight: 700;
+}
+
+.host-game__error--top {
+  padding: 10px 16px;
+  background: var(--quiz-text);
+  color: var(--quiz-surface);
+  font-family: "Rubik", sans-serif;
+  text-align: center;
+}
+
+/* De belangrijkste knop van de lobby: groot, zodat de host hem op het digibord makkelijk raakt. */
+.host-game__start {
+  min-height: 58px;
+  margin-top: 24px;
+  padding: 0 40px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--quiz-primary);
+  color: #ffffff;
+  font: inherit;
+  font-size: 22px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.host-game__start:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.host-game__start:focus-visible {
+  outline: 3px solid var(--quiz-text);
+  outline-offset: 3px;
+}
+
+/* Uitgeschakeld: lichter, maar de tekst blijft leesbaar (donker op licht oranje). */
+.host-game__start:disabled {
+  background: var(--quiz-accent);
+  color: var(--quiz-text);
+  cursor: not-allowed;
+}
+
+.host-game__hint {
+  margin: 0;
+  font-size: 18px;
+}
+
+/* Waarschuwing als de host via localhost werkt: telefoons kunnen dan niet meedoen. */
+.host-game__warning {
+  max-width: 720px;
+  margin: 0 0 12px;
+  padding: 14px 18px;
+  border: 2px solid var(--quiz-muted);
+  border-radius: 12px;
+  background: var(--quiz-surface);
+  font-size: 17px;
+  line-height: 1.45;
+  text-align: left;
+}
+
+.host-game__warning code {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+/* De naam zelf is de verwijderknop: geen eigen knopstijl, hij neemt de stijl van de pil over. */
+.host-game__kick {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* Doorgestreept = "klik en deze speler is weg". Ook bij toetsenbordfocus. */
+.host-game__kick:hover .host-game__kick-name,
+.host-game__kick:focus-visible .host-game__kick-name {
+  text-decoration: line-through;
+  text-decoration-thickness: 3px;
+}

@@ -6,7 +6,6 @@ import HostGamePage, {
   HostCreatePage,
 } from "./pages/HostGamePage/HostGamePage.jsx";
 import JoinPage from "./pages/JoinPage/JoinPage.jsx";
-import LobbyHost from "./pages/LobbyHost.jsx";
 import LobbyPage from "./pages/Lobby/LobbyPage.jsx";
 import LobbyPlayer from "./pages/Lobby/LobbyPlayer.jsx";
 import PlaceholderPage from "./pages/PlaceholderPage.jsx";
@@ -57,7 +56,6 @@ export default function App() {
           }
         />
         <Route path="/lobbyplayer" element={<LobbyPlayer />} />
-        <Route path="/lobbyhost" element={<LobbyHost />} />
         <Route path="/lobby" element={<LobbyPage />} />
         <Route path="/join" element={<JoinPage />} />
         <Route path="/join/:code" element={<JoinPage />} />

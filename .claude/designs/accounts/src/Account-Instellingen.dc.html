@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Accountinstellingen</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Rubik:wght@500;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFEDD5}
+a{color:#C2410C}a:hover{color:#7C2D12}
+</style>
+</helmet>
+<div style="min-height: 100vh; box-sizing: border-box; overflow: hidden; position: relative; background: #FFEDD5; color: #7C2D12; font-family: 'Rubik', sans-serif; display: flex; flex-direction: column">
+<nav aria-label="Hoofdmenu" style="position: relative; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 24px; padding: 18px 40px; background: #FFF7ED; border-bottom: 2px solid #FDBA74">
+<a href="Main.dc.html" style="font-family: 'Anton', sans-serif; font-size: 30px; letter-spacing: 0.04em; color: #C2410C; text-decoration: none; line-height: 1">OPEN ICT QUIZ</a>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+<a href="Account-Student.dc.html" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px 0 8px; border-radius: 999px; background: {{accent}}; border: 2px solid {{accent}}; color: #7C2D12; font-weight: 700; font-size: 16px; text-decoration: none"><span aria-hidden="true" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 999px; background: #FFF7ED; color: #7C2D12; font-weight: 800; font-size: 13px">EJ</span>Emma</a>
+<a href="Main.dc.html" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: 999px; border: 2px solid #9A4A22; color: #7C2D12; font-weight: 700; font-size: 16px; text-decoration: none"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h4v16h-4"></path><path d="M10 17l5-5-5-5"></path><path d="M15 12H3"></path></svg>Uitloggen</a>
+</div>
+</nav>
+<main style="position: relative; flex: 1; width: 100%; max-width: 860px; margin: 0 auto; box-sizing: border-box; padding: 48px 32px; display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<a href="Account-Student.dc.html" style="align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-weight: 700; font-size: 16px"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>Terug naar mijn account</a>
+<h1 style="margin: 0; font-family: 'Anton', sans-serif; font-weight: 400; font-size: 56px; line-height: 1.05; color: #C2410C; letter-spacing: 0.04em">INSTELLINGEN</h1>
+</div>
+<sc-if value="{{saved}}" hint-placeholder-val="{{ true }}">
+<p role="status" style="margin: 0; display: flex; align-items: center; gap: 10px; padding: 14px 18px; border-radius: 16px; background: #DCFCE7; border: 2px solid #166534; color: #166534; font-weight: 800; font-size: 17px"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"></path></svg>Je wijzigingen zijn opgeslagen.</p>
+</sc-if>
+<form aria-labelledby="h-profiel" style="background: #FFF7ED; border: 2px solid #FDBA74; border-radius: 24px; padding: 32px; display: flex; flex-direction: column; gap: 16px">
+<h2 id="h-profiel" style="margin: 0; font-size: 18px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #9A4A22">Profiel</h2>
+<div style="display: flex; flex-wrap: wrap; gap: 16px">
+<div style="flex: 1 1 240px; min-width: 0; display: flex; flex-direction: column; gap: 8px">
+<label for="s-nick" style="font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #9A4A22">Gebruikersnaam</label>
+<input id="s-nick" maxlength="20" value="Emma" style="box-sizing: border-box; width: 100%; min-height: 54px; padding: 0 16px; border: 2px solid #FDBA74; border-radius: 14px; background: #FFFFFF; color: #7C2D12; font-family: 'Rubik', sans-serif; font-weight: 700; font-size: 18px">
+</div>
+<div style="flex: 1 1 240px; min-width: 0; display: flex; flex-direction: column; gap: 8px">
+<label for="s-mail" style="font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #9A4A22">E-mailadres</label>
+<input id="s-mail" type="email" value="emma.jansen@student.hu.nl" style="box-sizing: border-box; width: 100%; min-height: 54px; padding: 0 16px; border: 2px solid #FDBA74; border-radius: 14px; background: #FFFFFF; color: #7C2D12; font-family: 'Rubik', sans-serif; font-weight: 700; font-size: 18px">
+</div>
+</div>
+<fieldset style="margin: 4px 0 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: 8px">
+<legend style="font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #9A4A22; padding: 0; margin-bottom: 8px">Jouw vaardigheden (0–5)</legend>
+<sc-for list="{{skills}}" as="k" hint-placeholder-count="6">
+<label style="display: grid; grid-template-columns: 44px minmax(0, 1fr) 20px; align-items: center; gap: 12px; font-weight: 700; font-size: 16px">{{k.code}}<input type="range" min="0" max="5" value="{{k.value}}" aria-label="{{k.code}}" style="width: 100%; accent-color: #C2410C"><span style="text-align: right">{{k.value}}</span></label>
+</sc-for>
+</fieldset>
+<div style="display: flex; justify-content: flex-end">
+<button type="button" onClick="{{save}}" style="display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 0 28px; border: 0; border-radius: 999px; background: {{accent}}; color: #7C2D12; font-family: 'Rubik', sans-serif; font-weight: 800; font-size: 18px; cursor: pointer">Opslaan</button>
+</div>
+</form>
+<form aria-labelledby="h-pw" style="background: #FFF7ED; border: 2px solid #FDBA74; border-radius: 24px; padding: 32px; display: flex; flex-direction: column; gap: 16px">
+<h2 id="h-pw" style="margin: 0; font-size: 18px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #9A4A22">Wachtwoord wijzigen</h2>
+<div style="display: flex; flex-wrap: wrap; gap: 16px">
+<div style="flex: 1 1 200px; min-width: 0; display: flex; flex-direction: column; gap: 8px">
+<label for="pw-old" style="font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #9A4A22">Huidig wachtwoord</label>
+<input id="pw-old" type="password" autocomplete="current-password" style="box-sizing: border-box; width: 100%; min-height: 54px; padding: 0 16px; border: 2px solid #FDBA74; border-radius: 14px; background: #FFFFFF; color: #7C2D12; font-size: 18px">
+</div>
+<div style="flex: 1 1 200px; min-width: 0; display: flex; flex-direction: column; gap: 8px">
+<label for="pw-new" style="font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #9A4A22">Nieuw wachtwoord</label>
+<input id="pw-new" type="password" autocomplete="new-password" style="box-sizing: border-box; width: 100%; min-height: 54px; padding: 0 16px; border: 2px solid #FDBA74; border-radius: 14px; background: #FFFFFF; color: #7C2D12; font-size: 18px">
+</div>
+</div>
+<div style="display: flex; justify-content: flex-end">
+<button type="button" style="display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 0 28px; border-radius: 999px; border: 2px solid #9A4A22; background: transparent; color: #7C2D12; font-family: 'Rubik', sans-serif; font-weight: 700; font-size: 18px; cursor: pointer">Wachtwoord wijzigen</button>
+</div>
+</form>
+<section aria-labelledby="h-del" style="border: 2px dashed #B91C1C; border-radius: 24px; padding: 28px 32px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px">
+<div style="flex: 1 1 360px; min-width: 0; display: flex; flex-direction: column; gap: 6px">
+<h2 id="h-del" style="margin: 0; font-size: 18px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #991B1B">Account verwijderen</h2>
+<p style="margin: 0; font-size: 16px; line-height: 1.5">Je profiel en al je bewaarde scores worden gewist. Dit kun je niet ongedaan maken.</p>
+</div>
+<button type="button" style="display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 52px; padding: 0 24px; border-radius: 999px; border: 2px solid #B91C1C; background: #FFFFFF; color: #991B1B; font-family: 'Rubik', sans-serif; font-weight: 800; font-size: 17px; cursor: pointer"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"></path></svg>Verwijderen</button>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#FDBA74","options":["#FDBA74","#C2410C"]},"$preview":{"width":1440,"height":1150}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { saved: false }; }
+  renderVals() {
+    return {
+      accent: this.props.accent ?? '#FDBA74',
+      saved: this.state.saved,
+      save: () => this.setState({ saved: true }),
+      skills: [['SD', 4], ['AI', 2], ['TI', 3], ['CSC', 1], ['GD', 5], ['BI', 2]].map(([code, value]) => ({ code, value }))
+    };
+  }
+}
+</script>
+</body>
+</html>

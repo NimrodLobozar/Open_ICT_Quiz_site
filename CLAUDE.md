@@ -38,6 +38,7 @@ Stack: React 19 + Vite + antd + react-router (frontend, `src/`), Express 5 + Soc
 - The editable online canvas is https://claude.ai/artifact/DYQLfMYVaoqjGKCUZ89XHf. After changing it, copy the updated `project/*` files into `src/` and rerun the script.
 - New design work goes in its own folder under `.claude/designs/`.
 - `.claude/designs/eindscherm-quizshow/` holds lighter, lower-contrast colour variants of design 7 (quizshow), including one on the `/lobby` background. Its second canvas page ("Volledige flow · 3 & 4") has every screen of the user flow (host big screen, student desktop, student phone) for variants 3 and 4; the buttons link to the next screen. Same setup: edit `src/`, then run `node .claude/designs/eindscherm-quizshow/render.cjs`. The editable online canvas is https://claude.ai/artifact/CU4wB5XbDxmXAhZbLRqEY5. After changing it, copy the updated `project/*` files into `src/` and rerun the script.
+- `.claude/designs/accounts/` holds the login, student account and admin portal designs (9 screens, orange quiz style; roles student / docent / beheerder). The user stories and tasks for them are in `docs/USER-STORIES-SPRINT-2.md`. Same setup: edit `src/`, then run `node .claude/designs/accounts/render.cjs`. The editable online canvas is https://claude.ai/artifact/BqhGC5qi1hAxFUk9SdMQC5. After changing it, copy the updated `project/*` files into `src/` and rerun the script.
 
 ## Realtime (Socket.IO)
 

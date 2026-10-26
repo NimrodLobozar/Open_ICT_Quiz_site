@@ -23,7 +23,24 @@
   overflow-y: auto;
   overscroll-behavior: contain; /* doorscrollen aan het eind van de lijst scrolt niet de hele pagina */
   scroll-behavior: smooth;
-  padding-right: 4px;
+  padding-right: 8px;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--quiz-accent);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--quiz-primary);
+}
+
+::-webkit-scrollbar-track {
+  background: var(--quiz-surface);
 }
 
 .scoreboard--list:focus-visible {

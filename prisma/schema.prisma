@@ -10,16 +10,142 @@ datasource db {
 // wat er gespeeld is: één GameSession per ronde, met één GameResult per speler (projectplan 12).
 // Zo kost elk antwoord geen databasequery, en raak je alleen een lopende game kwijt als de server herstart.
 
+// ---------- Accounts (sprint 2) ----------
+
+// Wat iemand mag. Registreren geeft altijd STUDENT; alleen een beheerder maakt docenten (story 11).
+enum Role {
+  STUDENT
+  TEACHER
+  ADMIN
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  username     String // zoals de gebruiker hem typte, bijv. "Emma"; ook de naam op het grote scherm
+  // username in kleine letters (nameKey), zodat "Emma" en "emma" niet allebei kunnen bestaan.
+  usernameKey  String    @unique
+  email        String    @unique // altijd in kleine letters opgeslagen
+  // null = nog geen wachtwoord: een uitgenodigde docent die zijn link nog niet heeft gebruikt.
+  // Nooit het wachtwoord zelf: alleen de bcrypt-hash.
+  passwordHash String?
+  role         Role      @default(STUDENT)
+  skills       Json      @default("{}") // { "SD": 4, "AI": 2, ... } zoals de sliders van de joinpagina
+  quizDefaults Json      @default("{}") // standaardinstellingen voor nieuwe quizzen (story 8)
+  createdAt    DateTime  @default(now())
+  lastActiveAt DateTime?
+
+  sessions Session[]
+  tokens   OneTimeToken[]
+  results  GameResult[]
+  quizzes  Quiz[]
+
+  @@index([role])
+}
+
+// Eén ingelogd apparaat. De browser heeft de token in de cookie quiz_auth; hier staat alleen de hash.
+// Lekt de database, dan kan niemand met deze rijen inloggen.
+// Een tabel (en geen JWT), zodat uitloggen en "overal uitloggen" (story 9) écht direct werken.
+model Session {
+  id          Int      @id @default(autoincrement())
+  tokenHash   String   @unique
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  deviceLabel String // bijv. "Laptop · Chrome", nooit het volledige IP-adres
+  createdAt   DateTime @default(now())
+  lastSeenAt  DateTime @default(now())
+  expiresAt   DateTime
+
+  @@index([userId])
+}
+
+enum TokenPurpose {
+  RESET // wachtwoord vergeten (story 3)
+  INVITE // nieuwe docent kiest zelf een wachtwoord (story 11)
+}
+
+// Eenmalige link voor een nieuw wachtwoord. Ook hier alleen de hash van de token.
+model OneTimeToken {
+  id        Int          @id @default(autoincrement())
+  tokenHash String       @unique
+  userId    Int
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  purpose   TokenPurpose
+  expiresAt DateTime
+  usedAt    DateTime? // gevuld = gebruikt; dan werkt de link niet meer
+  createdAt DateTime     @default(now())
+
+  @@index([userId])
+}
+
+// ---------- Quizzen (story 7) ----------
+
+enum QuizStatus {
+  DRAFT // concept: nog niet te hosten
+  READY // klaar
+}
+
+model Quiz {
+  id          Int        @id @default(autoincrement())
+  title       String
+  status      QuizStatus @default(DRAFT)
+  // SetNull: verwijder je een docent, dan blijft zijn quiz bestaan (een beheerder kan hem nog zien).
+  ownerId     Int?
+  owner       User?      @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  // Instellingen per quiz. Bij het maken gekopieerd uit User.quizDefaults (story 8),
+  // zodat een latere wijziging van de standaard geen bestaande quizzen verandert.
+  showCorrectAnswer Boolean @default(true)
+  showStandings     Boolean @default(true)
+  lockLobbyOnStart  Boolean @default(false)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  questions   Question[]
+  sessions    GameSession[]
+
+  @@index([ownerId])
+}
+
+model Question {
+  id           Int            @id @default(autoincrement())
+  quizId       Int
+  quiz         Quiz           @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  text         String
+  order        Int
+  timeLimitSec Int            @default(20)
+  options      AnswerOption[]
+
+  @@index([quizId])
+}
+
+model AnswerOption {
+  id         Int      @id @default(autoincrement())
+  questionId Int
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  text       String
+  isCorrect  Boolean  @default(false)
+  order      Int
+
+  @@index([questionId])
+}
+
+// ---------- Gespeelde rondes ----------
+
 // Eén gespeelde ronde. Herstart de host, dan komt er een nieuwe rij met dezelfde code en round + 1.
 model GameSession {
-  id        Int          @id @default(autoincrement())
-  code      String // de lobbycode; niet uniek, want codes worden later opnieuw uitgedeeld
-  round     Int          @default(1)
-  startedAt DateTime // moment dat de lobby (opnieuw) openging
-  endedAt   DateTime     @default(now()) // moment van het podium
-  results   GameResult[]
+  id            Int          @id @default(autoincrement())
+  code          String // de lobbycode; niet uniek, want codes worden later opnieuw uitgedeeld
+  round         Int          @default(1)
+  startedAt     DateTime // moment dat de lobby (opnieuw) openging
+  endedAt       DateTime     @default(now()) // moment van het podium
+  // Welke quiz. SetNull + de titel als kopie: verwijder je de quiz, dan blijft de uitslag leesbaar.
+  quizId        Int?
+  quiz          Quiz?        @relation(fields: [quizId], references: [id], onDelete: SetNull)
+  quizTitle     String?
+  // Aantal vragen in deze ronde, voor "% goed" op Mijn account.
+  questionCount Int          @default(0)
+  results       GameResult[]
 
   @@index([code])
+  @@index([quizId])
 }
 
 // De eindstand van één speler in één ronde.
@@ -28,6 +154,11 @@ model GameResult {
   sessionId    Int
   session      GameSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   nickname     String
+  // Het account van de speler, of null voor een gast. Verwijdert iemand zijn account (story 6),
+  // dan blijft zijn rij (score, plaats) staan zodat de eindstand van de anderen klopt,
+  // maar wordt de naam anoniem gemaakt (zie deleteUser in backend/db/users.js).
+  userId       Int?
+  user         User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
   score        Int
   // rank wordt hier wél opgeslagen: het is een momentopname van getRanking() op het podium,
   // zodat de database precies laat zien wat de spelers zagen.
@@ -37,4 +168,5 @@ model GameResult {
   isBot        Boolean     @default(false) // testspelers van dev:finish, zodat je ze kunt wegfilteren
 
   @@index([sessionId])
+  @@index([userId])
 }

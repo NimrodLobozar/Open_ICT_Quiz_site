@@ -14,7 +14,7 @@ Stack: React 19 + Vite + antd + react-router (frontend, `src/`), Express 5 + Soc
 - After `package.json` changes: `docker compose up -d --build -V` (`-V` is required, otherwise the old `node_modules` volume is kept).
 - Reset the database: `docker compose down -v`. Backend/schema errors show in `docker compose logs backend`.
 - Without Docker: `npm run server` (API, needs `DATABASE_URL`, see `.env.example`) and `npm run dev` (Vite proxies `/api` and `/socket.io` to `API_PROXY_TARGET`, default `http://localhost:3000`).
-- Tests: `npm test`. Single file: `npx vitest run backend/tests/ranking.test.js`; single test: add `-t "<test name>"`.
+- Tests: `npm test` (unit, no DB). Single file: `npx vitest run backend/tests/ranking.test.js`; single test: add `-t "<test name>"`. `npm run test:api` runs the API tests against a separate `quiz_test` database (Docker must run; never point it at `quiz`). `npm run test:smoke` plays the whole flow against the running site (`SMOKE_URL` for another host).
 - There are no migrations yet: the schema is applied with `prisma db push`. Live games are in memory; the DB only stores finished rounds (`GameSession` + `GameResult`), written once at the podium by `backend/db/gameResults.js`. See `docs/DATABASE.md`.
 
 ## Conventions
@@ -25,6 +25,13 @@ Stack: React 19 + Vite + antd + react-router (frontend, `src/`), Express 5 + Soc
 - Shared styling lives in `src/index.css` (imported once in `main.jsx`, so it applies to every page): the colour variables `--quiz-*`, page background, text colour and font, plus the `.page` / `.page__main` layout. Don't redefine the colours per page; use `var(--quiz-...)`. `index.css` is imported before `App` in `main.jsx`, so page CSS wins on equal selectors (pages override `.page__main` width/padding in their own CSS).
 - Every page is `<div className="page <name>">` + `<QuizHeader code={...} />` (add `large` on the host big screen) + `<main className="page__main <name>__main">`. Never build a page-specific nav bar or set the page background. Host big-screen pages also add `<PageRings />` (background circles) as the first child.
 - New pages start as a copy of `src/pages/_Template/` (nav bar `QuizHeader` already included; view it at `/template`). Rename the files and the `template-page` class, then add a route in `src/App.jsx`.
+
+## Accounts (sprint 2)
+
+- See `docs/ACCOUNTS.md`. Roles `STUDENT`/`TEACHER`/`ADMIN` (enum on `User`); sessions are DB rows (`Session`, sha256 of the `quiz_auth` cookie token), not JWT. `loadUser` sets `request.user` on every `/api` request; protect routes with `requireAuth` / `requireRole(...)` from `backend/auth/middleware.js`. Frontend: `useAuth()` and `<RequireAuth roles>` in `src/auth/`.
+- Never return a user row directly; use `publicUser()`. Throw `ApiError(code, message, status)` (`backend/utils/ApiError.js`) for user-facing errors.
+- Dev admin is seeded from `SEED_ADMIN_*` in `docker-compose.yml` (`beheerder@quiz.local` / `Beheerder123`). Mails are logged to `docker compose logs backend` in development.
+- `// USER IMPLEMENTATION (S1..S12)` marks code the user writes themselves (guide: `docs/SPRINT-2-ZELF-IMPLEMENTEREN.md`). Don't fill these in unless asked; when asked to check them, compare against the guide and run `npm test`, `npm run test:api`, `npm run test:smoke`.
 
 ## Ranking
 

@@ -8,5 +8,8 @@ Uitleg voor het team over hoe de backend, de database en Socket.IO samenwerken.
 | [SOCKET-IO-UITLEG.md](SOCKET-IO-UITLEG.md) | Hoe Socket.IO in onze quiz werkt (emit, ack, rooms, middleware, verversen) + een oefening: herstart door de host. |
 | [SOCKET-EVENTS.md](SOCKET-EVENTS.md) | Het contract: alle REST-endpoints, socket-events en payloads die nu gebouwd zijn. |
 | [USER-STORIES-SPRINT-2.md](USER-STORIES-SPRINT-2.md) | User stories en taken voor sprint 2: accounts, inloggen en het admin-portaal. |
+| [IMPLEMENTATIEPLAN-SPRINT-2.md](IMPLEMENTATIEPLAN-SPRINT-2.md) | Volgorde en technische keuzes voor sprint 2. |
+| [ACCOUNTS.md](ACCOUNTS.md) | Hoe inloggen, sessies, rollen en het admin-portaal werken, met alle API-endpoints en hoe je test. |
+| [SPRINT-2-ZELF-IMPLEMENTEREN.md](SPRINT-2-ZELF-IMPLEMENTEREN.md) | De 12 opdrachten om zelf te bouwen (USER IMPLEMENTATION), stap voor stap. |
 
 Het volledige plan (alle events, fases en het gewenste schema) staat in [`../Quizapp-Projectplan-Codebase.md`](../Quizapp-Projectplan-Codebase.md), hoofdstuk 6, 8 en 12. Deze docs beschrijven wat er **nu** in de code staat en hoe je daar vanaf hier naartoe bouwt.

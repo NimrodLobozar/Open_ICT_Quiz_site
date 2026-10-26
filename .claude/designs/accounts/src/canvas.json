@@ -13,7 +13,8 @@
     "Account-Telefoon.dc.html": { "x": 3040, "y": 1420, "w": 390, "h": 1500, "title": "6 · Mijn account — telefoon", "is_interactive": true },
     "Admin-Overzicht.dc.html": { "x": 0, "y": 3340, "w": 1440, "h": 1150, "title": "7 · Admin — overzicht & quizzen", "expand": "fill", "is_interactive": true },
     "Admin-Gebruikers.dc.html": { "x": 1520, "y": 3340, "w": 1440, "h": 1150, "title": "8 · Admin — gebruikers", "expand": "fill", "is_interactive": true },
-    "Admin-Account.dc.html": { "x": 3040, "y": 3340, "w": 1440, "h": 1100, "title": "9 · Admin — mijn account", "expand": "fill", "is_interactive": true }
+    "Admin-Account.dc.html": { "x": 3040, "y": 3340, "w": 1440, "h": 1100, "title": "9 · Admin — mijn account", "expand": "fill", "is_interactive": true },
+    "Admin-Uitslagen.dc.html": { "x": 4560, "y": 3340, "w": 1440, "h": 1150, "title": "10 · Admin — uitslagen", "expand": "fill", "is_interactive": true }
   },
   "order": [
     "Main.dc.html",
@@ -24,12 +25,13 @@
     "Account-Telefoon.dc.html",
     "Admin-Overzicht.dc.html",
     "Admin-Gebruikers.dc.html",
-    "Admin-Account.dc.html"
+    "Admin-Account.dc.html",
+    "Admin-Uitslagen.dc.html"
   ],
   "notes": {
     "t1": { "x": 0, "y": -300, "text": "Inloggen & account maken", "kind": "title1", "maxW": 3430 },
     "t2": { "x": 0, "y": 1120, "text": "Gebruikersaccount (student)", "kind": "title1", "maxW": 3430 },
-    "t3": { "x": 0, "y": 3040, "text": "Admin-portaal (docent / beheerder)", "kind": "title1", "maxW": 4480 }
+    "t3": { "x": 0, "y": 3040, "text": "Admin-portaal (docent / beheerder)", "kind": "title1", "maxW": 6000 }
   },
   "designSystems": []
 }

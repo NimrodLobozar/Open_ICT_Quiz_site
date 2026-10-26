@@ -10,14 +10,17 @@ Uitleg over hoe het werkt: [SOCKET-IO-UITLEG.md](SOCKET-IO-UITLEG.md).
 
 | Methode + pad | Body | Antwoord | Cookie |
 |---|---|---|---|
-| `POST /api/games` | – | `201 { gameCode }` | zet `quiz_host` |
-| `GET /api/games/:code` | – | `{ exists, locked, phase }` | – |
-| `POST /api/games/:code/players` | `{ nickname }` | `201 { playerId, nickname }` | zet `quiz_player` |
+| `POST /api/games` | `{ quizId }` | `201 { gameCode }` | zet `quiz_host`; vereist `quiz_auth` van een docent of beheerder |
+| `GET /api/games/:code` | – | `{ exists, locked, phase, quizTitle }` | – |
+| `POST /api/games/:code/players` | `{ nickname, skills }` | `201 { playerId, nickname }` | zet `quiz_player`; met `quiz_auth` wordt de accountnaam de `nickname` |
 | `GET /api/games/:code/me` | – | `{ role: 'player', playerId, nickname }` | leest `quiz_player` |
 | `GET /api/games/:code/me?role=host` | – | `{ role: 'host' }` | leest `quiz_host` |
 | `DELETE /api/games/:code/players/me` | – | `{ ok: true }` | wist `quiz_player` |
 
 Fouten: `{ error, message }` met status `404 GAME_NOT_FOUND`, `409 NAME_TAKEN`, `400 NAME_INVALID`, `403 LOBBY_LOCKED`, `403 WRONG_PHASE`, `401 NO_SESSION`.
+Bij `POST /api/games` ook: `401 NOT_LOGGED_IN`, `403 FORBIDDEN` (geen docent), `400 QUIZ_REQUIRED`, `404 QUIZ_NOT_FOUND` (bestaat niet of is van een andere docent), `409 QUIZ_DRAFT`, `409 QUIZ_EMPTY`.
+
+Alle account-endpoints (`/api/auth`, `/api/me`, `/api/admin`, `/api/quizzes`) staan in [ACCOUNTS.md](ACCOUNTS.md).
 
 `DELETE …/players/me` verwijdert de speler (naam komt vrij), verbreekt zijn open sockets en stuurt `lobby:update`. De eindstand blijft gelijk: die is bij het podium vastgezet.
 
@@ -91,7 +94,7 @@ Zo krijgt een speler na verversen of verbindingsverlies precies hetzelfde scherm
 | `lobby:update` | room (iedereen) | `{ players: [{ id, nickname, connected, isVerified }], playerCount, locked }` |
 | `question:show` | room (iedereen) | zie hieronder. Bij een nieuwe vraag én als de leestijd voorbij is (dan met `phase: 'QUESTION_ACTIVE'`) |
 | `question:progress` | host-room | `{ answeredCount, playerCount }`; na elk antwoord |
-| `question:end` | room (iedereen) | `{ questionIndex, correctOptionId, answerCounts: { [optionId]: n }, ranking: [{ id, nickname, score, rank, isVerified, pointsGained }] }` |
+| `question:end` | room (iedereen) | `{ questionIndex, correctOptionId, answerCounts: { [optionId]: n }, ranking: [{ id, nickname, score, rank, isVerified, pointsGained }], display: { showCorrectAnswer, showStandings } }`. `display` = instellingen van de quiz (story 8): het grote scherm verbergt dan het goede antwoord of de tussenstand |
 | `question:my-result` | room van één speler | `{ questionIndex, answered, optionId, correct, pointsGained }`; direct na `question:end` |
 | `game:podium` | room (iedereen) | `{ top3, ranking: [{ id, nickname, score, rank, isVerified }], totalQuestions }` |
 | `player:result` | room van één speler | zie hieronder |

@@ -8,9 +8,5 @@ export const DELETE_CONFIRM_WORD = 'VERWIJDER'
  * @param {string | undefined} typed
  */
 export function isDeleteConfirmed(typed) {
-  // USER IMPLEMENTATION (S6): geef true terug als `typed`, zonder spaties aan begin en eind,
-  // precies gelijk is aan DELETE_CONFIRM_WORD. Let op: `typed` kan ook undefined zijn.
-  // Tot je dit invult, blijft de verwijderknop altijd uit (veilig).
-  // Stappenplan: docs/SPRINT-2-ZELF-IMPLEMENTEREN.md, opdracht S6. Test: npx vitest run backend/tests/confirmDelete.test.js
-  return false
+  return String(typed ?? '').trim() === DELETE_CONFIRM_WORD
 }

@@ -30,11 +30,10 @@ export function requireAuth(request, _response, next) {
 export function requireRole(...roles) {
   return (request, _response, next) => {
     if (!request.user) throw new ApiError('NOT_LOGGED_IN', 'Log eerst in.', 401)
-    // USER IMPLEMENTATION (S2): laat de gebruiker alleen door als zijn rol in `roles` staat (dan next()).
-    // Staat hij er niet in, gooi dan een ApiError met code 'FORBIDDEN', een Nederlandse melding en status 403.
-    // Tot je dit invult, weigert deze regel IEDEREEN (veilig: beter niemand binnen dan iedereen).
-    // Stappenplan: docs/SPRINT-2-ZELF-IMPLEMENTEREN.md, opdracht S2. Test: npx vitest run backend/tests/requireRole.test.js
-    throw new ApiError('NOT_IMPLEMENTED', 'USER IMPLEMENTATION S2: requireRole is nog niet af.', 501)
+    if (!roles.includes(request.user.role)) {
+      throw new ApiError('FORBIDDEN', 'Je hebt hier geen toegang toe.', 403)
+    }
+    next()
   }
 }
 

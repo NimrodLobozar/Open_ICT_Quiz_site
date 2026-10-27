@@ -44,11 +44,8 @@ router.patch('/', async (request, response) => {
 router.post('/password', passwordCheckLimiter, async (request, response) => {
   const { currentPassword, newPassword } = request.body ?? {}
 
-  // USER IMPLEMENTATION (S5): controleer hier het huidige wachtwoord met verifyPassword(...)
-  // (kijk hoe router.delete('/') verderop het doet). Klopt het niet: ApiError 'WRONG_PASSWORD', status 400.
-  // Tot je dit invult, kan niemand zijn wachtwoord wijzigen (veilig).
-  // Stappenplan: docs/SPRINT-2-ZELF-IMPLEMENTEREN.md, opdracht S5. Test: npm run test:api (backend/tests/api/me.test.js)
-  throw new ApiError('NOT_IMPLEMENTED', 'USER IMPLEMENTATION S5: wachtwoordcontrole is nog niet af.', 501)
+  const ok = await verifyPassword(currentPassword, request.user.passwordHash)
+  if (!ok) throw new ApiError('WRONG_PASSWORD', 'Je huidige wachtwoord klopt niet.', 400)
 
   const password = parsePassword(newPassword)
   await updateUser(request.user.id, { passwordHash: await hashPassword(password) })

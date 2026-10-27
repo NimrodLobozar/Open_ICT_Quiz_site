@@ -11,12 +11,8 @@
 export function summarizeResults(rows) {
   const played = rows.length
 
-  // USER IMPLEMENTATION (S4): reken deze twee echt uit.
-  //   bestRank: de laagste rank uit rows (1 is het best), of null als er nog niets gespeeld is.
-  //   podiumCount: hoeveel rijen een rank van 1, 2 of 3 hebben.
-  // Stappenplan: docs/SPRINT-2-ZELF-IMPLEMENTEREN.md, opdracht S4. Test: npx vitest run backend/tests/summary.test.js
-  const bestRank = null
-  const podiumCount = 0
+  const bestRank = played > 0 ? Math.min(...rows.map((row) => row.rank)) : null
+  const podiumCount = rows.filter((row) => row.rank <= 3).length
 
   const totalQuestions = rows.reduce((sum, row) => sum + row.questionCount, 0)
   const totalCorrect = rows.reduce((sum, row) => sum + row.correctCount, 0)

@@ -4,10 +4,8 @@
 
 export const PASSWORD_RULES = [
   { id: 'length', label: 'Minstens 8 tekens', test: (password) => password.length >= 8 },
-  // USER IMPLEMENTATION (S1): voeg hier nog twee regels toe, in dezelfde vorm als 'length' hierboven:
-  //   id 'digit', label 'Een cijfer'       → test: zit er minstens één cijfer in?
-  //   id 'upper', label 'Een hoofdletter'  → test: zit er minstens één hoofdletter in (ook É of Ö)?
-  // Stappenplan: docs/SPRINT-2-ZELF-IMPLEMENTEREN.md, opdracht S1. Test: npx vitest run backend/tests/passwordRules.test.js
+  { id: 'digit', label: 'Een cijfer', test: (password) => /\d/.test(password) },
+  { id: 'upper', label: 'Een hoofdletter', test: (password) => /\p{Lu}/u.test(password) },
 ]
 
 // bcrypt kijkt alleen naar de eerste 72 bytes. Langer zou stiekem afgekapt worden, dus dat weigeren we.

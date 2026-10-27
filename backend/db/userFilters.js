@@ -10,8 +10,11 @@
 export function buildUserWhere({ role, q }) {
   const where = {}
   if (role) where.role = role
-  // USER IMPLEMENTATION (S10): als er een zoekterm q is, zet dan where.OR op een lijst van twee voorwaarden:
-  // username bevat q, óf email bevat q, allebei zonder op hoofdletters te letten (Prisma: contains + mode).
-  // Stappenplan: docs/SPRINT-2-ZELF-IMPLEMENTEREN.md, opdracht S10. Test: npx vitest run backend/tests/userFilters.test.js
+  if (q) {
+    where.OR = [
+      { username: { contains: q, mode: 'insensitive' } },
+      { email: { contains: q, mode: 'insensitive' } },
+    ]
+  }
   return where
 }

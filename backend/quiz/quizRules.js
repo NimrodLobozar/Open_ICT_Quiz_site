@@ -40,11 +40,12 @@ const bool = (value, fallback) => (typeof value === 'boolean' ? value : fallback
  * @returns {typeof DEFAULT_QUIZ_SETTINGS}
  */
 export function applyQuizDefaults(defaults, settings) {
-  // USER IMPLEMENTATION (S8): nu wint altijd de standaard en wordt wat de docent bij de quiz koos genegeerd.
-  // Maak het zo dat per instelling de waarde uit `settings` wint, en alleen als die undefined is
-  // de waarde uit `defaults` gebruikt wordt. Let op: false is een keuze, geen "leeg".
-  // Stappenplan: docs/SPRINT-2-ZELF-IMPLEMENTEREN.md, opdracht S8. Test: npx vitest run backend/tests/quizRules.test.js
-  return { ...defaults }
+  return {
+    timePerQuestion: settings.timePerQuestion ?? defaults.timePerQuestion,
+    showCorrectAnswer: settings.showCorrectAnswer ?? defaults.showCorrectAnswer,
+    showStandings: settings.showStandings ?? defaults.showStandings,
+    lockLobbyOnStart: settings.lockLobbyOnStart ?? defaults.lockLobbyOnStart,
+  }
 }
 
 /**
@@ -52,9 +53,9 @@ export function applyQuizDefaults(defaults, settings) {
  * @param {{ status: 'DRAFT' | 'READY', questions: Array<unknown> }} quiz
  */
 export function assertCanHost(quiz) {
-  // USER IMPLEMENTATION (S7): een concept-quiz (status niet 'READY') mag niet gehost worden.
-  // Gooi dan een ApiError met code 'QUIZ_DRAFT', een duidelijke Nederlandse melding en status 409.
-  // Stappenplan: docs/SPRINT-2-ZELF-IMPLEMENTEREN.md, opdracht S7. Test: npx vitest run backend/tests/quizRules.test.js
+  if (quiz.status !== 'READY') {
+    throw new ApiError('QUIZ_DRAFT', 'Deze quiz is nog een concept. Zet hem eerst op "Klaar".', 409)
+  }
   if (quiz.questions.length === 0) {
     throw new ApiError('QUIZ_EMPTY', 'Deze quiz heeft nog geen vragen.', 409)
   }

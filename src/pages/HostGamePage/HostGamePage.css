@@ -12,6 +12,15 @@
   text-align: center;
 }
 
+.ant-qrcode {
+  position: absolute;
+  top: 30vh;
+  left: 100px;
+  margin: 0 auto;
+  width: 40vh !important;
+  height: 40vh !important;
+}
+
 .host-game__label {
   margin: 0;
   font-size: 20px;

@@ -13,6 +13,7 @@ import { HostLeaderboard } from "../QuestionPage_Host/LeaderboardPage.jsx";
 import { HostQuestionAnswers } from "../QuestionPage_Host/QuestionAnswersPage.jsx";
 import { HostQuestionPreview } from "../QuestionPage_Host/QuestionPreviewPage.jsx";
 import "./HostGamePage.css";
+import { QRCode, Space } from "antd";
 
 // Zelfde grens als MIN_PLAYERS in backend/game/Game.js. De server controleert het ook;
 // hier is het alleen om de knop al uit te zetten.
@@ -75,6 +76,9 @@ export default function HostGamePage() {
       socket.disconnect();
     };
   }, [code, navigate]);
+
+  //QR_CODE
+  const qrCodeValue = `${window.location.protocol}//${window.location.host}/join/${code}`;
 
   useSocketEvent("connect", async () => {
     const response = await emitWithAck(EVENTS.GAME_SYNC).catch(() => null);
@@ -283,7 +287,9 @@ export default function HostGamePage() {
         <h1 className="host-game__title">
           {playerCount} {playerCount === 1 ? "speler" : "spelers"}
         </h1>
-
+        <Space className="QRCode">
+          <QRCode type="canvas" value={qrCodeValue} />
+        </Space>
         <ul className="host-game__players">
           {players.map((player) => (
             <li
@@ -304,7 +310,6 @@ export default function HostGamePage() {
             </li>
           ))}
         </ul>
-
         <button
           type="button"
           className="host-game__start"
@@ -318,7 +323,6 @@ export default function HostGamePage() {
             Er zijn minimaal {MIN_PLAYERS} spelers nodig om te starten.
           </p>
         )}
-
         {/* {import.meta.env.DEV && (
           <section className="host-game__dev" aria-label="Alleen voor testen">
             <p>

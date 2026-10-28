@@ -5,7 +5,7 @@ De designs staan op het canvas: https://claude.ai/artifact/BqhGC5qi1hAxFUk9SdMQC
 
 - **Rollen:** speler (student), docent en beheerder, net als in de designs.
 - **Prioriteiten** zijn een voorstel; stem ze af met het team.
-- **Volgorde:** story 1 en 2 eerst, want bijna alles heeft de `User`-tabel en het inloggen nodig. Story 7 heeft eerst de nieuwe `Quiz`-tabel nodig.
+- **Volgorde:** story 1 en 2 eerst, want bijna alles heeft de `User`-tabel en het inloggen nodig. Story 7 heeft eerst de nieuwe `Quiz`-tabel nodig. Story 14 heeft story 13 nodig, want zonder echte mail komt de bevestigingslink niet aan.
 - Testtaken staan er niet apart in. Wil het team dat wel, voeg dan per story een taak "[Test]" toe voor de backend-endpoints (`npm test`, vitest).
 
 ## Overzicht
@@ -24,6 +24,8 @@ De designs staan op het canvas: https://claude.ai/artifact/BqhGC5qi1hAxFUk9SdMQC
 | 10 | Gebruikers bekijken en zoeken | Beheerder | Should |
 | 11 | Docentaccount aanmaken | Beheerder | Must |
 | 12 | Gebruiker aanpassen of verwijderen | Beheerder | Could |
+| 13 | Echte e-mails versturen | Docent en speler | Must |
+| 14 | Alleen registreren met een HU-mailadres | Beheerder | Must |
 
 ---
 
@@ -408,3 +410,75 @@ Maak `PATCH /api/admin/users/:id` en `DELETE /api/admin/users/:id`. Gebruik deze
 **[Frontend] Bewerkvenster en bevestiging**
 Koppel de bewerk- en verwijderknoppen in de tabel aan een bewerkvenster en een bevestigingsstap. Toon een melding na elke actie.
 *Klaar als:* aanpassen en verwijderen werken vanuit de tabel.
+
+---
+
+## 13. Echte e-mails versturen
+
+Als docent of speler
+wil ik de uitnodigingsmail en de mail van "wachtwoord vergeten" echt in mijn mailbox ontvangen,
+zodat ik zelf mijn account kan activeren of mijn wachtwoord kan herstellen.
+
+**PRIORITEIT:** Must
+
+**ACCEPTATIECRITERIA:**
+- Een nieuwe docent ontvangt de uitnodigingsmail uit story 11 echt in zijn mailbox.
+- Een speler ontvangt de mail uit story 3 (wachtwoord vergeten) echt in zijn mailbox.
+- De mails komen van een vast afzenderadres met de naam "Open ICT Quiz".
+- Lukt het versturen van een uitnodiging niet, dan ziet de beheerder dat en kan hij de uitnodiging opnieuw sturen.
+- In development en tests gaan er geen echte mails naar buiten, maar je kunt ze wel bekijken.
+
+**KWALITEITSCRITERIA (wanneer is het goed volgens een professional):**
+- Wachtwoorden en sleutels van de maildienst staan nooit in git, alleen in omgevingsvariabelen (`.env`).
+- Er is geen persoonlijk mailaccount of Gmail-wachtwoord van een teamlid nodig.
+- De mails komen niet in de spammap terecht (test met een @student.hu.nl-adres).
+- Een trage of kapotte maildienst laat de website niet vastlopen.
+
+### Taken
+
+**[Backend] Maildienst koppelen via SMTP**
+Installeer `nodemailer` en laat `sendMail` in `backend/mail/sendMail.js` via SMTP versturen. De instellingen komen uit omgevingsvariabelen: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` en `MAIL_FROM` (zet ze zonder echte waarden in `.env.example` en `docker-compose.yml`). Zonder `SMTP_HOST` blijft de huidige uitvoer in de log werken. Voeg Mailpit toe aan `docker-compose.yml` als nep-mailserver voor development: alle mails komen dan in een web-inbox op http://localhost:8025. Lukt het versturen niet, dan geeft `POST /api/admin/users` dat terug (`mailSent: false`). Bij "wachtwoord vergeten" blijft het antwoord altijd hetzelfde; daar wordt de fout alleen gelogd. Maak `POST /api/admin/users/:id/resend-invite` voor een nieuwe uitnodigingslink.
+*Klaar als:* een uitnodiging en een resetlink echt aankomen op een @student.hu.nl-adres, en in development alle mails in Mailpit te zien zijn.
+
+**[Frontend] Mailstatus in het admin-portaal**
+Laat na "Docent toevoegen" zien of de uitnodiging is verstuurd. Is dat mislukt, toon dan een waarschuwing met de knop "Uitnodiging opnieuw sturen". Zet die knop ook in de gebruikerslijst bij docenten die hun account nog niet hebben geactiveerd. Controleer of teksten zoals "We sturen een e-mail naar ..." op alle pagina's kloppen.
+*Klaar als:* de beheerder ziet of de mail is verstuurd en een uitnodiging opnieuw kan sturen.
+
+> **Welke maildienst?** Voorstel: **Brevo** (gratis tot 300 mails per dag). Eén teamlid maakt een gratis Brevo-account, bevestigt daarin één keer een afzenderadres (bijvoorbeeld het eigen HU-adres) en maakt een SMTP-sleutel. De website logt dan nergens in op een mailbox, en je hoeft geen Gmail-account te maken.
+> Alternatieven: Gmail met een app-wachtwoord (vraagt een Google-account met tweestapsverificatie), of Resend of Mailgun (die vragen meestal een eigen domein om naar anderen te mailen). Omdat alles via de SMTP-instellingen loopt, kun je later wisselen zonder de code te veranderen.
+> Komen de mails in de spam? Dan helpt een eigen domein (ongeveer €10 per jaar) dat je in Brevo koppelt. Vraag ook na of de HU een SMTP-server voor studentprojecten heeft.
+
+---
+
+## 14. Alleen registreren met een HU-mailadres
+
+Als beheerder
+wil ik dat alleen mensen met een actief HU-mailadres een account kunnen maken,
+zodat alleen studenten en medewerkers van de HU de quizsite gebruiken.
+
+**PRIORITEIT:** Must
+
+**ACCEPTATIECRITERIA:**
+- Registreren lukt alleen met een adres dat eindigt op `@student.hu.nl` of `@hu.nl`.
+- Andere adressen worden geweigerd met een melding die uitlegt welke adressen wel mogen. Dat geldt ook voor adressen die erop lijken, zoals `@nephu.nl` of `@hu.nl.voorbeeld.com`.
+- Hoofdletters maken niet uit (`Naam@Student.HU.nl` is goed).
+- Na het registreren krijgt de speler een bevestigingsmail. Het account werkt pas na een klik op de link; zo weten we dat het adres bestaat en van hem is.
+- De speler kan de bevestigingsmail opnieuw aanvragen.
+- Dezelfde regel geldt bij het wijzigen van het e-mailadres (story 5) en bij een docentaccount dat de beheerder aanmaakt (story 11).
+
+**KWALITEITSCRITERIA (wanneer is het goed volgens een professional):**
+- De controle gebeurt op de server. De controle in het formulier is alleen voor snelle feedback.
+- Frontend en backend gebruiken dezelfde regel uit één bestand, zodat ze het altijd met elkaar eens zijn.
+- Niemand kan het HU-adres van een ander "bezetten": een onbevestigd account mag opnieuw worden aangemaakt zodra de link verlopen is.
+
+### Taken
+
+**[Backend] HU-domeincontrole en e-mailbevestiging**
+Maak `src/utils/schoolEmail.js` met `isHuEmail(email)`: het deel na de `@` moet precies `student.hu.nl` of `hu.nl` zijn. Het bestand wordt gedeeld met de frontend, net als `ranking.js`. Gebruik het in `POST /api/auth/register`, `PATCH /api/me` en `POST /api/admin/users`; een ander adres geeft `ApiError('EMAIL_NOT_HU', ..., 400)`. Voeg `emailVerifiedAt` toe aan `User`. Bij registratie wordt het account aangemaakt zonder in te loggen, en krijgt de speler een eenmalige bevestigingslink (net als de resetlink in `backend/auth/oneTimeTokens.js`, met een nieuw doel en bijvoorbeeld 24 uur geldig). Maak `POST /api/auth/verify-email` en `POST /api/auth/resend-verification` (dat laatste geeft altijd hetzelfde antwoord). Inloggen met een onbevestigd account geeft `EMAIL_NOT_VERIFIED`. Een docent die via de uitnodiging zijn wachtwoord kiest, is daarmee ook bevestigd. Het beheerdersaccount uit de seed (`beheerder@quiz.local`) valt buiten de regel. Schrijf unit-tests voor `isHuEmail`.
+*Klaar als:* registreren met een niet-HU-adres mislukt, en een HU-account pas kan inloggen na een klik op de bevestigingslink.
+
+**[Frontend] Registratie en bevestigingspagina**
+Zet op `/registreren` onder het e-mailveld "Gebruik je HU-mailadres (@student.hu.nl of @hu.nl)" en toon tijdens het typen al een melding met `isHuEmail`. Laat na het registreren het scherm "Check je mailbox" zien, met de knop "Mail opnieuw sturen". Bouw de pagina `/email-bevestigen`: die handelt de link uit de mail af en stuurt de speler daarna naar het inloggen. Toon op `/inloggen` een duidelijke melding (met "Mail opnieuw sturen") als het account nog niet is bevestigd.
+*Klaar als:* een speler zich met een HU-adres kan registreren, de mail kan bevestigen en daarna kan inloggen, en een ander adres direct een melding geeft.
+
+> Let op: dit verandert story 1. Daar staat "Na het aanmaken is de speler direct ingelogd"; met deze story logt de speler pas in na het bevestigen. Bestaande accounts met een ander adres blijven staan; kies als team of je ze verwijdert (in development kan dat met `docker compose down -v`).

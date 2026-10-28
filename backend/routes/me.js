@@ -3,7 +3,7 @@ import { noStore, requireAuth, requireRole } from '../auth/middleware.js'
 import { hashPassword, verifyPassword } from '../auth/password.js'
 import { passwordCheckLimiter } from '../auth/rateLimits.js'
 import { deleteOtherSessions, listSessions } from '../auth/sessions.js'
-import { parseEmail, parsePassword, parseUsername } from '../auth/validate.js'
+import { parseHuEmail, parsePassword, parseUsername } from '../auth/validate.js'
 import { prisma } from '../db/prisma.js'
 import { getMyResults } from '../db/results.js'
 import { deleteUser, publicUser, updateUser } from '../db/users.js'
@@ -28,7 +28,11 @@ router.patch('/', async (request, response) => {
   const body = request.body ?? {}
   const data = {}
   if (body.username !== undefined) Object.assign(data, parseUsername(body.username))
-  if (body.email !== undefined) data.email = parseEmail(body.email)
+  // Een nieuw adres moet een HU-adres zijn (story 14). Het huidige adres mag blijven staan,
+  // ook als dat geen HU-adres is (bijv. de seed-beheerder), want het formulier stuurt het altijd mee.
+  if (body.email !== undefined && body.email.trim?.().toLowerCase() !== request.user.email) {
+    data.email = parseHuEmail(body.email)
+  }
   if (body.skills !== undefined) data.skills = cleanAccountSkills(body.skills)
 
   const user = await updateUser(request.user.id, data)

@@ -33,6 +33,16 @@ export const forgotLimiter = rateLimit({
   handler: (_request, response) => response.json({ ok: true }),
 })
 
+// 3 bevestigingsmails per e-mailadres per uur (story 14). Zelfde antwoord als normaal, om dezelfde reden.
+export const resendVerificationLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  limit: 3,
+  keyGenerator: emailKey('verify'),
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  handler: (_request, response) => response.json({ ok: true }),
+})
+
 // Registreren: ruim, want een hele klas maakt tegelijk een account aan. Alleen tegen scripts die duizenden accounts maken.
 export const registerLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,

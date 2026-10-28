@@ -13,6 +13,7 @@ import AuthPage from "./pages/Auth/AuthPage.jsx";
 import ForgotPasswordPage from "./pages/Auth/ForgotPasswordPage.jsx";
 import PrivacyPage from "./pages/Auth/PrivacyPage.jsx";
 import SetPasswordPage from "./pages/Auth/SetPasswordPage.jsx";
+import VerifyEmailPage from "./pages/Auth/VerifyEmailPage.jsx";
 import EndScreenPageHost from "./pages/EndScreenPage_Host/EndScreenPage.jsx";
 import EndScreenPagePlayer from "./pages/EndScreenPage_Player/EndScreenPage.jsx";
 import HostGamePage, {
@@ -105,6 +106,7 @@ export default function App() {
         <Route path="/registreren" element={<AuthPage mode="register" />} />
         <Route path="/wachtwoord-vergeten" element={<ForgotPasswordPage />} />
         <Route path="/wachtwoord-instellen" element={<SetPasswordPage />} />
+        <Route path="/email-bevestigen" element={<VerifyEmailPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         {/* Oude adressen uit sprint 1. */}
         <Route path="/login" element={<Navigate to="/inloggen" replace />} />

@@ -1,15 +1,19 @@
-// Visuele API-test voor de backend-taken van de 12 user stories van sprint 2.
+// Visuele API-test voor de backend-taken van de user stories van sprint 2.
 // Doet echte HTTP-verzoeken tegen de DRAAIENDE site (net als Postman) en zet elk verzoek + antwoord
 // in een HTML-rapport, met per story een screenshot (PNG). Zo kun je laten zien dát de API werkt.
 //
 // Gebruik (Docker moet draaien):
-//   npm run test:visual
-//   VISUAL_URL=http://localhost:3000 npm run test:visual   (rechtstreeks tegen de API, zonder Vite-proxy)
+//   npm run test:visual                                   (start de test-backend en test op http://localhost:3001)
+//   VISUAL_URL=http://localhost:5173 npm run test:visual   (tegen de gewone site; start niets, gebruikt dus .env!)
 // Uitkomst: test-reports/api-visual/index.html (open in je browser) en test-reports/api-visual/screenshots/*.png
+//
+// Mails (uitnodiging, bevestiging, resetlink) haalt de test uit Mailpit (MAILPIT_URL, standaard http://localhost:8025).
+// De test-backend haalt zijn mail-instellingen uit test.env (altijd Mailpit), niet uit .env. Zo gaan er geen echte
+// mails naar verzonnen HU-adressen, ook als Brevo in .env staat. Zie scripts/with-test-backend.mjs.
 //
 // Let op: maakt echte rijen in de database. Testaccounts en quizzen worden aan het eind weer verwijderd;
 // de gespeelde ronde blijft (anoniem) staan bij Uitslagen, met de titel "Visuele test".
-import { execSync, spawn } from 'node:child_process'
+import { spawn } from 'node:child_process'
 import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
@@ -18,9 +22,10 @@ import { io } from 'socket.io-client'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const OUT = join(ROOT, 'test-reports', 'api-visual')
-const BASE = (process.env.VISUAL_URL ?? 'http://localhost:5173').replace(/\/$/, '')
+const BASE = (process.env.VISUAL_URL ?? 'http://localhost:3001').replace(/\/$/, '')
 const ADMIN_EMAIL = process.env.SMOKE_ADMIN_EMAIL ?? 'beheerder@quiz.local'
 const ADMIN_PASSWORD = process.env.SMOKE_ADMIN_PASSWORD ?? 'Beheerder123'
+const MAILPIT = (process.env.MAILPIT_URL ?? 'http://localhost:8025').replace(/\/$/, '')
 const STAMP = Date.now().toString(36)
 
 // Echte User-Agents, zodat story 9 verschillende apparaten laat zien.
@@ -43,6 +48,8 @@ const STORIES = {
   S10: { title: 'Gebruikers bekijken en zoeken', task: 'GET /api/admin/users met rolfilter, zoeken en pagina\u2019s; alleen ADMIN' },
   S11: { title: 'Docentaccount aanmaken', task: 'POST /api/admin/users (uitnodigingslink) en PATCH /api/admin/users/:id/role' },
   S12: { title: 'Gebruiker aanpassen of verwijderen', task: 'PATCH en DELETE /api/admin/users/:id' },
+  S13: { title: 'Echte e-mails versturen', task: 'SMTP via nodemailer (Mailpit in development); mailSent en POST /api/admin/users/:id/resend-invite' },
+  S14: { title: 'Alleen registreren met een HU-mailadres', task: 'isHuEmail, EMAIL_NOT_HU, POST /api/auth/verify-email en /resend-verification, EMAIL_NOT_VERIFIED' },
 }
 const steps = Object.fromEntries(Object.keys(STORIES).map((key) => [key, []]))
 
@@ -116,13 +123,22 @@ const emit = (socket, event, payload) =>
   new Promise((done) => socket.timeout(5000).emit(event, payload, (error, ack) => done(error ? { ok: false } : ack)))
 const sleep = (ms) => new Promise((done) => setTimeout(done, ms))
 
-/** De resetlink staat (in development) alleen in de backendlog. Die lezen we hier, net zoals jij dat met de hand doet. */
-function resetLinkFromLog(email) {
-  const log = execSync('docker compose logs backend --since 2m --no-log-prefix', { cwd: ROOT, encoding: 'utf8' })
-  const blocks = log.split('──── E-MAIL').filter((block) => block.includes(`Aan:       ${email}`))
-  const match = blocks.at(-1)?.match(/https?:\/\/\S+wachtwoord-instellen\?token=\S+/)
-  return match?.[0] ?? null
+/** De nieuwste link met `path` uit een mail aan `email`, uit de Mailpit-inbox (net zoals jij hem op :8025 opent). */
+async function linkFromMailpit(email, path) {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const search = await fetch(`${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:"${email}"`)}`).catch(() => null)
+    if (search?.ok) {
+      for (const { ID } of (await search.json()).messages ?? []) {
+        const message = await (await fetch(`${MAILPIT}/api/v1/message/${ID}`)).json()
+        const link = message.Text?.match(/https?:\/\/\S+/)?.[0]
+        if (link?.includes(path)) return link
+      }
+    }
+    await sleep(250)
+  }
+  return null
 }
+const shortLink = (link) => link.replace(/token=(.{8}).*/, 'token=$1…')
 
 const questions = [
   { text: 'Hoeveel bits zitten er in een byte?', options: [{ text: '4' }, { text: '8', isCorrect: true }] },
@@ -140,9 +156,9 @@ async function run() {
   const health = await anonymous.request('/health')
   if (health.status !== 200) throw new Error(`Server niet bereikbaar op ${BASE} (status ${health.status}). Draait Docker?`)
 
-  const studentEmail = `student-${STAMP}@visueel.nl`
+  const studentEmail = `visueel-student-${STAMP}@student.hu.nl`
   const studentName = `Emma${STAMP}`.slice(0, 20)
-  const teacherEmail = `docent-${STAMP}@visueel.nl`
+  const teacherEmail = `visueel-docent-${STAMP}@hu.nl`
   let studentPassword = 'Student123'
 
   // ---------- S1: account aanmaken ----------
@@ -155,10 +171,35 @@ async function run() {
     (r) => r.status === 400)
   const register = await step('S1', 'Geldig account; rol ADMIN meesturen wordt genegeerd → STUDENT', student, '/auth/register',
     { method: 'POST', body: { username: studentName, email: studentEmail, password: 'Student123', acceptPrivacy: true, role: 'ADMIN' } },
-    (r) => r.status === 201 && r.data.user?.role === 'STUDENT' && r.setCookies.some((c) => c.startsWith('quiz_auth=') && /HttpOnly/i.test(c)) && !('passwordHash' in (r.data.user ?? {})))
+    (r) => r.status === 201 && r.data.user?.role === 'STUDENT' && !('passwordHash' in (r.data.user ?? {})))
   await step('S1', 'Zelfde e-mailadres nog een keer → geweigerd', anonymous, '/auth/register',
     { method: 'POST', body: { username: `${studentName}x`.slice(0, 20), email: studentEmail, password: 'Student123', acceptPrivacy: true } },
     (r) => r.status === 409)
+
+  // ---------- S14: alleen HU-adressen, e-mail bevestigen ----------
+  console.log('S14 Alleen HU-adressen')
+  for (const email of [`emma-${STAMP}@gmail.com`, `emma-${STAMP}@nephu.nl`, `emma-${STAMP}@hu.nl.voorbeeld.com`]) {
+    await step('S14', `Registreren met ${email.split('@')[1]} → geweigerd`, anonymous, '/auth/register',
+      { method: 'POST', body: { username: `${studentName}y`.slice(0, 20), email, password: 'Student123', acceptPrivacy: true } },
+      (r) => r.status === 400 && r.data.error === 'EMAIL_NOT_HU')
+  }
+  await step('S14', 'Na registreren nog niet ingelogd: eerst bevestigen', student, '/auth/login',
+    { method: 'POST', body: { email: studentEmail, password: 'Student123' } },
+    (r) => r.status === 403 && r.data.error === 'EMAIL_NOT_VERIFIED' && !r.setCookies.some((c) => c.startsWith('quiz_auth=')))
+  await step('S14', 'Bevestigingsmail opnieuw sturen → altijd hetzelfde antwoord', anonymous, '/auth/resend-verification',
+    { method: 'POST', body: { email: studentEmail } }, (r) => r.status === 200 && r.data.ok === true)
+  // De nieuwe mail wordt op de achtergrond verstuurd en maakt de eerste link ongeldig: even wachten tot hij er is.
+  await sleep(1500)
+  const verifyLink = await linkFromMailpit(studentEmail, '/email-bevestigen')
+  note('S14', 'Bevestigingsmail gevonden in Mailpit', Boolean(verifyLink), verifyLink ? shortLink(verifyLink) : `Geen mail in ${MAILPIT}. Draait Mailpit?`)
+  const verifyToken = verifyLink ? new URL(verifyLink).searchParams.get('token') : 'geen'
+  await step('S14', 'Een bevestigingslink kan geen wachtwoord instellen', anonymous, `/auth/password-link?token=${verifyToken}`, {},
+    (r) => r.status === 400)
+  await step('S14', 'E-mailadres bevestigen via de link', anonymous, '/auth/verify-email',
+    { method: 'POST', body: { token: verifyToken } }, (r) => r.status === 200)
+  await step('S14', 'Na bevestigen: inloggen lukt, httpOnly-cookie gezet', student, '/auth/login',
+    { method: 'POST', body: { email: studentEmail, password: 'Student123' } },
+    (r) => r.status === 200 && r.setCookies.some((c) => c.startsWith('quiz_auth=') && /HttpOnly/i.test(c)))
 
   // ---------- S2: inloggen en uitloggen ----------
   console.log('S2 Inloggen en uitloggen')
@@ -166,7 +207,7 @@ async function run() {
     { method: 'POST', body: { email: studentEmail, password: 'Fout12345' } },
     (r) => r.status === 401 && r.data.error === 'INVALID_LOGIN')
   await step('S2', 'Onbekend e-mailadres → zelfde 401', anonymous, '/auth/login',
-    { method: 'POST', body: { email: `bestaat-niet-${STAMP}@visueel.nl`, password: 'Fout12345' } },
+    { method: 'POST', body: { email: `bestaat-niet-${STAMP}@student.hu.nl`, password: 'Fout12345' } },
     (r) => r.status === 401 && r.data.error === 'INVALID_LOGIN')
   await step('S2', 'Beheerder logt in → cookie gezet', admin, '/auth/login',
     { method: 'POST', body: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD } },
@@ -177,10 +218,17 @@ async function run() {
 
   // ---------- S10 / S11: docent uitnodigen en gebruikers zoeken ----------
   console.log('S11 Docentaccount aanmaken')
-  const invite = await step('S11', 'Beheerder maakt docent aan → uitnodigingslink', admin, '/admin/users',
+  await step('S14', 'Docent zonder HU-adres → geweigerd', admin, '/admin/users',
+    { method: 'POST', body: { username: `Docent${STAMP}`.slice(0, 20), email: `docent-${STAMP}@gmail.com` } },
+    (r) => r.status === 400 && r.data.error === 'EMAIL_NOT_HU')
+  const invite = await step('S11', 'Beheerder maakt docent aan → uitnodiging gemaild (mailSent)', admin, '/admin/users',
     { method: 'POST', body: { username: `Docent${STAMP}`.slice(0, 20), email: teacherEmail } },
-    (r) => r.status === 201 && r.data.user?.role === 'TEACHER' && r.data.inviteLink)
-  const inviteToken = invite.data.inviteLink ? new URL(invite.data.inviteLink).searchParams.get('token') : ''
+    (r) => r.status === 201 && r.data.user?.role === 'TEACHER' && r.data.mailSent === true)
+  await step('S13', 'Uitnodiging opnieuw sturen (oude link vervalt)', admin, `/admin/users/${invite.data.user?.id}/resend-invite`,
+    { method: 'POST' }, (r) => r.status === 200 && r.data.mailSent === true)
+  const inviteLink = invite.data.inviteLink ?? (await linkFromMailpit(teacherEmail, '/wachtwoord-instellen'))
+  note('S13', 'Uitnodigingsmail aangekomen in Mailpit', Boolean(inviteLink), inviteLink ? shortLink(inviteLink) : `Geen mail in ${MAILPIT}. Draait Mailpit?`)
+  const inviteToken = inviteLink ? new URL(inviteLink).searchParams.get('token') : ''
   await step('S11', 'Docent kan nog niet inloggen (nog geen wachtwoord)', anonymous, '/auth/login',
     { method: 'POST', body: { email: teacherEmail, password: 'Docent123' } }, (r) => r.status === 401)
   await step('S11', 'Docent kiest wachtwoord via de link', anonymous, '/auth/password',
@@ -258,18 +306,12 @@ async function run() {
   // ---------- S3: wachtwoord vergeten ----------
   console.log('S3 Wachtwoord vergeten')
   await step('S3', 'Onbekend adres → zelfde antwoord (verraadt niets)', anonymous, '/auth/forgot',
-    { method: 'POST', body: { email: `bestaat-niet-${STAMP}@visueel.nl` } }, (r) => r.status === 200 && r.data.ok === true)
-  await step('S3', 'Bestaand adres → zelfde antwoord, mail in de log', anonymous, '/auth/forgot',
+    { method: 'POST', body: { email: `bestaat-niet-${STAMP}@student.hu.nl` } }, (r) => r.status === 200 && r.data.ok === true)
+  await step('S3', 'Bestaand adres → zelfde antwoord, mail naar Mailpit', anonymous, '/auth/forgot',
     { method: 'POST', body: { email: studentEmail } }, (r) => r.status === 200 && r.data.ok === true)
-  await sleep(800) // de mail wordt op de achtergrond verstuurd
-  let resetLink = null
-  try {
-    resetLink = resetLinkFromLog(studentEmail)
-  } catch (error) {
-    resetLink = null
-  }
-  note('S3', 'Resetlink gevonden in "docker compose logs backend"', Boolean(resetLink),
-    resetLink ? resetLink.replace(/token=(.{8}).*/, 'token=$1…') : 'Geen link gevonden (draait de backend in Docker?). De rest van S3 wordt overgeslagen.')
+  const resetLink = await linkFromMailpit(studentEmail, '/wachtwoord-instellen')
+  note('S13', 'Resetmail aangekomen in Mailpit', Boolean(resetLink),
+    resetLink ? shortLink(resetLink) : `Geen mail in ${MAILPIT} (draait Mailpit?). De rest van S3 wordt overgeslagen.`)
   if (resetLink) {
     const resetToken = new URL(resetLink).searchParams.get('token')
     await step('S3', 'Is de link geldig? (zonder hem te gebruiken)', anonymous, `/auth/password-link?token=${resetToken}`, {},

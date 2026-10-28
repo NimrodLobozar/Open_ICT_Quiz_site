@@ -444,7 +444,7 @@ Installeer `nodemailer` en laat `sendMail` in `backend/mail/sendMail.js` via SMT
 Laat na "Docent toevoegen" zien of de uitnodiging is verstuurd. Is dat mislukt, toon dan een waarschuwing met de knop "Uitnodiging opnieuw sturen". Zet die knop ook in de gebruikerslijst bij docenten die hun account nog niet hebben geactiveerd. Controleer of teksten zoals "We sturen een e-mail naar ..." op alle pagina's kloppen.
 *Klaar als:* de beheerder ziet of de mail is verstuurd en een uitnodiging opnieuw kan sturen.
 
-> **Welke maildienst?** Voorstel: **Brevo** (gratis tot 300 mails per dag). Eén teamlid maakt een gratis Brevo-account, bevestigt daarin één keer een afzenderadres (bijvoorbeeld het eigen HU-adres) en maakt een SMTP-sleutel. De website logt dan nergens in op een mailbox, en je hoeft geen Gmail-account te maken.
+> **Welke maildienst?** Voorstel: **Brevo** (gratis tot 300 mails per dag). Eén teamlid maakt een gratis Brevo-account, bevestigt daarin één keer een afzenderadres (een Gmail-adres van het team; **geen** HU-adres, want de HU laat mail "van" een HU-adres via een andere dienst blokkeren, zie `docs/MAIL.md`) en maakt een SMTP-sleutel. De website logt dan nergens in op een mailbox, en je hoeft geen Gmail-account te maken.
 > Alternatieven: Gmail met een app-wachtwoord (vraagt een Google-account met tweestapsverificatie), of Resend of Mailgun (die vragen meestal een eigen domein om naar anderen te mailen). Omdat alles via de SMTP-instellingen loopt, kun je later wisselen zonder de code te veranderen.
 > Komen de mails in de spam? Dan helpt een eigen domein (ongeveer €10 per jaar) dat je in Brevo koppelt. Vraag ook na of de HU een SMTP-server voor studentprojecten heeft.
 

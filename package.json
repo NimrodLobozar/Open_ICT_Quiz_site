@@ -15,8 +15,8 @@
     "test": "vitest run",
     "test:api": "vitest run --config vitest.api.config.js",
     "test:all": "vitest run && vitest run --config vitest.api.config.js",
-    "test:smoke": "node scripts/smoke-test.mjs",
-    "test:visual": "node scripts/visual-api-test.mjs"
+    "test:smoke": "node scripts/with-test-backend.mjs scripts/smoke-test.mjs",
+    "test:visual": "node scripts/with-test-backend.mjs scripts/visual-api-test.mjs"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",
@@ -27,6 +27,7 @@
     "dotenv": "^18.0.6",
     "express": "^5.2.1",
     "express-rate-limit": "^8.7.1",
+    "nodemailer": "^10.2.1",
     "pg": "^8.23.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

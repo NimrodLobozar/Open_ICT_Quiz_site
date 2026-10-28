@@ -3,10 +3,10 @@ import { noStore, requireRole } from '../auth/middleware.js'
 import { createOneTimeToken } from '../auth/oneTimeTokens.js'
 import { deleteUserError, roleChangeError } from '../auth/roleRules.js'
 import { deleteAllSessions } from '../auth/sessions.js'
-import { parseEmail, parseId, parsePage, parseSearch, parseUsername } from '../auth/validate.js'
+import { parseHuEmail, parseId, parsePage, parseSearch, parseUsername } from '../auth/validate.js'
 import { getOverviewStats, getRound, listRounds } from '../db/results.js'
 import { createUser, deleteUser, findUserById, listUsers, publicUser, updateUser } from '../db/users.js'
-import { appUrl, teacherInviteMail } from '../mail/sendMail.js'
+import { appUrl, teacherInviteMail, trySendMail } from '../mail/sendMail.js'
 import { ApiError } from '../utils/ApiError.js'
 
 // Het admin-portaal (story 7, 10, 11 en 12).
@@ -22,6 +22,16 @@ const ERROR_MESSAGES = {
   INVALID_ROLE: 'Deze rol bestaat niet.',
   OWN_ADMIN_ROLE: 'Je kunt je eigen beheerdersrol niet weghalen. Vraag een andere beheerder.',
   DELETE_SELF: 'Je kunt je eigen account hier niet verwijderen. Dat doe je via Mijn account.',
+}
+
+/**
+ * Nieuwe uitnodigingslink maken en mailen (story 11 en 13). Oudere links werken daarna niet meer.
+ * Lukt de mail niet, dan krijgt de beheerder de link zelf, zodat hij hem kan doorsturen.
+ */
+async function sendInvite(user) {
+  const inviteLink = `${appUrl()}/wachtwoord-instellen?token=${await createOneTimeToken(user.id, 'INVITE')}`
+  const mailSent = await trySendMail(() => teacherInviteMail(user.email, user.username, inviteLink))
+  return mailSent ? { mailSent } : { mailSent, inviteLink }
 }
 
 async function findTarget(request) {
@@ -55,15 +65,23 @@ router.get('/users', adminOnly, async (request, response) => {
 })
 
 // Story 11: docent toevoegen. De docent kiest zelf een wachtwoord via een uitnodigingslink.
+// Ook een docent heeft een HU-adres nodig (story 14).
 router.post('/users', adminOnly, async (request, response) => {
   const { username, usernameKey } = parseUsername(request.body?.username)
-  const email = parseEmail(request.body?.email)
+  const email = parseHuEmail(request.body?.email)
   // passwordHash null: inloggen kan pas als de docent zijn link heeft gebruikt.
   const user = await createUser({ username, usernameKey, email, passwordHash: null, role: 'TEACHER' })
-  const inviteLink = `${appUrl()}/wachtwoord-instellen?token=${await createOneTimeToken(user.id, 'INVITE')}`
-  await teacherInviteMail(email, username, inviteLink)
-  // De link gaat ook terug naar de beheerder: er is nog geen echte maildienst, dus dan kan hij hem zelf doorsturen.
-  response.status(201).json({ user: publicUser(user), inviteLink })
+  // Het account bestaat al, ook als de mail mislukt: dan ziet de beheerder mailSent: false en stuurt hij opnieuw.
+  response.status(201).json({ user: publicUser(user), ...(await sendInvite(user)) })
+})
+
+// Story 13: uitnodiging opnieuw sturen, voor een docent die zijn account nog niet heeft geactiveerd.
+router.post('/users/:id/resend-invite', adminOnly, async (request, response) => {
+  const target = await findTarget(request)
+  if (target.passwordHash) {
+    throw new ApiError('ALREADY_ACTIVATED', 'Dit account is al geactiveerd. Gebruik "Wachtwoord vergeten" op de inlogpagina.', 409)
+  }
+  response.json(await sendInvite(target))
 })
 
 // Story 12: naam of e-mailadres van een gebruiker aanpassen.
@@ -72,7 +90,8 @@ router.patch('/users/:id', adminOnly, async (request, response) => {
   const body = request.body ?? {}
   const data = {}
   if (body.username !== undefined) Object.assign(data, parseUsername(body.username))
-  if (body.email !== undefined) data.email = parseEmail(body.email)
+  // Alleen een nieuw adres moet een HU-adres zijn; zo kun je de seed-beheerder nog steeds een andere naam geven.
+  if (body.email !== undefined && body.email.trim?.().toLowerCase() !== target.email) data.email = parseHuEmail(body.email)
   const user = await updateUser(target.id, data)
   response.json({ user: publicUser(user) })
 })

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { browser, makeUser, PASSWORD, prisma, resetDatabase } from './helpers.js'
+import { browser, makeUser, outbox, PASSWORD, prisma, resetDatabase, tokenFromMail } from './helpers.js'
 
-// Story 1 (account aanmaken) en story 2 (inloggen en uitloggen).
+// Story 1 (account aanmaken), story 2 (inloggen en uitloggen) en story 14 (alleen HU-adressen, e-mail bevestigen).
 beforeEach(resetDatabase)
 
 const signup = (overrides = {}) => ({
@@ -15,22 +15,21 @@ const signup = (overrides = {}) => ({
 const authCookie = (response) => (response.headers['set-cookie'] ?? []).find((c) => c.startsWith('quiz_auth='))
 
 describe('POST /api/auth/register', () => {
-  it('maakt een studentaccount, slaat alleen een hash op en logt meteen in', async () => {
+  it('maakt een studentaccount en slaat alleen een hash op, maar logt nog niet in (eerst bevestigen)', async () => {
     const agent = browser()
     const response = await agent.post('/api/auth/register').send(signup())
 
     expect(response.status).toBe(201)
     expect(response.body.user).toMatchObject({ username: 'Emma', email: 'emma@student.hu.nl', role: 'STUDENT' })
     expect(response.body.user.passwordHash).toBeUndefined()
-    expect(authCookie(response)).toMatch(/HttpOnly/i)
-    expect(authCookie(response)).toMatch(/SameSite=Lax/i)
+    expect(authCookie(response)).toBeUndefined()
 
     const user = await prisma.user.findUnique({ where: { email: 'emma@student.hu.nl' } })
     expect(user.passwordHash).not.toContain('Geheim123')
     expect(user.passwordHash).toMatch(/^\$2[aby]\$/) // bcrypt
+    expect(user.emailVerifiedAt).toBeNull()
 
-    const me = await agent.get('/api/auth/me')
-    expect(me.body.user.username).toBe('Emma')
+    expect((await agent.get('/api/auth/me')).body.user).toBeNull()
   })
 
   it('negeert een meegestuurde rol: registreren geeft altijd STUDENT', async () => {
@@ -49,7 +48,7 @@ describe('POST /api/auth/register', () => {
 
   it('weigert een gebruikersnaam die al bestaat, ook met andere hoofdletters', async () => {
     await browser().post('/api/auth/register').send(signup())
-    const response = await browser().post('/api/auth/register').send(signup({ username: 'EMMA', email: 'ander@test.nl' }))
+    const response = await browser().post('/api/auth/register').send(signup({ username: 'EMMA', email: 'ander@student.hu.nl' }))
     expect(response.status).toBe(409)
     expect(response.body.error).toBe('USERNAME_TAKEN')
   })
@@ -173,5 +172,101 @@ describe('uitloggen en beveiligde routes', () => {
     const response = await browser().post('/api/auth/login').set('Content-Type', 'application/json').send('{kapot')
     expect(response.status).toBe(400)
     expect(response.body).toEqual({ error: 'BAD_JSON', message: expect.any(String) })
+  })
+})
+
+describe('alleen HU-adressen (story 14)', () => {
+  it.each(['emma@gmail.com', 'emma@nephu.nl', 'emma@hu.nl.voorbeeld.com'])('weigert %s met een uitleg', async (email) => {
+    const response = await browser().post('/api/auth/register').send(signup({ email }))
+    expect(response.status).toBe(400)
+    expect(response.body.error).toBe('EMAIL_NOT_HU')
+    expect(response.body.message).toMatch(/@student\.hu\.nl of @hu\.nl/)
+    expect(await prisma.user.count()).toBe(0)
+  })
+
+  it('accepteert ook @hu.nl, met hoofdletters', async () => {
+    const response = await browser().post('/api/auth/register').send(signup({ email: 'Medewerker@HU.nl' }))
+    expect(response.status).toBe(201)
+    expect(response.body.user.email).toBe('medewerker@hu.nl')
+  })
+})
+
+describe('e-mailadres bevestigen (story 14)', () => {
+  it('stuurt een bevestigingsmail; na de link kan de speler inloggen', async () => {
+    await browser().post('/api/auth/register').send(signup())
+    const login = () => browser().post('/api/auth/login').send({ email: 'emma@student.hu.nl', password: 'Geheim123' })
+
+    const before = await login()
+    expect(before.status).toBe(403)
+    expect(before.body.error).toBe('EMAIL_NOT_VERIFIED')
+
+    const token = await tokenFromMail('emma@student.hu.nl', '/email-bevestigen')
+    expect(token).toBeTruthy()
+    expect(outbox.at(-1).subject).toMatch(/bevestig/i)
+    expect((await browser().post('/api/auth/verify-email').send({ token })).status).toBe(200)
+    // Werkt maar één keer.
+    expect((await browser().post('/api/auth/verify-email').send({ token })).body.error).toBe('LINK_INVALID')
+
+    const after = await login()
+    expect(after.status).toBe(200)
+    expect(authCookie(after)).toMatch(/HttpOnly/i)
+  })
+
+  it('een fout wachtwoord verraadt niet dat het account nog onbevestigd is', async () => {
+    await makeUser({ email: 'nieuw@student.hu.nl', verified: false })
+    const response = await browser().post('/api/auth/login').send({ email: 'nieuw@student.hu.nl', password: 'Fout1234' })
+    expect(response.status).toBe(401)
+    expect(response.body.error).toBe('INVALID_LOGIN')
+  })
+
+  it('een bevestigingslink kan geen wachtwoord instellen', async () => {
+    await browser().post('/api/auth/register').send(signup())
+    const token = await tokenFromMail('emma@student.hu.nl', '/email-bevestigen')
+    expect((await browser().get('/api/auth/password-link').query({ token })).status).toBe(400)
+    expect((await browser().post('/api/auth/password').send({ token, password: 'Overname123' })).status).toBe(400)
+  })
+
+  it('stuurt de mail opnieuw; alleen de nieuwste link werkt', async () => {
+    await browser().post('/api/auth/register').send(signup())
+    const first = await tokenFromMail('emma@student.hu.nl', '/email-bevestigen')
+    outbox.length = 0
+
+    const resend = await browser().post('/api/auth/resend-verification').send({ email: 'Emma@student.hu.nl' })
+    expect(resend.body).toEqual({ ok: true })
+    const second = await tokenFromMail('emma@student.hu.nl', '/email-bevestigen')
+    expect(second).toBeTruthy()
+    expect(second).not.toBe(first)
+    expect((await browser().post('/api/auth/verify-email').send({ token: first })).status).toBe(400)
+    expect((await browser().post('/api/auth/verify-email').send({ token: second })).status).toBe(200)
+  })
+
+  it('opnieuw sturen geeft altijd hetzelfde antwoord, en mailt niet bij een bevestigd of onbekend adres', async () => {
+    await makeUser({ email: 'klaar@student.hu.nl' })
+    const known = await browser().post('/api/auth/resend-verification').send({ email: 'klaar@student.hu.nl' })
+    const unknown = await browser().post('/api/auth/resend-verification').send({ email: 'niemand@student.hu.nl' })
+    expect(known.body).toEqual(unknown.body)
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    expect(outbox).toHaveLength(0)
+  })
+
+  it('een onbevestigd account houdt een adres niet bezet zodra de link verlopen is', async () => {
+    await browser().post('/api/auth/register').send(signup())
+    await tokenFromMail('emma@student.hu.nl', '/email-bevestigen')
+
+    // Link nog geldig: het adres is (nog) bezet.
+    const tooEarly = await browser().post('/api/auth/register').send(signup({ username: 'Echte Emma' }))
+    expect(tooEarly.body.error).toBe('EMAIL_TAKEN')
+
+    // Na 24 uur: iemand anders (de echte eigenaar) mag het adres wél gebruiken.
+    await prisma.oneTimeToken.updateMany({ data: { expiresAt: new Date(Date.now() - 1000) } })
+    const later = await browser().post('/api/auth/register').send(signup({ username: 'Echte Emma' }))
+    expect(later.status).toBe(201)
+    expect(await prisma.user.count()).toBe(1)
+  })
+
+  it('een bevestigd account wordt nooit vrijgegeven', async () => {
+    await makeUser({ username: 'Emma', email: 'emma@student.hu.nl' })
+    const response = await browser().post('/api/auth/register').send(signup({ username: 'Andere' }))
+    expect(response.body.error).toBe('EMAIL_TAKEN')
   })
 })

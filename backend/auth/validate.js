@@ -1,4 +1,5 @@
 import { isStrongPassword } from '../../src/utils/passwordRules.js'
+import { HU_EMAIL_MESSAGE, isHuEmail } from '../../src/utils/schoolEmail.js'
 import { nameKey, normalizeName, validateName } from '../game/nameRules.js'
 import { ApiError } from '../utils/ApiError.js'
 
@@ -15,6 +16,13 @@ export function parseEmail(raw) {
   if (email.length > 254 || !EMAIL.test(email)) {
     throw new ApiError('EMAIL_INVALID', 'Vul een geldig e-mailadres in.', 400)
   }
+  return email
+}
+
+/** Zoals parseEmail, maar alleen een HU-adres (story 14). Anders ApiError EMAIL_NOT_HU. */
+export function parseHuEmail(raw) {
+  const email = parseEmail(raw)
+  if (!isHuEmail(email)) throw new ApiError('EMAIL_NOT_HU', HU_EMAIL_MESSAGE, 400)
   return email
 }
 

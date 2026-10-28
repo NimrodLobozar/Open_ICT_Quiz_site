@@ -9,13 +9,13 @@ Volgorde en keuzes: [IMPLEMENTATIEPLAN-SPRINT-2.md](IMPLEMENTATIEPLAN-SPRINT-2.m
 2. Bij het opstarten maakt de server (als ze er nog niet zijn) een **beheerder** en een **voorbeeldquiz** ([`backend/db/seed.js`](../backend/db/seed.js)):
    - e-mail `beheerder@quiz.local`, wachtwoord `Beheerder123` (uit `docker-compose.yml`, alleen voor development).
 3. Log in op http://localhost:5173/inloggen. Als beheerder kom je in het admin-portaal (`/admin`).
-4. Docent toevoegen: **Gebruikers → Docent toevoegen**. Er is nog geen echte maildienst: de uitnodigingslink staat in het venster én in `docker compose logs backend`.
+4. Docent toevoegen: **Gebruikers → Docent toevoegen** (een `@hu.nl`- of `@student.hu.nl`-adres). In development komt de uitnodiging in Mailpit: http://localhost:8025. Echte mails versturen: zie [MAIL.md](MAIL.md).
 
 ## Rollen
 
 | Rol | Hoe krijg je hem | Mag |
 |---|---|---|
-| `STUDENT` | zelf registreren op `/registreren` (altijd deze rol) | meedoen, eigen resultaten, profiel |
+| `STUDENT` | zelf registreren op `/registreren` met een HU-adres, daarna de bevestigingsmail (altijd deze rol) | meedoen, eigen resultaten, profiel |
 | `TEACHER` | een beheerder maakt het account aan | + quizzen maken en hosten, uitslagen van eigen quizzen |
 | `ADMIN` | seed, of een andere beheerder | + alle quizzen en uitslagen, gebruikers beheren |
 
@@ -36,7 +36,9 @@ browser                         server                               database
 - **Wachtwoorden:** alleen een bcrypt-hash (cost 12) in `User.passwordHash`. De wachtwoordregels staan in [`src/utils/passwordRules.js`](../src/utils/passwordRules.js), gedeeld door de registratiepagina (vinkjes tijdens het typen) en de server.
 - **Sessies in de database** (`Session`), niet als JWT. Daardoor werken uitloggen en "overal uitloggen" (story 9) meteen. In de database staat alleen de **hash** van de token: een gelekte database bevat geen bruikbare cookies.
 - **"Ingelogd blijven":** cookie van 30 dagen. Zonder: cookie tot de browser sluit (en maximaal 12 uur op de server).
-- **Eenmalige links** (`OneTimeToken`): "wachtwoord vergeten" (1 uur) en docent-uitnodiging (7 dagen). Ook gehasht, werken één keer, en een nieuwe link maakt de oude ongeldig. Na een reset log je overal uit.
+- **Eenmalige links** (`OneTimeToken`): "wachtwoord vergeten" (`RESET`, 1 uur), docent-uitnodiging (`INVITE`, 7 dagen) en e-mail bevestigen (`VERIFY`, 24 uur). Ook gehasht, werken één keer, en een nieuwe link maakt de oude ongeldig. Een link werkt alleen voor zijn eigen doel: met een bevestigingslink kun je geen wachtwoord instellen. Na een reset log je overal uit.
+- **Alleen HU-adressen** (story 14): `isHuEmail` in [`src/utils/schoolEmail.js`](../src/utils/schoolEmail.js), gedeeld door frontend en server. Geldt bij registreren, `PATCH /api/me`, en docenten toevoegen/aanpassen; alleen een *nieuw* adres wordt gecontroleerd, zodat de seed-beheerder (`beheerder@quiz.local`) blijft werken.
+- **E-mail bevestigen** (story 14): `User.emailVerifiedAt`. Na registreren ben je niet ingelogd; inloggen kan pas na de link uit de mail (`/email-bevestigen`). Een docent is bevestigd zodra hij via zijn uitnodiging een wachtwoord kiest (een resetlink bevestigt ook). Een onbevestigd account met een verlopen link houdt het adres en de naam niet bezet: bij een nieuwe registratie wordt het verwijderd.
 - **Links in mails** gebruiken `APP_URL`, nooit de Host-header van de request (anders kan een aanvaller een link naar zijn eigen site laten mailen).
 
 ## Beveiliging in het kort
@@ -64,8 +66,10 @@ Alle fouten: `{ error: 'CODE', message: 'Nederlandse uitleg' }`. 401 = niet inge
 
 | Methode + pad | Body | Antwoord |
 |---|---|---|
-| `POST /register` | `{ username, email, password, acceptPrivacy: true }` | `201 { user }` + cookie. Fouten: `USERNAME_INVALID`, `USERNAME_TAKEN`, `EMAIL_INVALID`, `EMAIL_TAKEN`, `PASSWORD_WEAK`, `PRIVACY_REQUIRED` |
-| `POST /login` | `{ email, password, remember }` | `{ user }` + cookie. Fout: `401 INVALID_LOGIN`, `429 TOO_MANY_REQUESTS` |
+| `POST /register` | `{ username, email, password, acceptPrivacy: true }` | `201 { user, verificationSent }`, géén cookie; stuurt de bevestigingsmail. Fouten: `USERNAME_INVALID`, `USERNAME_TAKEN`, `EMAIL_INVALID`, `EMAIL_NOT_HU`, `EMAIL_TAKEN`, `PASSWORD_WEAK`, `PRIVACY_REQUIRED` |
+| `POST /verify-email` | `{ token }` | `{ ok: true }` of `400 LINK_INVALID` |
+| `POST /resend-verification` | `{ email }` | altijd `{ ok: true }` (max. 3 mails per adres per uur) |
+| `POST /login` | `{ email, password, remember }` | `{ user }` + cookie. Fout: `401 INVALID_LOGIN`, `403 EMAIL_NOT_VERIFIED` (alleen na het juiste wachtwoord), `429 TOO_MANY_REQUESTS` |
 | `POST /logout` | – | `{ ok: true }`, cookie gewist, sessie weg |
 | `GET /me` | – | `{ user }` of `{ user: null }` |
 | `POST /forgot` | `{ email }` | altijd `{ ok: true }` |
@@ -103,7 +107,8 @@ Ontbrekende instellingen komen uit de standaard van de docent (story 8). Hosten:
 | `GET /results?q=&page=` | docent, beheerder | gespeelde rondes (docent: alleen eigen quizzen) |
 | `GET /results/:id` | docent, beheerder | eindstand van één ronde |
 | `GET /users?role=&q=&page=` | beheerder | gebruikerslijst, 20 per pagina |
-| `POST /users` | beheerder | `{ username, email }` → docent + `inviteLink` |
+| `POST /users` | beheerder | `{ username, email }` → `{ user, mailSent }`; is de mail mislukt, dan ook `inviteLink` om zelf door te sturen. Fout: `EMAIL_NOT_HU` |
+| `POST /users/:id/resend-invite` | beheerder | nieuwe uitnodiging (oude link vervalt) → `{ mailSent, inviteLink? }`. Fout: `409 ALREADY_ACTIVATED` |
 | `PATCH /users/:id` | beheerder | `{ username?, email? }` |
 | `PATCH /users/:id/role` | beheerder | `{ role }`; eigen beheerdersrol weghalen = `409 OWN_ADMIN_ROLE` |
 | `DELETE /users/:id` | beheerder | jezelf = `409 DELETE_SELF` |
@@ -113,7 +118,7 @@ Ontbrekende instellingen komen uit de standaard van de docent (story 8). Hosten:
 | Route | Wie | Bestand |
 |---|---|---|
 | `/inloggen`, `/registreren` | iedereen | `src/pages/Auth/AuthPage.jsx` |
-| `/wachtwoord-vergeten`, `/wachtwoord-instellen?token=` | iedereen | `src/pages/Auth/` |
+| `/wachtwoord-vergeten`, `/wachtwoord-instellen?token=`, `/email-bevestigen?token=` | iedereen | `src/pages/Auth/` |
 | `/privacy` | iedereen | `src/pages/Auth/PrivacyPage.jsx` |
 | `/account`, `/account/instellingen` | ingelogd | `src/pages/Account/` |
 | `/admin`, `/admin/quizzen`, `/admin/quizzen/nieuw`, `/admin/quizzen/:id`, `/admin/uitslagen`, `/admin/account` | docent, beheerder | `src/pages/Admin/` |

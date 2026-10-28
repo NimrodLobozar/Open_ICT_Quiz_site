@@ -3,6 +3,7 @@ import { api } from '../../api/http.js'
 import { useAuth } from '../../auth/AuthContext.jsx'
 import { Notice, PasswordChecklist, PasswordField, SkillSliders, TextField } from '../../components/AccountUi.jsx'
 import { isStrongPassword } from '../../utils/passwordRules.js'
+import { HU_EMAIL_MESSAGE, isHuEmail } from '../../utils/schoolEmail.js'
 
 // Formulieren die zowel op Instellingen (student) als op Mijn account (admin-portaal) staan (story 5).
 
@@ -25,6 +26,8 @@ export function ProfileForm({ withSkills = false, onSaved }) {
     const found = {}
     if (username.trim().length < 2 || username.trim().length > 20) found.username = 'Kies een naam van 2 tot 20 tekens.'
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) found.email = 'Vul een geldig e-mailadres in.'
+    // Story 14: een nieuw adres moet een HU-adres zijn. Het huidige adres mag blijven (bijv. de seed-beheerder).
+    else if (email.trim().toLowerCase() !== user.email && !isHuEmail(email)) found.email = HU_EMAIL_MESSAGE
     setErrors(found)
     if (Object.keys(found).length) return
 

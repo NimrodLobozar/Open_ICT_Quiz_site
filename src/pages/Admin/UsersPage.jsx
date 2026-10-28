@@ -4,6 +4,7 @@ import { api } from '../../api/http.js'
 import { Avatar, Notice, TextField } from '../../components/AccountUi.jsx'
 import { useDebounced } from '../../hooks/useDebounced.js'
 import { formatAgo } from '../../utils/formatDate.js'
+import { HU_EMAIL_MESSAGE, huEmailTypingError, isHuEmail } from '../../utils/schoolEmail.js'
 import AdminLayout from './AdminLayout.jsx'
 import SearchField from './SearchField.jsx'
 
@@ -30,6 +31,8 @@ export default function UsersPage() {
   const [adding, setAdding] = useState(false)
   const [editing, setEditing] = useState(null)
   const [deleting, setDeleting] = useState(null)
+  // Uitnodiging opnieuw gestuurd, maar de mail is mislukt: dan tonen we de link zelf.
+  const [resent, setResent] = useState(null)
   const query = useDebounced(search)
 
   const load = useCallback(() => {
@@ -47,6 +50,17 @@ export default function UsersPage() {
   useEffect(load, [load])
   // Ander filter of andere zoekterm: terug naar pagina 1.
   useEffect(() => setPage(1), [role, query])
+
+  // Story 13: uitnodiging opnieuw sturen vanuit de tabel (docent die zijn account nog niet heeft geactiveerd).
+  async function resendInvite(user) {
+    try {
+      const result = await api(`/admin/users/${user.id}/resend-invite`, { method: 'POST' })
+      if (result.mailSent) message.success(`Nieuwe uitnodiging verstuurd naar ${user.email}.`)
+      else setResent({ user, inviteLink: result.inviteLink })
+    } catch (apiError) {
+      message.error(apiError.message)
+    }
+  }
 
   async function remove() {
     try {
@@ -117,9 +131,16 @@ export default function UsersPage() {
                   <span className={`ui-pill ${ROLES[user.role].className}`}>{ROLES[user.role].label}</span>
                 </td>
                 <td className="is-number">{user.role === 'STUDENT' ? user.played : '—'}</td>
-                <td className="admin-table__muted">{user.activated ? formatAgo(user.lastActiveAt) : 'uitgenodigd'}</td>
+                <td className="admin-table__muted">
+                  {!user.activated ? 'uitgenodigd' : !user.verified ? 'e-mail niet bevestigd' : formatAgo(user.lastActiveAt)}
+                </td>
                 <td className="is-actions">
                   <span className="admin-table__actions">
+                    {!user.activated && (
+                      <button type="button" className="ui-btn ui-btn--small" onClick={() => resendInvite(user)}>
+                        Uitnodiging opnieuw sturen
+                      </button>
+                    )}
                     <button type="button" className="ui-icon-btn" aria-label={`Bewerk ${user.username}`} onClick={() => setEditing(user)}>
                       <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                         <path d="M4 20h4L19 9l-4-4L4 16z" />
@@ -175,6 +196,11 @@ export default function UsersPage() {
           }}
         />
       )}
+      {resent && (
+        <Modal open title="Mail niet verstuurd" onCancel={() => setResent(null)} footer={null} destroyOnHidden>
+          <InviteLinkFallback invite={resent} onClose={() => setResent(null)} />
+        </Modal>
+      )}
       <Modal
         open={Boolean(deleting)}
         title={`${deleting?.username ?? ''} verwijderen?`}
@@ -193,22 +219,23 @@ export default function UsersPage() {
   )
 }
 
-/** Story 11: docent toevoegen. Daarna zie je de uitnodigingslink, voor het geval de mail niet aankomt. */
+/** Story 11 + 13: docent toevoegen. Daarna zie je of de uitnodiging is verstuurd. */
 function AddTeacherModal({ onClose, onAdded }) {
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
+  // Het antwoord van de server: { user, mailSent, inviteLink? }.
   const [invite, setInvite] = useState(null)
-  const [copied, setCopied] = useState(false)
 
   async function submit(event) {
     event.preventDefault()
     setError(null)
+    // Story 14: ook een docent heeft een HU-adres nodig. De server controleert het nog een keer.
+    if (!isHuEmail(email)) return setError(HU_EMAIL_MESSAGE)
     setBusy(true)
     try {
-      const data = await api('/admin/users', { method: 'POST', body: { username, email } })
-      setInvite(data)
+      setInvite(await api('/admin/users', { method: 'POST', body: { username, email } }))
       onAdded()
     } catch (apiError) {
       setError(apiError.message)
@@ -217,38 +244,53 @@ function AddTeacherModal({ onClose, onAdded }) {
     }
   }
 
-  async function copy() {
+  async function resend() {
+    setError(null)
+    setBusy(true)
     try {
-      await navigator.clipboard.writeText(invite.inviteLink)
-      setCopied(true)
-    } catch {
-      setCopied(false)
+      const result = await api(`/admin/users/${invite.user.id}/resend-invite`, { method: 'POST' })
+      setInvite({ user: invite.user, ...result })
+    } catch (apiError) {
+      setError(apiError.message)
+    } finally {
+      setBusy(false)
     }
   }
 
   return (
     <Modal open title="Docent toevoegen" onCancel={onClose} footer={null} destroyOnHidden>
-      {invite ? (
+      {invite?.mailSent && (
         <div className="ui-form">
           <Notice type="success">{invite.user.username} is toegevoegd als docent.</Notice>
           <p>
-            We hebben een mail gestuurd met een link om een wachtwoord te kiezen. Komt die niet aan? Stuur dan deze link door
-            (7 dagen geldig, werkt één keer):
+            We hebben een uitnodiging gestuurd naar <strong>{invite.user.email}</strong>. Met de link daarin kiest{' '}
+            {invite.user.username} een wachtwoord (7 dagen geldig).
           </p>
-          <TextField label="Uitnodigingslink" readOnly value={invite.inviteLink} onFocus={(e) => e.target.select()} />
           <div className="ui-actions">
-            <button type="button" className="ui-btn" onClick={copy}>
-              {copied ? 'Gekopieerd!' : 'Kopieer link'}
-            </button>
             <button type="button" className="ui-btn ui-btn--primary" onClick={onClose}>
               Klaar
             </button>
           </div>
         </div>
-      ) : (
+      )}
+      {invite && !invite.mailSent && (
+        <div className="ui-form">
+          <Notice type="success">{invite.user.username} is toegevoegd als docent.</Notice>
+          <InviteLinkFallback invite={invite} onClose={onClose} onResend={resend} busy={busy} />
+          <Notice>{error}</Notice>
+        </div>
+      )}
+      {!invite && (
         <form className="ui-form" onSubmit={submit} noValidate>
           <TextField label="Naam" maxLength={20} value={username} onChange={(e) => setUsername(e.target.value)} hint="2 tot 20 tekens." />
-          <TextField label="E-mailadres" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          <TextField
+            label="E-mailadres"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            hint="Een HU-mailadres (@hu.nl of @student.hu.nl)."
+            error={huEmailTypingError(email)}
+          />
           <Notice>{error}</Notice>
           <div className="ui-actions">
             <button type="button" className="ui-btn" onClick={onClose}>
@@ -261,6 +303,47 @@ function AddTeacherModal({ onClose, onAdded }) {
         </form>
       )}
     </Modal>
+  )
+}
+
+/**
+ * De uitnodigingsmail is mislukt (story 13): een waarschuwing, de knop "Uitnodiging opnieuw sturen",
+ * en de link zelf, zodat de beheerder hem desnoods zelf doorstuurt.
+ * @param {{ invite: { user: { email: string }, inviteLink: string }, onClose: () => void, onResend?: () => void, busy?: boolean }} props
+ */
+function InviteLinkFallback({ invite, onClose, onResend, busy = false }) {
+  const [copied, setCopied] = useState(false)
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(invite.inviteLink)
+      setCopied(true)
+    } catch {
+      setCopied(false)
+    }
+  }
+
+  return (
+    <>
+      <Notice>
+        De uitnodigingsmail naar {invite.user.email} kon niet worden verstuurd. Probeer het opnieuw, of stuur de link hieronder zelf
+        door (7 dagen geldig, werkt één keer).
+      </Notice>
+      <TextField label="Uitnodigingslink" readOnly value={invite.inviteLink} onFocus={(e) => e.target.select()} />
+      <div className="ui-actions">
+        <button type="button" className="ui-btn" onClick={copy}>
+          {copied ? 'Gekopieerd!' : 'Kopieer link'}
+        </button>
+        {onResend && (
+          <button type="button" className="ui-btn" onClick={onResend} disabled={busy}>
+            {busy ? 'Versturen…' : 'Uitnodiging opnieuw sturen'}
+          </button>
+        )}
+        <button type="button" className="ui-btn ui-btn--primary" onClick={onClose}>
+          Klaar
+        </button>
+      </div>
+    </>
   )
 }
 

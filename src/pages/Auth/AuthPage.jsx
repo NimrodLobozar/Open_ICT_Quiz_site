@@ -5,6 +5,8 @@ import { Checkbox, Notice, PasswordChecklist, PasswordField, TextField } from '.
 import PageRings from '../../components/PageRings.jsx'
 import QuizHeader from '../../components/QuizHeader.jsx'
 import { isStrongPassword } from '../../utils/passwordRules.js'
+import { HU_EMAIL_MESSAGE, huEmailTypingError, isHuEmail } from '../../utils/schoolEmail.js'
+import ResendVerification from './ResendVerification.jsx'
 import './AuthPage.css'
 
 /**
@@ -34,7 +36,10 @@ export default function AuthPage({ mode }) {
             Account maken
           </Link>
         </div>
-        <div className="auth-page__card ui-card">{mode === 'login' ? <LoginForm back={back} /> : <RegisterForm back={back} />}</div>
+        <div className="auth-page__card ui-card">
+          {/* ?bevestigd=1 komt van /email-bevestigen, na een geldige link uit de bevestigingsmail. */}
+          {mode === 'login' ? <LoginForm back={back} verified={params.get('bevestigd') === '1'} /> : <RegisterForm />}
+        </div>
         <p className="auth-page__note">Alleen meedoen aan een quiz? Daar heb je geen account voor nodig.</p>
       </main>
     </div>
@@ -43,20 +48,23 @@ export default function AuthPage({ mode }) {
 
 /**
  * Het inlogformulier. Ook gebruikt op de joinpagina (tab "Login"); daar blijf je na het inloggen staan.
- * @param {{ back?: string | null, onSuccess?: (user) => void, compact?: boolean }} props
+ * @param {{ back?: string | null, onSuccess?: (user) => void, compact?: boolean, verified?: boolean }} props
  */
-export function LoginForm({ back = null, onSuccess, compact = false }) {
+export function LoginForm({ back = null, onSuccess, compact = false, verified = false }) {
   const { login } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [remember, setRemember] = useState(true)
   const [error, setError] = useState(null)
+  // Story 14: juist wachtwoord, maar het e-mailadres is nog niet bevestigd.
+  const [unverified, setUnverified] = useState(false)
   const [busy, setBusy] = useState(false)
 
   async function submit(event) {
     event.preventDefault()
     setError(null)
+    setUnverified(false)
     if (!email.trim() || !password) {
       setError('Vul je e-mailadres en wachtwoord in.')
       return
@@ -69,6 +77,7 @@ export function LoginForm({ back = null, onSuccess, compact = false }) {
     } catch (apiError) {
       // Bewust één algemene melding (komt van de server): niet verraden of het e-mailadres bestaat.
       setError(apiError.message)
+      setUnverified(apiError.code === 'EMAIL_NOT_VERIFIED')
       setBusy(false)
     }
   }
@@ -81,6 +90,7 @@ export function LoginForm({ back = null, onSuccess, compact = false }) {
           <h1 className="ui-title">INLOGGEN</h1>
         </div>
       )}
+      {verified && <Notice type="success">Je e-mailadres is bevestigd. Log nu in.</Notice>}
       <TextField label="E-mailadres" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
       <PasswordField
         label="Wachtwoord"
@@ -97,6 +107,7 @@ export function LoginForm({ back = null, onSuccess, compact = false }) {
         Ingelogd blijven op dit apparaat
       </Checkbox>
       <Notice>{error}</Notice>
+      {unverified && <ResendVerification email={email} />}
       <button type="submit" className="ui-btn ui-btn--primary ui-btn--block" disabled={busy}>
         {busy ? 'Bezig met inloggen…' : 'Inloggen'}
       </button>
@@ -115,16 +126,18 @@ const FIELD_FOR_ERROR = {
   USERNAME_TAKEN: 'username',
   EMAIL_INVALID: 'email',
   EMAIL_TAKEN: 'email',
+  EMAIL_NOT_HU: 'email',
   PASSWORD_WEAK: 'password',
   PRIVACY_REQUIRED: 'privacy',
 }
 
-function RegisterForm({ back }) {
+function RegisterForm() {
   const { register } = useAuth()
-  const navigate = useNavigate()
   const [fields, setFields] = useState({ username: '', email: '', password: '', acceptPrivacy: false })
   const [errors, setErrors] = useState({})
   const [busy, setBusy] = useState(false)
+  // Na het registreren: het adres waar de bevestigingsmail heen ging (story 14).
+  const [sentTo, setSentTo] = useState(null)
   const set = (name) => (event) => {
     const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value
     setFields((current) => ({ ...current, [name]: value }))
@@ -136,6 +149,7 @@ function RegisterForm({ back }) {
     const name = fields.username.trim()
     if (name.length < 2 || name.length > 20) found.username = 'Kies een naam van 2 tot 20 tekens.'
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email.trim())) found.email = 'Vul een geldig e-mailadres in.'
+    else if (!isHuEmail(fields.email)) found.email = HU_EMAIL_MESSAGE
     if (!isStrongPassword(fields.password)) found.password = 'Je wachtwoord voldoet nog niet aan alle eisen.'
     if (!fields.acceptPrivacy) found.privacy = 'Ga akkoord met de privacyregels om een account te maken.'
     return found
@@ -148,15 +162,36 @@ function RegisterForm({ back }) {
     if (Object.keys(found).length) return
     setBusy(true)
     try {
-      await register({ ...fields, remember: true })
-      // Story 1: na het aanmaken ben je meteen ingelogd en ga je naar Mijn account.
-      navigate(back ?? '/account', { replace: true })
+      const user = await register(fields)
+      // Story 14: nog niet ingelogd. Eerst de link in de mail, dan inloggen.
+      setSentTo(user.email)
     } catch (apiError) {
       setErrors({ [FIELD_FOR_ERROR[apiError.code] ?? 'general']: apiError.message })
       setBusy(false)
     }
   }
 
+  if (sentTo) {
+    return (
+      <div className="ui-form">
+        <h1 className="ui-title">CHECK JE MAILBOX</h1>
+        <Notice type="success">
+          Je account is gemaakt. We hebben een mail gestuurd naar <strong>{sentTo}</strong>.
+        </Notice>
+        <p className="auth-page__switch">
+          Klik op de link in de mail om je e-mailadres te bevestigen (24 uur geldig). Daarna kun je inloggen. Niets ontvangen?
+          Kijk ook in je spam.
+        </p>
+        <ResendVerification email={sentTo} />
+        <Link to="/inloggen" className="ui-btn ui-btn--primary ui-btn--block">
+          Naar inloggen
+        </Link>
+      </div>
+    )
+  }
+
+  // Tijdens het typen al een melding als het geen HU-adres meer kan worden. Een fout na verzenden gaat voor.
+  const emailError = errors.email ?? huEmailTypingError(fields.email)
   return (
     <form className="ui-form" onSubmit={submit} noValidate>
       <div>
@@ -172,7 +207,19 @@ function RegisterForm({ back }) {
         onChange={set('username')}
         error={errors.username}
       />
-      <TextField label="E-mailadres" type="email" autoComplete="email" value={fields.email} onChange={set('email')} error={errors.email} />
+      <TextField
+        label="E-mailadres"
+        type="email"
+        autoComplete="email"
+        hint="Gebruik je HU-mailadres (@student.hu.nl of @hu.nl)."
+        value={fields.email}
+        onChange={(event) => {
+          // Oude foutmelding weg zodra je het adres aanpast; de melding tijdens het typen neemt het over.
+          setErrors(({ email: _old, ...rest }) => rest)
+          set('email')(event)
+        }}
+        error={emailError}
+      />
       <PasswordField
         label="Wachtwoord"
         autoComplete="new-password"

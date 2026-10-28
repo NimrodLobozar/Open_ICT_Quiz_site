@@ -45,6 +45,7 @@ export async function listUsers({ role, q, page = 1 }) {
       lastActiveAt: user.lastActiveAt,
       played: user._count.results,
       activated: user.passwordHash !== null,
+      verified: user.emailVerifiedAt !== null,
     })),
   }
 }
@@ -78,6 +79,22 @@ function uniqueError(error) {
   const fields = [error.meta?.target, constraint.index, constraint.fields].flat().join(' ')
   if (fields.includes('email')) return new ApiError('EMAIL_TAKEN', 'Dit e-mailadres heeft al een account.', 409)
   return new ApiError('USERNAME_TAKEN', 'Deze gebruikersnaam is al bezet. Kies een andere.', 409)
+}
+
+/**
+ * Story 14: niemand mag het HU-adres (of de naam) van een ander "bezetten". Een speleraccount dat nooit is bevestigd
+ * en geen geldige bevestigingslink meer heeft, wordt daarom verwijderd zodra iemand hetzelfde adres of dezelfde
+ * naam opnieuw registreert. Zo'n account heeft nooit kunnen inloggen, dus er gaat niets verloren.
+ */
+export async function deleteExpiredUnverified({ email, usernameKey }, now = new Date()) {
+  await prisma.user.deleteMany({
+    where: {
+      OR: [{ email }, { usernameKey }],
+      role: 'STUDENT',
+      emailVerifiedAt: null,
+      tokens: { none: { purpose: 'VERIFY', usedAt: null, expiresAt: { gt: now } } },
+    },
+  })
 }
 
 export function findUserByEmail(email) {

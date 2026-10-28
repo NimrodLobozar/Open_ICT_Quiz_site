@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest'
-import { browser, loggedIn, makeUser, prisma, resetDatabase } from './helpers.js'
+import { browser, loggedIn, makeUser, outbox, prisma, resetDatabase, tokenFromMail } from './helpers.js'
 
 // Story 10 (gebruikers bekijken), 11 (docent aanmaken, rol wijzigen) en 12 (aanpassen, verwijderen).
 beforeEach(resetDatabase)
@@ -10,7 +10,8 @@ describe('alleen beheerders', () => {
     const { agent: teacher } = await loggedIn({ role: 'TEACHER' })
     for (const agent of [student, teacher]) {
       expect((await agent.get('/api/admin/users')).status).toBe(403)
-      expect((await agent.post('/api/admin/users').send({ username: 'Hack', email: 'h@test.nl' })).status).toBe(403)
+      expect((await agent.post('/api/admin/users').send({ username: 'Hack', email: 'h@hu.nl' })).status).toBe(403)
+      expect((await agent.post('/api/admin/users/1/resend-invite')).status).toBe(403)
       expect((await agent.patch('/api/admin/users/1/role').send({ role: 'ADMIN' })).status).toBe(403)
       expect((await agent.delete('/api/admin/users/1')).status).toBe(403)
     }
@@ -77,16 +78,20 @@ describe('GET /api/admin/users (story 10)', () => {
 })
 
 describe('docent toevoegen en rol wijzigen (story 11)', () => {
-  it('maakt een docent met een uitnodigingslink; pas na die link kan hij inloggen', async () => {
+  it('maakt een docent en mailt een uitnodigingslink; pas na die link kan hij inloggen', async () => {
     const { agent } = await loggedIn({ role: 'ADMIN' })
     const response = await agent.post('/api/admin/users').send({ username: 'Sara Bakker', email: 'S.Bakker@hu.nl' })
     expect(response.status).toBe(201)
     expect(response.body.user).toMatchObject({ role: 'TEACHER', email: 's.bakker@hu.nl' })
-    expect(response.body.inviteLink).toMatch(/^http:\/\/quiz\.test\/wachtwoord-instellen\?token=/)
+    // Mail gelukt (story 13): dan krijgt de beheerder de geheime link niet te zien.
+    expect(response.body.mailSent).toBe(true)
+    expect(response.body.inviteLink).toBeUndefined()
+    expect(outbox.at(-1)).toMatchObject({ to: 's.bakker@hu.nl', subject: expect.stringMatching(/docentaccount/) })
+    expect(outbox.at(-1).text).toMatch(/http:\/\/quiz\.test\/wachtwoord-instellen\?token=/)
 
     expect((await browser().post('/api/auth/login').send({ email: 's.bakker@hu.nl', password: '' })).status).toBe(401)
 
-    const token = new URL(response.body.inviteLink).searchParams.get('token')
+    const token = await tokenFromMail('s.bakker@hu.nl', '/wachtwoord-instellen')
     const link = await browser().get('/api/auth/password-link').query({ token })
     expect(link.body).toEqual({ purpose: 'INVITE', username: 'Sara Bakker' })
     expect((await browser().post('/api/auth/password').send({ token, password: 'Docent123' })).status).toBe(200)
@@ -94,6 +99,37 @@ describe('docent toevoegen en rol wijzigen (story 11)', () => {
     const login = await browser().post('/api/auth/login').send({ email: 's.bakker@hu.nl', password: 'Docent123' })
     expect(login.status).toBe(200)
     expect(login.body.user.role).toBe('TEACHER')
+    // Wachtwoord gekozen via de mail = e-mailadres bevestigd (story 14).
+    expect((await prisma.user.findUnique({ where: { email: 's.bakker@hu.nl' } })).emailVerifiedAt).not.toBeNull()
+  })
+
+  it('weigert een docent zonder HU-adres (story 14)', async () => {
+    const { agent } = await loggedIn({ role: 'ADMIN' })
+    const response = await agent.post('/api/admin/users').send({ username: 'Sara', email: 'sara@gmail.com' })
+    expect(response.status).toBe(400)
+    expect(response.body.error).toBe('EMAIL_NOT_HU')
+  })
+
+  it('stuurt een uitnodiging opnieuw; alleen de nieuwste link werkt (story 13)', async () => {
+    const { agent } = await loggedIn({ role: 'ADMIN' })
+    const created = await agent.post('/api/admin/users').send({ username: 'Sara', email: 'sara@hu.nl' })
+    const first = await tokenFromMail('sara@hu.nl', '/wachtwoord-instellen')
+
+    const resend = await agent.post(`/api/admin/users/${created.body.user.id}/resend-invite`)
+    expect(resend.status).toBe(200)
+    expect(resend.body).toEqual({ mailSent: true })
+    const second = await tokenFromMail('sara@hu.nl', '/wachtwoord-instellen')
+    expect(second).not.toBe(first)
+    expect((await browser().get('/api/auth/password-link').query({ token: first })).status).toBe(400)
+    expect((await browser().get('/api/auth/password-link').query({ token: second })).status).toBe(200)
+  })
+
+  it('stuurt geen uitnodiging naar een account dat al is geactiveerd', async () => {
+    const { agent } = await loggedIn({ role: 'ADMIN' })
+    const teacher = await makeUser({ role: 'TEACHER', email: 'actief@hu.nl' })
+    const response = await agent.post(`/api/admin/users/${teacher.id}/resend-invite`)
+    expect(response.status).toBe(409)
+    expect(response.body.error).toBe('ALREADY_ACTIVATED')
   })
 
   it('weigert een docent met een e-mailadres dat al bestaat', async () => {
@@ -137,10 +173,12 @@ describe('docent toevoegen en rol wijzigen (story 11)', () => {
 describe('gebruiker aanpassen of verwijderen (story 12)', () => {
   it('past naam en e-mailadres aan', async () => {
     const { agent } = await loggedIn({ role: 'ADMIN' })
-    const other = await makeUser({ username: 'Typo', email: 'typo@test.nl' })
-    const response = await agent.patch(`/api/admin/users/${other.id}`).send({ username: 'Goed', email: 'goed@test.nl' })
+    const other = await makeUser({ username: 'Typo', email: 'typo@student.hu.nl' })
+    const response = await agent.patch(`/api/admin/users/${other.id}`).send({ username: 'Goed', email: 'goed@student.hu.nl' })
     expect(response.status).toBe(200)
-    expect(response.body.user).toMatchObject({ username: 'Goed', email: 'goed@test.nl' })
+    expect(response.body.user).toMatchObject({ username: 'Goed', email: 'goed@student.hu.nl' })
+    // Een nieuw adres moet een HU-adres zijn (story 14).
+    expect((await agent.patch(`/api/admin/users/${other.id}`).send({ email: 'goed@gmail.com' })).body.error).toBe('EMAIL_NOT_HU')
   })
 
   it('verwijdert een speler; zijn uitslagen blijven staan maar anoniem, zodat de eindstand klopt', async () => {

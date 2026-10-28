@@ -3,17 +3,23 @@
 // → uitslag op Mijn account en bij Uitslagen → uitloggen → opruimen.
 //
 // Gebruik (Docker moet draaien):
-//   npm run test:smoke                                  (tegen http://localhost:5173, via de Vite-proxy)
-//   SMOKE_URL=https://quiz.example.nl npm run test:smoke   (tegen een online omgeving)
+//   npm run test:smoke                                  (start de test-backend en test op http://localhost:3001)
+//   SMOKE_URL=https://quiz.example.nl npm run test:smoke   (tegen een online omgeving; start niets)
 // Inloggen als beheerder met SMOKE_ADMIN_EMAIL / SMOKE_ADMIN_PASSWORD (standaard de dev-beheerder uit docker-compose.yml).
+//
+// Mail (story 13 en 14): de uitnodiging en de bevestigingslink haalt de test uit Mailpit (MAILPIT_URL, standaard
+// http://localhost:8025). npm run test:smoke test daarom tegen de test-backend (poort 3001), die zijn mail-instellingen
+// uit test.env haalt (altijd Mailpit), niet uit .env. Staat Brevo in .env, dan gaan er dus toch geen echte mails
+// naar de verzonnen HU-adressen. Zie scripts/with-test-backend.mjs.
 //
 // Let op: dit maakt echte rijen in de database van die omgeving. Accounts en de quiz worden aan het eind weer
 // verwijderd; de gespeelde ronde blijft (anoniem) staan bij Uitslagen, met de titel "Rooktest".
 import { io } from 'socket.io-client'
 
-const BASE = (process.env.SMOKE_URL ?? 'http://localhost:5173').replace(/\/$/, '')
+const BASE = (process.env.SMOKE_URL ?? 'http://localhost:3001').replace(/\/$/, '')
 const ADMIN_EMAIL = process.env.SMOKE_ADMIN_EMAIL ?? 'beheerder@quiz.local'
 const ADMIN_PASSWORD = process.env.SMOKE_ADMIN_PASSWORD ?? 'Beheerder123'
+const MAILPIT = (process.env.MAILPIT_URL ?? 'http://localhost:8025').replace(/\/$/, '')
 const STAMP = Date.now().toString(36)
 
 let failures = 0
@@ -65,6 +71,23 @@ const emit = (socket, event, payload) =>
 const waitFor = (socket, event) => new Promise((resolve) => socket.once(event, resolve))
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
+/** De nieuwste link met `path` uit een mail aan `to`, uit de Mailpit-inbox. null als hij er na een paar seconden niet is. */
+async function linkFromMailpit(to, path) {
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const search = await fetch(`${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:"${to}"`)}`).catch(() => null)
+    if (search?.ok) {
+      // Mailpit geeft de nieuwste mail eerst.
+      for (const { ID } of (await search.json()).messages ?? []) {
+        const message = await (await fetch(`${MAILPIT}/api/v1/message/${ID}`)).json()
+        const link = message.Text?.match(/https?:\/\/\S+/)?.[0]
+        if (link?.includes(path)) return link
+      }
+    }
+    await sleep(250)
+  }
+  return null
+}
+
 async function main() {
   console.log(`Rooktest tegen ${BASE}\n`)
 
@@ -77,10 +100,14 @@ async function main() {
   const adminLogin = await admin.request('/auth/login', { method: 'POST', body: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD } })
   if (!check(adminLogin.status === 200 && adminLogin.data.user?.role === 'ADMIN', 'beheerder logt in', JSON.stringify(adminLogin.data))) return
   check(adminLogin.headers.get('cache-control') === 'no-store', 'antwoord met persoonsgegevens wordt niet gecachet')
-  const teacherEmail = `docent-${STAMP}@rooktest.nl`
+  const notHu = await admin.request('/admin/users', { method: 'POST', body: { username: `Docent ${STAMP}`, email: `docent-${STAMP}@gmail.com` } })
+  check(notHu.data.error === 'EMAIL_NOT_HU', 'docent zonder HU-adres wordt geweigerd (story 14)')
+  const teacherEmail = `rooktest-docent-${STAMP}@hu.nl`
   const invite = await admin.request('/admin/users', { method: 'POST', body: { username: `Docent ${STAMP}`, email: teacherEmail } })
-  check(invite.status === 201 && invite.data.inviteLink, 'docent aangemaakt met uitnodigingslink', JSON.stringify(invite.data))
-  const token = new URL(invite.data.inviteLink).searchParams.get('token')
+  check(invite.status === 201 && invite.data.mailSent === true, 'docent aangemaakt en uitnodiging verstuurd (story 13)', JSON.stringify(invite.data))
+  const inviteLink = invite.data.inviteLink ?? (await linkFromMailpit(teacherEmail, '/wachtwoord-instellen'))
+  if (!check(Boolean(inviteLink), `uitnodiging staat in Mailpit (${MAILPIT})`)) return
+  const token = new URL(inviteLink).searchParams.get('token')
   const activate = await browser().request('/auth/password', { method: 'POST', body: { token, password: 'Docent123' } })
   check(activate.status === 200, 'docent kiest zelf een wachtwoord via de link')
   const reuse = await browser().request('/auth/password', { method: 'POST', body: { token, password: 'Docent456' } })
@@ -101,15 +128,26 @@ async function main() {
   const draftHost = await teacher.request('/games', { method: 'POST', body: { quizId: draft.data.quiz.id } })
   check(draftHost.status === 409, 'concept-quiz kan niet gehost worden')
 
-  console.log('4. Student maakt een account (story 1)')
+  console.log('4. Student maakt een account en bevestigt zijn e-mailadres (story 1 en 14)')
   const student = browser()
-  const studentEmail = `student-${STAMP}@rooktest.nl`
-  const register = await student.request('/auth/register', {
-    method: 'POST',
-    body: { username: `Emma${STAMP}`.slice(0, 20), email: studentEmail, password: 'Student123', acceptPrivacy: true },
-  })
+  const studentEmail = `rooktest-student-${STAMP}@student.hu.nl`
+  const signup = { username: `Emma${STAMP}`.slice(0, 20), email: studentEmail, password: 'Student123', acceptPrivacy: true }
+  const notHuStudent = await student.request('/auth/register', { method: 'POST', body: { ...signup, email: `emma-${STAMP}@nephu.nl` } })
+  check(notHuStudent.data.error === 'EMAIL_NOT_HU', 'registreren met een niet-HU-adres wordt geweigerd')
+  const register = await student.request('/auth/register', { method: 'POST', body: signup })
   check(register.status === 201 && register.data.user.role === 'STUDENT', 'registreren lukt en geeft rol STUDENT', JSON.stringify(register.data))
-  check(student.cookies.has('quiz_auth'), 'na registreren meteen ingelogd (cookie gezet)')
+  check(!student.cookies.has('quiz_auth'), 'na registreren nog niet ingelogd')
+  const early = await student.request('/auth/login', { method: 'POST', body: { email: studentEmail, password: 'Student123' } })
+  check(early.data.error === 'EMAIL_NOT_VERIFIED', 'inloggen vóór het bevestigen lukt niet', JSON.stringify(early.data))
+  const verifyLink = await linkFromMailpit(studentEmail, '/email-bevestigen')
+  if (!check(Boolean(verifyLink), `bevestigingsmail staat in Mailpit (${MAILPIT})`)) return
+  const verify = await browser().request('/auth/verify-email', {
+    method: 'POST',
+    body: { token: new URL(verifyLink).searchParams.get('token') },
+  })
+  check(verify.status === 200, 'e-mailadres bevestigd via de link')
+  const studentLogin = await student.request('/auth/login', { method: 'POST', body: { email: studentEmail, password: 'Student123' } })
+  check(studentLogin.status === 200 && student.cookies.has('quiz_auth'), 'na bevestigen kan de student inloggen')
   const empty = await student.request('/me/results')
   check(empty.data.summary?.played === 0, 'lege staat op Mijn account')
   const studentHost = await student.request('/games', { method: 'POST', body: { quizId: ready.data.quiz.id } })

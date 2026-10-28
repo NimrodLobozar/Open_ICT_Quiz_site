@@ -38,9 +38,9 @@ export function AuthProvider({ children }) {
     return data.user
   }, [])
 
+  // Na registreren ben je nog níet ingelogd: eerst je e-mailadres bevestigen (story 14).
   const register = useCallback(async (fields) => {
     const data = await api('/auth/register', { method: 'POST', body: fields })
-    setUser(data.user)
     return data.user
   }, [])
 

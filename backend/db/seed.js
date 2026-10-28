@@ -11,6 +11,13 @@ import { prisma } from './prisma.js'
  */
 export async function seedDatabase() {
   const admin = await seedAdmin()
+  // Story 14: docenten van vóór de e-mailbevestiging. Hun wachtwoord kwam altijd via de uitnodigingsmail,
+  // dus hun adres is al bewezen. Zonder dit konden ze na de update niet meer inloggen. Doet niets als alles klopt.
+  const { count } = await prisma.user.updateMany({
+    where: { role: 'TEACHER', emailVerifiedAt: null, passwordHash: { not: null } },
+    data: { emailVerifiedAt: new Date() },
+  })
+  if (count) console.log(`Seed: ${count} bestaande docent(en) als bevestigd gemarkeerd.`)
   if ((await prisma.quiz.count()) === 0) {
     await prisma.quiz.create({
       data: {
@@ -43,6 +50,11 @@ async function seedAdmin() {
   if (!email || !password) return prisma.user.findFirst({ where: { role: 'ADMIN' } })
 
   const existing = await prisma.user.findUnique({ where: { email } })
+  // De seed-beheerder valt buiten de HU-regel en heeft geen bevestigingsmail nodig (story 14).
+  // Ook een beheerder van vóór story 14 (kolom emailVerifiedAt nog leeg) moet kunnen blijven inloggen.
+  if (existing && !existing.emailVerifiedAt) {
+    return prisma.user.update({ where: { id: existing.id }, data: { emailVerifiedAt: new Date() } })
+  }
   if (existing) return existing
 
   const username = process.env.SEED_ADMIN_NAME?.trim() || 'Beheerder'
@@ -53,6 +65,7 @@ async function seedAdmin() {
       email,
       passwordHash: await hashPassword(password),
       role: 'ADMIN',
+      emailVerifiedAt: new Date(),
     },
   })
   console.log(`Seed: beheerder ${email} aangemaakt.`)

@@ -100,14 +100,23 @@ describe('profiel en wachtwoord (story 5)', () => {
     const { agent } = await loggedIn()
     const response = await agent
       .patch('/api/me')
-      .send({ username: 'Nieuwe Naam', email: 'NIEUW@test.nl', skills: { SD: 4, AI: 9, Hack: 3, GD: 0 } })
+      .send({ username: 'Nieuwe Naam', email: 'NIEUW@student.hu.nl', skills: { SD: 4, AI: 9, Hack: 3, GD: 0 } })
     expect(response.status).toBe(200)
-    expect(response.body.user).toMatchObject({ username: 'Nieuwe Naam', email: 'nieuw@test.nl', skills: { SD: 4, GD: 0 } })
+    expect(response.body.user).toMatchObject({ username: 'Nieuwe Naam', email: 'nieuw@student.hu.nl', skills: { SD: 4, GD: 0 } })
     expect((await agent.get('/api/auth/me')).body.user.username).toBe('Nieuwe Naam')
   })
 
+  it('een nieuw e-mailadres moet een HU-adres zijn; het huidige adres mag blijven staan (story 14)', async () => {
+    // Zoals de seed-beheerder: een adres dat geen HU-adres is.
+    const { agent } = await loggedIn({ email: 'beheerder@quiz.local' })
+    expect((await agent.patch('/api/me').send({ email: 'ander@gmail.com' })).body.error).toBe('EMAIL_NOT_HU')
+    // Het formulier stuurt het huidige adres altijd mee; dat moet gewoon werken.
+    const same = await agent.patch('/api/me').send({ username: 'Nieuwe Naam', email: 'Beheerder@quiz.local' })
+    expect(same.status).toBe(200)
+  })
+
   it('weigert een e-mailadres of naam van iemand anders', async () => {
-    const { user: other } = await loggedIn({ username: 'Bezet' })
+    const { user: other } = await loggedIn({ username: 'Bezet', email: 'bezet@student.hu.nl' })
     const { agent } = await loggedIn()
     expect((await agent.patch('/api/me').send({ email: other.email })).body.error).toBe('EMAIL_TAKEN')
     expect((await agent.patch('/api/me').send({ username: 'bezet' })).body.error).toBe('USERNAME_TAKEN')

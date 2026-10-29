@@ -332,3 +332,12 @@
     padding-inline: 22px;
   }
 }
+/* Ingelogd (sprint 2): melding onder wiens naam je meedoet. */
+.join-logged-in {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: var(--quiz-bg);
+  border: 2px solid var(--quiz-border);
+  line-height: 1.5;
+}

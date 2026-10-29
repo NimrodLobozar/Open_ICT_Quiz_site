@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../../api/http.js";
 import LockButton from "../../components/LockButton.jsx";
 import QuizHeader from "../../components/QuizHeader.jsx";
@@ -25,9 +25,14 @@ const isLocalhost = ["localhost", "127.0.0.1", "[::1]"].includes(
   window.location.hostname,
 );
 
-/** /host/new: maakt een game aan (de server zet de host-cookie) en gaat door naar /host/:code. */
+/**
+ * /host/new?quiz=<id>: maakt een game aan met die quiz uit de database (story 7).
+ * De server zet de host-cookie; daarna gaan we door naar /host/:code.
+ */
 export function HostCreatePage() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const quizId = Number(params.get("quiz"));
   const [error, setError] = useState(null);
   // StrictMode draait effects in development twee keer; zonder deze ref maak je twee games.
   const started = useRef(false);
@@ -35,16 +40,21 @@ export function HostCreatePage() {
   useEffect(() => {
     if (started.current) return;
     started.current = true;
-    api("/games", { method: "POST" })
+    if (!quizId) {
+      setError("Kies eerst een quiz in het beheerportaal.");
+      return;
+    }
+    api("/games", { method: "POST", body: { quizId } })
       .then(({ gameCode }) => navigate(`/host/${gameCode}`, { replace: true }))
       .catch((apiError) => setError(apiError.message));
-  }, [navigate]);
+  }, [navigate, quizId]);
 
   return (
     <div className="page">
       <QuizHeader large />
       <main className="page__main host-game">
         <p role="status">{error ?? "Lobby wordt aangemaakt…"}</p>
+        {error && <Link to="/admin">Naar mijn quizzen</Link>}
       </main>
     </div>
   );
@@ -255,6 +265,8 @@ export default function HostGamePage() {
           answerCounts={game.questionEnd.answerCounts}
           playerCount={game.questionEnd.ranking.length}
           ranking={game.questionEnd.ranking}
+          showCorrectAnswer={game.questionEnd.display?.showCorrectAnswer ?? true}
+          showStandings={game.questionEnd.display?.showStandings ?? true}
           onNext={next}
         />
       </>

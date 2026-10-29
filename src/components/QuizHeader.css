@@ -10,6 +10,26 @@
   border-bottom: 2px solid var(--quiz-border);
 }
 
+.quiz-header__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* "BEHEER" naast het logo in het admin-portaal. Witte tekst op primary haalt 4,5:1. */
+.quiz-header__badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--quiz-primary);
+  color: var(--quiz-white);
+  font-weight: 800;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+}
+
 .quiz-header__logo {
   font-family: 'Anton', sans-serif;
   font-size: 26px;
@@ -56,10 +76,41 @@
   padding: 0 18px;
   border: 2px solid var(--quiz-muted);
   border-radius: 999px;
+  background: transparent; /* ook voor de knop "Uitloggen" (een <button>, geen link) */
   color: var(--quiz-text);
+  font-family: inherit;
   font-size: 16px;
   font-weight: 700;
   text-decoration: none;
+  cursor: pointer;
+}
+
+/* Ingelogd: rondje met initialen vóór de naam. */
+.quiz-header__account--user {
+  padding-left: 8px;
+}
+
+.quiz-header__avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: var(--quiz-accent);
+  color: var(--quiz-text);
+  font-weight: 800;
+  font-size: 13px;
+}
+
+/* Je bent op je eigen accountpagina: knop gevuld, net als in het design. */
+.quiz-header__account.is-current {
+  border-color: var(--quiz-accent);
+  background: var(--quiz-accent);
+}
+
+.quiz-header__account.is-current .quiz-header__avatar {
+  background: var(--quiz-surface);
 }
 
 /* antd's reset kleurt links blauw bij hover; hier houden we de eigen kleur. */
@@ -123,5 +174,16 @@
     justify-content: center;
     width: 44px;
     padding: 0;
+  }
+  .quiz-header__account--user {
+    padding: 0;
+  }
+  .quiz-header__brand {
+    gap: 8px;
+  }
+  .quiz-header__badge {
+    min-height: 24px;
+    padding: 0 8px;
+    font-size: 11px;
   }
 }

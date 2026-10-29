@@ -1,3 +1,14 @@
+# Instellingen die backend en backend-test delen (x- = geen dienst, alleen een stukje om te hergebruiken).
+x-backend-env: &backend-env
+  DATABASE_URL: postgresql://quiz:quiz@db:5432/quiz
+  NODE_ENV: development
+  # Adres van de website, voor links in mails (wachtwoord vergeten, docent-uitnodiging).
+  APP_URL: http://localhost:5173
+  # Eerste beheerder, alleen voor development. Wijzig dit wachtwoord op een echte server!
+  SEED_ADMIN_EMAIL: beheerder@quiz.local
+  SEED_ADMIN_PASSWORD: Beheerder123
+  SEED_ADMIN_NAME: Beheerder
+
 services:
   frontend:
     build:
@@ -18,15 +29,25 @@ services:
     depends_on:
       - backend
 
-  backend:
+  # &backend = dit blok een naam geven, zodat backend-test hieronder hetzelfde kan gebruiken.
+  backend: &backend
     build:
       context: .
       dockerfile: Dockerfile.backend
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: postgresql://quiz:quiz@db:5432/quiz
-      NODE_ENV: development
+      # <<: *backend-env = de gedeelde instellingen uit x-backend-env (bovenaan), plus de mail hieronder.
+      <<: *backend-env
+      # Mail (story 13). Standaard gaat alles naar Mailpit: niets komt echt aan, je leest de mails op
+      # http://localhost:8025. Echte mails (Brevo)? Zet SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS en MAIL_FROM
+      # in een bestand .env naast dit bestand (staat in .gitignore). Zie docs/MAIL.md.
+      # ${NAAM:-standaard} = de waarde uit .env, of de standaard als die er niet is.
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      MAIL_FROM: ${MAIL_FROM:-noreply@quiz.local}
     volumes:
       # Je backend-code live in de container, zodat nodemon wijzigingen ziet
       # zonder rebuild. node_modules blijft die uit de image.
@@ -38,6 +59,20 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      mailpit:
+        condition: service_started
+
+  # Tweede backend, alleen voor npm run test:smoke en npm run test:visual (http://localhost:3001).
+  # Leest de mail-instellingen uit test.env (altijd Mailpit) en NIET uit .env. Zo kun je in .env Brevo laten staan:
+  # de tests sturen dan toch nooit echte mails naar hun verzonnen HU-adressen.
+  # Start alleen met --profile test (de testscripts doen dat zelf), dus niet bij een gewone docker compose up.
+  backend-test:
+    <<: *backend
+    profiles: ["test"]
+    ports:
+      - "3001:3000"
+    env_file: test.env
+    environment: *backend-env
 
   db:
     image: postgres:16-alpine
@@ -66,6 +101,14 @@ services:
       ADMINER_DEFAULT_SERVER: db
     depends_on:
       - db
+
+  # Nep-mailserver voor development (story 13): vangt alle mails op, niets gaat naar buiten.
+  # Bekijk de inbox op http://localhost:8025. De backend verstuurt via SMTP naar mailpit:1025.
+  mailpit:
+    image: axllent/mailpit:v1.27
+    ports:
+      - "8025:8025"
+      - "1025:1025"
 
 volumes:
   postgres-data:

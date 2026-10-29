@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<title>Mijn account telefoon</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Rubik:wght@500;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFEDD5}
+a{color:#C2410C}a:hover{color:#7C2D12}
+</style>
+</helmet>
+<div style="width: 390px; min-height: 1500px; box-sizing: border-box; overflow: hidden; position: relative; background: #FFEDD5; color: #7C2D12; font-family: 'Rubik', sans-serif; display: flex; flex-direction: column">
+<nav aria-label="Hoofdmenu" style="position: relative; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 16px; background: #FFF7ED; border-bottom: 2px solid #FDBA74">
+<a href="Inloggen-Telefoon.dc.html" style="font-family: 'Anton', sans-serif; font-size: 20px; letter-spacing: 0.04em; color: #C2410C; text-decoration: none; line-height: 1">OPEN ICT QUIZ</a>
+<div style="display: flex; gap: 8px">
+<a href="Account-Telefoon.dc.html" aria-label="Mijn account" aria-current="page" style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; border-radius: 999px; background: {{accent}}; color: #7C2D12; font-weight: 800; font-size: 15px; text-decoration: none">EJ</a>
+<a href="Inloggen-Telefoon.dc.html" aria-label="Uitloggen" style="display: inline-flex; align-items: center; justify-content: center; width: 44px; height: 44px; box-sizing: border-box; border-radius: 999px; border: 2px solid #9A4A22; color: #7C2D12; text-decoration: none"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h4v16h-4"></path><path d="M10 17l5-5-5-5"></path><path d="M15 12H3"></path></svg></a>
+</div>
+</nav>
+<main style="flex: 1; box-sizing: border-box; padding: 24px 16px 32px; display: flex; flex-direction: column; gap: 20px">
+<section aria-label="Profiel" style="background: #FFF7ED; border: 2px solid #FDBA74; border-radius: 24px; padding: 24px 20px; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center">
+<span aria-hidden="true" style="display: inline-flex; align-items: center; justify-content: center; width: 88px; height: 88px; border-radius: 999px; background: {{accent}}; color: #7C2D12; font-family: 'Anton', sans-serif; font-size: 38px">EJ</span>
+<h1 style="margin: 6px 0 0; font-family: 'Anton', sans-serif; font-weight: 400; font-size: 44px; line-height: 1.05; color: #C2410C; letter-spacing: 0.04em">EMMA</h1>
+<span style="font-size: 15px; color: #9A4A22">emma.jansen@student.hu.nl</span>
+<a href="#" style="display: inline-flex; align-items: center; justify-content: center; gap: 10px; box-sizing: border-box; width: 100%; min-height: 54px; margin-top: 10px; border-radius: 999px; background: {{accent}}; color: #7C2D12; font-weight: 800; font-size: 18px; text-decoration: none"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4l13 8-13 8z"></path></svg>Meedoen met code</a>
+<a href="Account-Instellingen.dc.html" style="display: inline-flex; align-items: center; justify-content: center; gap: 10px; box-sizing: border-box; width: 100%; min-height: 54px; border-radius: 999px; border: 2px solid #9A4A22; color: #7C2D12; font-weight: 700; font-size: 17px; text-decoration: none">Profiel bewerken</a>
+</section>
+<section aria-labelledby="m-stats" style="display: flex; flex-direction: column; gap: 12px">
+<h2 id="m-stats" style="margin: 0; font-size: 15px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #9A4A22">Jouw cijfers</h2>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+<sc-for list="{{stats}}" as="s" hint-placeholder-count="4">
+<div style="background: #FFF7ED; border: 2px solid #FDBA74; border-radius: 20px; padding: 16px 18px; display: flex; flex-direction: column; gap: 2px">
+<span style="font-family: 'Anton', sans-serif; font-size: 40px; line-height: 1.05; color: #C2410C">{{s.value}}</span>
+<span style="font-size: 14px; font-weight: 700">{{s.label}}</span>
+</div>
+</sc-for>
+</div>
+</section>
+<section aria-labelledby="m-skills" style="background: #FFF7ED; border: 2px solid #FDBA74; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+<h2 id="m-skills" style="margin: 0; font-size: 15px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #9A4A22">Vaardigheden</h2>
+<sc-for list="{{skills}}" as="k" hint-placeholder-count="6">
+<div style="display: grid; grid-template-columns: 40px minmax(0, 1fr) 32px; align-items: center; gap: 10px; font-weight: 700; font-size: 15px">
+<span>{{k.code}}</span>
+<span role="img" aria-label="{{k.aria}}" style="height: 12px; border-radius: 999px; background: #FFEDD5; border: 2px solid #FDBA74; overflow: hidden"><span style="display: block; height: 100%; width: {{k.width}}; background: #C2410C; border-radius: 999px"></span></span>
+<span style="text-align: right">{{k.value}}/5</span>
+</div>
+</sc-for>
+</section>
+<section aria-labelledby="m-recent" style="display: flex; flex-direction: column; gap: 10px">
+<h2 id="m-recent" style="margin: 0; font-size: 15px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #9A4A22">Laatst gespeeld</h2>
+<ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px">
+<sc-for list="{{games}}" as="g" hint-placeholder-count="4">
+<li style="display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 10px 14px 10px 10px; border-radius: 18px; background: {{g.bg}}; border: 2px solid #FDBA74">
+<span style="display: inline-flex; align-items: center; justify-content: center; height: 46px; border-radius: 12px; background: #FFF7ED; font-family: 'Anton', sans-serif; font-size: 22px; color: #C2410C">{{g.place}}</span>
+<span style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><strong style="font-size: 16px">{{g.quiz}}</strong><span style="font-size: 13px; color: #9A4A22">{{g.meta}}</span></span>
+<strong style="font-size: 16px; font-variant-numeric: tabular-nums">{{g.score}}</strong>
+</li>
+</sc-for>
+</ul>
+</section>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"accent":{"editor":"color","default":"#FDBA74","options":["#FDBA74","#C2410C"]},"$preview":{"width":390,"height":1500}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const accent = this.props.accent ?? '#FDBA74';
+    const skills = [['SD', 4], ['AI', 2], ['TI', 3], ['CSC', 1], ['GD', 5], ['BI', 2]].map(([code, v]) => ({
+      code, value: v, width: (v / 5 * 100) + '%', aria: code + ': ' + v + ' van 5'
+    }));
+    const games = [
+      { place: '1e', quiz: 'Webtechniek · wk 6', meta: '24 okt', score: '7.420' },
+      { place: '4e', quiz: 'Databases · SQL', meta: '17 okt', score: '5.180' },
+      { place: '2e', quiz: 'Git & GitHub', meta: '10 okt', score: '6.900' },
+      { place: '9e', quiz: 'Netwerken · OSI', meta: '3 okt', score: '3.250' }
+    ].map((g) => ({ ...g, bg: g.place === '1e' ? accent : '#FFEDD5' }));
+    return {
+      accent,
+      stats: [
+        { value: '14', label: 'Quizzen gespeeld' },
+        { value: '3×', label: 'Op het podium' },
+        { value: '1e', label: 'Beste plaats' },
+        { value: '72%', label: 'Goede antwoorden' }
+      ],
+      skills, games
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin uitslagen</title>
+<link href="https://fonts.googleapis.com/css2?family=Anton&amp;family=Rubik:wght@500;700;800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FFEDD5}
+a{color:#C2410C}a:hover{color:#7C2D12}
+</style>
+</head>
+<body>
+<div style="min-height: 100vh; box-sizing: border-box; overflow: hidden; position: relative; background: #FFEDD5; color: #7C2D12; font-family: 'Rubik', sans-serif; display: flex; flex-direction: column">
+<nav aria-label="Hoofdmenu" style="position: relative; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 24px; padding: 18px 40px; background: #FFF7ED; border-bottom: 2px solid #FDBA74">
+<div style="display: flex; align-items: center; gap: 14px">
+<a href="Admin-Overzicht.html" style="font-family: 'Anton', sans-serif; font-size: 30px; letter-spacing: 0.04em; color: #C2410C; text-decoration: none; line-height: 1">OPEN ICT QUIZ</a>
+<span style="display: inline-flex; align-items: center; min-height: 30px; padding: 0 12px; border-radius: 999px; background: #C2410C; color: #FFFFFF; font-weight: 800; font-size: 13px; letter-spacing: 0.08em">BEHEER</span>
+</div>
+<div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px">
+<a href="Admin-Account.html" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: 999px; border: 2px solid #9A4A22; color: #7C2D12; font-weight: 700; font-size: 16px; text-decoration: none"><span aria-hidden="true" style="display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 999px; background: #FDBA74; color: #7C2D12; font-weight: 800; font-size: 13px">JV</span>Profiel</a>
+<a href="Main.html" style="display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: 999px; border: 2px solid #9A4A22; color: #7C2D12; font-weight: 700; font-size: 16px; text-decoration: none"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h4v16h-4"></path><path d="M10 17l5-5-5-5"></path><path d="M15 12H3"></path></svg>Uitloggen</a>
+</div>
+</nav>
+<div style="flex: 1; width: 100%; max-width: 1360px; margin: 0 auto; box-sizing: border-box; padding: 40px; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 32px">
+<nav aria-label="Beheermenu" style="flex: 1 1 220px; max-width: 260px; min-width: 0; background: #FFF7ED; border: 2px solid #FDBA74; border-radius: 24px; padding: 12px; box-sizing: border-box">
+<ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px">
+<li><a href="Admin-Overzicht.html" style="display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 16px; border-radius: 999px; color: #7C2D12; font-weight: 700; font-size: 17px; text-decoration: none"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></svg>Overzicht</a></li>
+<li><a href="Admin-Overzicht.html" style="display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 16px; border-radius: 999px; color: #7C2D12; font-weight: 700; font-size: 17px; text-decoration: none"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17v.5"></path></svg>Quizzen</a></li>
+<li><a href="Admin-Gebruikers.html" style="display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 16px; border-radius: 999px; color: #7C2D12; font-weight: 700; font-size: 17px; text-decoration: none"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"></circle><path d="M2 20c0-3.5 3-5.5 7-5.5s7 2 7 5.5"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7"></path><path d="M18 14.5c2.5.5 4 2.3 4 5.5"></path></svg>Gebruikers</a></li>
+<li><a href="Admin-Uitslagen.html" aria-current="page" style="display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 16px; border-radius: 999px; background: #FDBA74; color: #7C2D12; font-weight: 800; font-size: 17px; text-decoration: none"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"></path><path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3"></path></svg>Uitslagen</a></li>
+<li><a href="Admin-Account.html" style="display: flex; align-items: center; gap: 12px; min-height: 48px; padding: 0 16px; border-radius: 999px; color: #7C2D12; font-weight: 700; font-size: 17px; text-decoration: none"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c0-4 4-6 8-6s8 2 8 6"></path></svg>Mijn account</a></li>
+</ul>
+</nav>
+<main style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 24px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<span style="font-size: 16px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #9A4A22">Gespeelde rondes</span>
+<h1 style="margin: 0; font-family: 'Anton', sans-serif; font-weight: 400; font-size: 60px; line-height: 1.05; color: #C2410C; letter-spacing: 0.04em">UITSLAGEN</h1>
+</div>
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px">
+
+<div style="background: #FFF7ED; border: 2px solid #FDBA74; border-radius: 24px; padding: 22px 24px; display: flex; flex-direction: column; gap: 4px">
+<span style="font-family: 'Anton', sans-serif; font-size: 52px; line-height: 1.05; color: #C2410C">38</span>
+<span style="font-size: 16px; font-weight: 700">Rondes gespeeld</span>
+</div>
+
+<div style="background: #FFF7ED; border: 2px solid #FDBA74; border-radius: 24px; padding: 22px 24px; display: flex; flex-direction: column; gap: 4px">
+<span style="font-family: 'Anton', sans-serif; font-size: 52px; line-height: 1.05; color: #C2410C">742</span>
+<span style="font-size: 16px; font-weight: 700">Deelnames</span>
+</div>
+
+<div style="background: #FFF7ED; border: 2px solid #FDBA74; border-radius: 24px; padding: 22px 24px; display: flex; flex-direction: column; gap: 4px">
+<span style="font-family: 'Anton', sans-serif; font-size: 52px; line-height: 1.05; color: #C2410C">64%</span>
+<span style="font-size: 16px; font-weight: 700">Met account</span>
+</div>
+
+</div>
+<label style="position: relative; display: block; max-width: 360px"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Zoek op quiz of code</span><input type="search" placeholder="Zoek op quiz of code" style="box-sizing: border-box; width: 100%; min-height: 52px; padding: 0 16px 0 44px; border: 2px solid #FDBA74; border-radius: 999px; background: #FFFFFF; color: #7C2D12; font-family: 'Rubik', sans-serif; font-size: 16px"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9A4A22" stroke-width="2.4" stroke-linecap="round" style="position: absolute; left: 16px; top: 17px"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-4-4"></path></svg></label>
+<div style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 24px">
+<section aria-labelledby="h-rondes" style="flex: 3 1 440px; min-width: 0; background: #FFF7ED; border: 2px solid #FDBA74; border-radius: 24px; overflow-x: auto">
+<h2 id="h-rondes" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Rondes</h2>
+<table style="width: 100%; min-width: 520px; border-collapse: collapse; font-size: 16px">
+<thead>
+<tr style="text-align: left; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #9A4A22">
+<th scope="col" style="padding: 18px 24px; font-weight: 700">Quiz</th>
+<th scope="col" style="padding: 18px 12px; font-weight: 700">Datum</th>
+<th scope="col" style="padding: 18px 12px; font-weight: 700; text-align: right">Spelers</th>
+<th scope="col" style="padding: 18px 24px; font-weight: 700">Winnaar</th>
+</tr>
+</thead>
+<tbody>
+
+<tr style="border-top: 2px solid #FDBA74; background: #FFEDD5">
+<td style="padding: 10px 24px"><button type="button" onClick="() => this.setState({ picked: i })" aria-pressed="true" style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 48px; justify-content: center; padding: 0; border: 0; background: transparent; color: #7C2D12; font-family: 'Rubik', sans-serif; text-align: left; cursor: pointer"><strong style="font-size: 17px; text-decoration: underline; text-underline-offset: 3px">Webtechniek · week 6</strong><span style="font-size: 14px; color: #9A4A22">482913 · ronde 2</span></button></td>
+<td style="padding: 10px 12px; color: #9A4A22">24 okt, 10:42</td>
+<td style="padding: 10px 12px; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums">24</td>
+<td style="padding: 10px 24px; font-weight: 700">Fatima el Amrani</td>
+</tr>
+
+<tr style="border-top: 2px solid #FDBA74; background: transparent">
+<td style="padding: 10px 24px"><button type="button" onClick="() => this.setState({ picked: i })" aria-pressed="false" style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 48px; justify-content: center; padding: 0; border: 0; background: transparent; color: #7C2D12; font-family: 'Rubik', sans-serif; text-align: left; cursor: pointer"><strong style="font-size: 17px; text-decoration: underline; text-underline-offset: 3px">Webtechniek · week 6</strong><span style="font-size: 14px; color: #9A4A22">482913 · ronde 1</span></button></td>
+<td style="padding: 10px 12px; color: #9A4A22">24 okt, 10:15</td>
+<td style="padding: 10px 12px; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums">23</td>
+<td style="padding: 10px 24px; font-weight: 700">Fatima el Amrani</td>
+</tr>
+
+<tr style="border-top: 2px solid #FDBA74; background: transparent">
+<td style="padding: 10px 24px"><button type="button" onClick="() => this.setState({ picked: i })" aria-pressed="false" style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 48px; justify-content: center; padding: 0; border: 0; background: transparent; color: #7C2D12; font-family: 'Rubik', sans-serif; text-align: left; cursor: pointer"><strong style="font-size: 17px; text-decoration: underline; text-underline-offset: 3px">Databases · SQL basis</strong><span style="font-size: 14px; color: #9A4A22">730158 · ronde 1</span></button></td>
+<td style="padding: 10px 12px; color: #9A4A22">17 okt, 13:30</td>
+<td style="padding: 10px 12px; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums">21</td>
+<td style="padding: 10px 24px; font-weight: 700">Mo Haddou</td>
+</tr>
+
+<tr style="border-top: 2px solid #FDBA74; background: transparent">
+<td style="padding: 10px 24px"><button type="button" onClick="() => this.setState({ picked: i })" aria-pressed="false" style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 48px; justify-content: center; padding: 0; border: 0; background: transparent; color: #7C2D12; font-family: 'Rubik', sans-serif; text-align: left; cursor: pointer"><strong style="font-size: 17px; text-decoration: underline; text-underline-offset: 3px">Git & GitHub</strong><span style="font-size: 14px; color: #9A4A22">215804 · ronde 1</span></button></td>
+<td style="padding: 10px 12px; color: #9A4A22">10 okt, 09:05</td>
+<td style="padding: 10px 12px; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums">19</td>
+<td style="padding: 10px 24px; font-weight: 700">Daan Visser</td>
+</tr>
+
+<tr style="border-top: 2px solid #FDBA74; background: transparent">
+<td style="padding: 10px 24px"><button type="button" onClick="() => this.setState({ picked: i })" aria-pressed="false" style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 48px; justify-content: center; padding: 0; border: 0; background: transparent; color: #7C2D12; font-family: 'Rubik', sans-serif; text-align: left; cursor: pointer"><strong style="font-size: 17px; text-decoration: underline; text-underline-offset: 3px">Databases · SQL basis</strong><span style="font-size: 14px; color: #9A4A22">604217 · ronde 1</span></button></td>
+<td style="padding: 10px 12px; color: #9A4A22">9 okt, 14:20</td>
+<td style="padding: 10px 12px; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums">22</td>
+<td style="padding: 10px 24px; font-weight: 700">Mo Haddou</td>
+</tr>
+
+<tr style="border-top: 2px solid #FDBA74; background: transparent">
+<td style="padding: 10px 24px"><button type="button" onClick="() => this.setState({ picked: i })" aria-pressed="false" style="display: flex; flex-direction: column; align-items: flex-start; gap: 2px; min-height: 48px; justify-content: center; padding: 0; border: 0; background: transparent; color: #7C2D12; font-family: 'Rubik', sans-serif; text-align: left; cursor: pointer"><strong style="font-size: 17px; text-decoration: underline; text-underline-offset: 3px">Git & GitHub</strong><span style="font-size: 14px; color: #9A4A22">118342 · ronde 1</span></button></td>
+<td style="padding: 10px 12px; color: #9A4A22">3 okt, 11:10</td>
+<td style="padding: 10px 12px; text-align: right; font-weight: 700; font-variant-numeric: tabular-nums">18</td>
+<td style="padding: 10px 24px; font-weight: 700">Daan Visser</td>
+</tr>
+
+</tbody>
+</table>
+<div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 24px; border-top: 2px solid #FDBA74; font-size: 15px; color: #9A4A22">
+<span>6 van 38 rondes</span>
+<span style="display: flex; gap: 8px">
+<a href="#" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 999px; border: 2px solid #9A4A22; color: #7C2D12; font-weight: 700; text-decoration: none">Vorige</a>
+<a href="#" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 999px; border: 2px solid #9A4A22; color: #7C2D12; font-weight: 700; text-decoration: none">Volgende</a>
+</span>
+</div>
+</section>
+<section aria-labelledby="h-eindstand" style="flex: 2 1 300px; min-width: 0; background: #FFF7ED; border: 2px solid #FDBA74; border-radius: 24px; padding: 24px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; flex-direction: column; gap: 4px">
+<h2 id="h-eindstand" style="margin: 0; font-size: 18px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #9A4A22">Eindstand</h2>
+<strong style="font-size: 22px">Webtechniek · week 6</strong>
+<span style="font-size: 15px; color: #9A4A22">482913 · ronde 2 · 24 okt, 10:42</span>
+</div>
+<ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px">
+
+<li style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 16px; background: #FDBA74; border: 2px solid #FDBA74">
+<span style="flex: none; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 999px; background: #FFFFFF; border: 2px solid #9A4A22; font-weight: 800; font-size: 15px; font-variant-numeric: tabular-nums">1</span>
+<span style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; font-weight: 700"><span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Fatima el Amrani</span><svg role="img" aria-label="Account" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C2410C" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M8 12.5l2.5 2.5L16 9.5"></path></svg></span>
+<span style="font-size: 14px; color: #9A4A22; font-variant-numeric: tabular-nums">7/8</span>
+<strong style="min-width: 56px; text-align: right; font-variant-numeric: tabular-nums">4.120</strong>
+</li>
+
+<li style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 16px; background: #FDBA74; border: 2px solid #FDBA74">
+<span style="flex: none; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 999px; background: #FFFFFF; border: 2px solid #9A4A22; font-weight: 800; font-size: 15px; font-variant-numeric: tabular-nums">2</span>
+<span style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; font-weight: 700"><span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Emma Jansen</span><svg role="img" aria-label="Account" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C2410C" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M8 12.5l2.5 2.5L16 9.5"></path></svg></span>
+<span style="font-size: 14px; color: #9A4A22; font-variant-numeric: tabular-nums">7/8</span>
+<strong style="min-width: 56px; text-align: right; font-variant-numeric: tabular-nums">3.870</strong>
+</li>
+
+<li style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 16px; background: #FDBA74; border: 2px solid #FDBA74">
+<span style="flex: none; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 999px; background: #FFFFFF; border: 2px solid #9A4A22; font-weight: 800; font-size: 15px; font-variant-numeric: tabular-nums">2</span>
+<span style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; font-weight: 700"><span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Daan Visser</span><svg role="img" aria-label="Account" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C2410C" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M8 12.5l2.5 2.5L16 9.5"></path></svg></span>
+<span style="font-size: 14px; color: #9A4A22; font-variant-numeric: tabular-nums">6/8</span>
+<strong style="min-width: 56px; text-align: right; font-variant-numeric: tabular-nums">3.870</strong>
+</li>
+
+<li style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 16px; background: #FFFFFF; border: 2px solid #FDBA74">
+<span style="flex: none; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 999px; background: #FFFFFF; border: 2px solid #9A4A22; font-weight: 800; font-size: 15px; font-variant-numeric: tabular-nums">4</span>
+<span style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; font-weight: 700"><span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Noor</span></span>
+<span style="font-size: 14px; color: #9A4A22; font-variant-numeric: tabular-nums">6/8</span>
+<strong style="min-width: 56px; text-align: right; font-variant-numeric: tabular-nums">3.410</strong>
+</li>
+
+<li style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 16px; background: #FFFFFF; border: 2px solid #FDBA74">
+<span style="flex: none; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 999px; background: #FFFFFF; border: 2px solid #9A4A22; font-weight: 800; font-size: 15px; font-variant-numeric: tabular-nums">5</span>
+<span style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; font-weight: 700"><span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Lucas Smit</span><svg role="img" aria-label="Account" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C2410C" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M8 12.5l2.5 2.5L16 9.5"></path></svg></span>
+<span style="font-size: 14px; color: #9A4A22; font-variant-numeric: tabular-nums">5/8</span>
+<strong style="min-width: 56px; text-align: right; font-variant-numeric: tabular-nums">2.980</strong>
+</li>
+
+<li style="display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 16px; background: #FFFFFF; border: 2px solid #FDBA74">
+<span style="flex: none; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 999px; background: #FFFFFF; border: 2px solid #9A4A22; font-weight: 800; font-size: 15px; font-variant-numeric: tabular-nums">6</span>
+<span style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; font-weight: 700"><span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">Sem</span></span>
+<span style="font-size: 14px; color: #9A4A22; font-variant-numeric: tabular-nums">4/8</span>
+<strong style="min-width: 56px; text-align: right; font-variant-numeric: tabular-nums">2.210</strong>
+</li>
+
+</ol>
+<span style="font-size: 14px; color: #9A4A22">Gelijke score = gedeelde plaats.</span>
+</section>
+</div>
+</main>
+</div>
+</div>
+</body>
+</html>

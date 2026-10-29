@@ -7,10 +7,12 @@ import { prisma } from './prisma.js'
  * Startdata, één keer bij het opstarten van de server (backend/index.js). Doet niets als het er al is.
  * 1. De eerste beheerder, uit de omgevingsvariabelen SEED_ADMIN_EMAIL en SEED_ADMIN_PASSWORD.
  *    Zonder beheerder kan niemand docenten aanmaken, en een beheerder kan zich niet registreren (story 11).
+ *    Samen met de beheerder komen er drie testaccounts bij (alleen buiten productie), zie DUMMY_USERS.
  * 2. De voorbeeldquiz met de vragen die eerst vast in quizQuestions.js stonden (story 7).
  */
 export async function seedDatabase() {
   const admin = await seedAdmin()
+  if (admin && process.env.SEED_ADMIN_EMAIL) await seedDummyUsers()
   // Story 14: docenten van vóór de e-mailbevestiging. Hun wachtwoord kwam altijd via de uitnodigingsmail,
   // dus hun adres is al bewezen. Zonder dit konden ze na de update niet meer inloggen. Doet niets als alles klopt.
   const { count } = await prisma.user.updateMany({
@@ -41,6 +43,37 @@ export async function seedDatabase() {
       },
     })
     console.log('Seed: voorbeeldquiz aangemaakt.')
+  }
+}
+
+// Testaccounts voor development, zodat je meteen als student of docent kunt inloggen zonder te registreren.
+// Al bevestigd (emailVerifiedAt), dus er is geen bevestigingsmail nodig.
+const DUMMY_USERS = [
+  { username: 'Emma', email: 'emma@student.hu.nl', password: 'Student123', role: 'STUDENT' },
+  { username: 'Daan', email: 'daan@student.hu.nl', password: 'Student123', role: 'STUDENT' },
+  { username: 'Docent', email: 'docent@hu.nl', password: 'Docent123', role: 'TEACHER' },
+]
+
+async function seedDummyUsers() {
+  // Nooit op een echte server: iedereen kent deze wachtwoorden (ze staan in de code).
+  if (process.env.NODE_ENV === 'production') return
+  for (const user of DUMMY_USERS) {
+    // Bestaat het e-mailadres of de naam al, dan laten we het account met rust.
+    const existing = await prisma.user.findFirst({
+      where: { OR: [{ email: user.email }, { usernameKey: nameKey(user.username) }] },
+    })
+    if (existing) continue
+    await prisma.user.create({
+      data: {
+        username: user.username,
+        usernameKey: nameKey(user.username),
+        email: user.email,
+        passwordHash: await hashPassword(user.password),
+        role: user.role,
+        emailVerifiedAt: new Date(),
+      },
+    })
+    console.log(`Seed: testaccount ${user.email} aangemaakt.`)
   }
 }
 

@@ -1,8 +1,11 @@
 import { Router } from 'express'
+import { requireRole } from '../auth/middleware.js'
+import { getQuiz, toGameQuestions } from '../db/quizzes.js'
 import { GameError } from '../game/GameError.js'
 import { gameManager } from '../game/GameManager.js'
 import { sendLobbyUpdate } from '../socket/broadcast.js'
 import { afterAnswer } from '../socket/gameLoop.js'
+import { assertCanHost } from '../quiz/quizRules.js'
 import { playerRoom } from '../socket/rooms.js'
 import {
   clearSessionCookie,
@@ -32,9 +35,27 @@ function readSession(request, cookieName, code) {
   return session?.code === code ? { token, ...session } : null
 }
 
-// Nieuwe game. De browser die dit doet, wordt de host.
-router.post('/', (_request, response) => {
-  const game = gameManager.createGame()
+// Nieuwe game met een quiz uit de database (story 7). Alleen docenten en beheerders mogen hosten.
+// De browser die dit doet, wordt de host.
+router.post('/', requireRole('TEACHER', 'ADMIN'), async (request, response) => {
+  const quizId = Number(request.body?.quizId)
+  if (!Number.isSafeInteger(quizId) || quizId < 1) {
+    throw new GameError('QUIZ_REQUIRED', 'Kies eerst een quiz om te hosten.', 400)
+  }
+  // getQuiz geeft 404 als de quiz niet bestaat of van een andere docent is.
+  const quiz = await getQuiz(quizId, request.user)
+  assertCanHost(quiz)
+
+  const game = gameManager.createGame({
+    questions: toGameQuestions(quiz),
+    quizId: quiz.id,
+    quizTitle: quiz.title,
+    settings: {
+      showCorrectAnswer: quiz.showCorrectAnswer,
+      showStandings: quiz.showStandings,
+      lockLobbyOnStart: quiz.lockLobbyOnStart,
+    },
+  })
   const token = gameManager.createSession({ code: game.code, role: 'host' })
   setSessionCookie(response, HOST_COOKIE, token)
   response.status(201).json({ gameCode: game.code })
@@ -43,7 +64,7 @@ router.post('/', (_request, response) => {
 // Voor het joinformulier: bestaat deze code?
 router.get('/:code', (request, response) => {
   const game = findGame(request.params.code)
-  response.json({ exists: true, locked: game.locked, phase: game.phase })
+  response.json({ exists: true, locked: game.locked, phase: game.phase, quizTitle: game.quizTitle })
 })
 
 // Joinen met een naam.
@@ -58,7 +79,13 @@ router.post('/:code/players', (request, response) => {
     return response.json({ playerId: existingPlayer.id, nickname: existingPlayer.nickname })
   }
 
-  const player = game.addPlayer(request.body?.nickname, { skills: request.body?.skills })
+  // Ingelogd? Dan speel je onder je accountnaam en komt de uitslag op "Mijn account" (story 4).
+  // De naam komt dan uit de database, niet uit het formulier: zo kun je niet onder een andere accountnaam spelen.
+  const account = request.user
+  const player = game.addPlayer(account ? account.username : request.body?.nickname, {
+    skills: request.body?.skills,
+    userId: account?.id ?? null,
+  })
   const token = gameManager.createSession({ code, role: 'player', playerId: player.id })
   setSessionCookie(response, PLAYER_COOKIE, token)
   sendLobbyUpdate(getIo(request), game)

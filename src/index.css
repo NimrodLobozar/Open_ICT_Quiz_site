@@ -14,6 +14,13 @@
   --quiz-primary: #c2410c; /* knoppen, logo, focusrand */
   --quiz-muted: #9a4a22; /* minder belangrijke tekst */
   --quiz-text: #7c2d12; /* gewone tekst */
+  --quiz-white: #ffffff; /* invoervelden */
+  /* Meldingen (accounts, sprint 2). Ook deze halen 4,5:1 op hun eigen achtergrond. */
+  --quiz-success-bg: #dcfce7;
+  --quiz-success: #166534;
+  --quiz-error-bg: #fee2e2;
+  --quiz-error-border: #b91c1c;
+  --quiz-error: #991b1b;
 }
 
 /* Geen witte rand om de pagina. */

@@ -17,8 +17,9 @@ const TOP_COUNT = 5;
  * @param {{ code: string, question: import("./QuestionPreviewPage.jsx").QuestionShow,
  *   correctOptionId: number, answerCounts: Record<number, number>, playerCount: number,
  *   ranking: Array<{ id: number, nickname: string, score: number, rank: number, pointsGained: number }>,
- *   onNext?: () => void }} props
+ *   onNext?: () => void, showCorrectAnswer?: boolean, showStandings?: boolean }} props
  *   correctOptionId en answerCounts komen uit question:end, ranking uit leaderboard:show (via getRanking).
+ *   showCorrectAnswer/showStandings: instellingen van de quiz (story 8); uit = dat deel niet tonen.
  */
 export function HostLeaderboard({
   code,
@@ -28,6 +29,8 @@ export function HostLeaderboard({
   playerCount,
   ranking,
   onNext,
+  showCorrectAnswer = true,
+  showStandings = true,
 }) {
   const correctCount = answerCounts[correctOptionId] ?? 0;
   const isLast = question.index + 1 >= question.total;
@@ -57,17 +60,20 @@ export function HostLeaderboard({
           aria-labelledby="host-outcome-title"
         >
           <h2 id="host-outcome-title" className="host-question__outcome-title">
-            Vraag {question.index + 1} · het goede antwoord
+            Vraag {question.index + 1}
+            {showCorrectAnswer ? " · het goede antwoord" : " · zo werd er gestemd"}
           </h2>
-          <p className="host-question__outcome-summary">
-            <strong>
-              {correctCount} van {playerCount}
-            </strong>{" "}
-            {playerCount === 1 ? "speler had" : "spelers hadden"} het goed.
-          </p>
+          {showCorrectAnswer && (
+            <p className="host-question__outcome-summary">
+              <strong>
+                {correctCount} van {playerCount}
+              </strong>{" "}
+              {playerCount === 1 ? "speler had" : "spelers hadden"} het goed.
+            </p>
+          )}
           <ol className="host-question__counts">
             {question.options.map((option, i) => {
-              const isCorrect = option.id === correctOptionId;
+              const isCorrect = showCorrectAnswer && option.id === correctOptionId;
               const count = answerCounts[option.id] ?? 0;
               return (
                 <li
@@ -108,6 +114,7 @@ export function HostLeaderboard({
           </ol>
         </section>
 
+        {showStandings && (
         <section
           className="host-question__standings"
           aria-labelledby="host-standings-title"
@@ -142,6 +149,7 @@ export function HostLeaderboard({
             ))}
           </ol>
         </section>
+        )}
       </div>
     </HostQuestionLayout>
   );

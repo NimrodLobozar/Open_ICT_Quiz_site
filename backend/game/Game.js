@@ -17,11 +17,20 @@ const LATE_GRACE_MS = 500;
 export class Game {
   /**
    * @param {string} code
-   * @param {{ questions?: Array<Question>, previewSeconds?: number }} [options]
+   * @param {{ questions?: Array<Question>, previewSeconds?: number, quizId?: number | null,
+   *   quizTitle?: string | null, settings?: { lockLobbyOnStart?: boolean } }} [options]
    *   previewSeconds = leestijd per vraag voordat je mag antwoorden (projectplan 3.4). 0 = meteen antwoorden.
+   *   quizId/quizTitle = de quiz uit de database (story 7), voor de uitslagen.
+   *   settings = instellingen van die quiz (story 8).
    */
-  constructor(code, { questions = QUIZ_QUESTIONS, previewSeconds = 5 } = {}) {
+  constructor(
+    code,
+    { questions = QUIZ_QUESTIONS, previewSeconds = 5, quizId = null, quizTitle = null, settings = {} } = {},
+  ) {
     this.code = code;
+    this.quizId = quizId;
+    this.quizTitle = quizTitle;
+    this.settings = settings;
     this.phase = PHASES.LOBBY;
     this.locked = false;
     this.questions = questions;
@@ -39,7 +48,11 @@ export class Game {
   }
 
   /** Nieuwe speler in de lobby. Gooit een GameError als het niet mag. */
-  addPlayer(rawNickname, { isBot = false, skills } = {}) {
+  /**
+   * @param {{ isBot?: boolean, skills?: object, userId?: number | null }} [options]
+   *   userId = het account van een ingelogde speler; die krijgt het account-icoontje (isVerified).
+   */
+  addPlayer(rawNickname, { isBot = false, skills, userId = null } = {}) {
     if (this.phase !== PHASES.LOBBY)
       throw new GameError("WRONG_PHASE", "De quiz is al begonnen.", 403);
     if (this.locked)
@@ -75,7 +88,8 @@ export class Game {
       // Punten per vraag. De totaalscore is altijd de som hiervan, zo kun je het narekenen.
       answers: [],
       connected: false,
-      isVerified: false, // pas true met een account (L1)
+      userId,
+      isVerified: userId !== null, // ingelogd met een account (sprint 2)
       isBot,
       skills: cleanSkills(skills),
     };
@@ -157,6 +171,9 @@ export class Game {
         409,
       );
     }
+    // Instelling van de quiz (story 8): na de start gaat de lobby op slot,
+    // dus ook na "opnieuw spelen" kan er niemand meer bij tot de host hem weer openzet.
+    if (this.settings.lockLobbyOnStart) this.locked = true;
     this.#showQuestion(0, now);
   }
 
@@ -330,7 +347,12 @@ export class Game {
         pointsGained: this.#answerTo(id, questionIndex)?.points ?? 0,
       }),
     );
-    return { ...this.lastQuestionEnd, ranking };
+    // Instellingen van de quiz (story 8): goede antwoord en tussenstand wel of niet op het grote scherm.
+    const display = {
+      showCorrectAnswer: this.settings.showCorrectAnswer ?? true,
+      showStandings: this.settings.showStandings ?? true,
+    };
+    return { ...this.lastQuestionEnd, ranking, display };
   }
 
   /** Eigen uitslag van de laatste vraag, alleen voor die speler: goed/fout en punten erbij. */
@@ -449,6 +471,9 @@ export class Game {
       round: this.round,
       startedAt: this.startedAt,
       endedAt,
+      quizId: this.quizId,
+      quizTitle: this.quizTitle,
+      questionCount: this.totalQuestions,
       results: this.finalRanking.map(
         ({ id, nickname, score, rank, correctCount }) => {
           // skills en isBot staan niet in de ranking, dus die komen uit players.
@@ -461,6 +486,7 @@ export class Game {
             correctCount,
             skills: player?.skills ?? {},
             isBot: player?.isBot ?? false,
+            userId: player?.userId ?? null,
           };
         },
       ),
@@ -492,5 +518,6 @@ function cleanSkills(skills) {
 /**
  * @typedef {{ id: number, nickname: string, score: number, correctCount: number,
  *   answers: Array<{ questionIndex: number, correct: boolean, points: number, optionId: number | null }>,
- *   connected: boolean, isVerified: boolean, isBot: boolean, skills: Record<string, number> }} Player
+ *   connected: boolean, userId: number | null, isVerified: boolean, isBot: boolean,
+ *   skills: Record<string, number> }} Player
  */

@@ -248,6 +248,13 @@ function PhaseScreen({
           {game.lobby.playerCount}{" "}
           {game.lobby.playerCount === 1 ? "speler" : "spelers"} in de lobby
         </p>
+        {game.lobby.questionCount != null && (
+          <p>
+            Willekeurige quiz:{" "}
+            <strong>{game.lobby.questionCount} vragen</strong>, gekozen op de
+            vaardigheden van deze lobby.
+          </p>
+        )}
       </WaitScreen>
     );
   }

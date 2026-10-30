@@ -184,7 +184,7 @@
   cursor: pointer;
 }
 
-.admin-filters button[aria-pressed='true'] {
+.admin-filters button[aria-pressed="true"] {
   background: var(--quiz-accent);
   font-weight: 800;
 }
@@ -552,7 +552,7 @@
   cursor: pointer;
 }
 
-.quiz-editor__status button[aria-pressed='true'] {
+.quiz-editor__status button[aria-pressed="true"] {
   background: var(--quiz-accent);
   font-weight: 800;
 }
@@ -622,7 +622,7 @@
   background: var(--quiz-success-bg);
 }
 
-.quiz-editor__option input[type='radio'] {
+.quiz-editor__option input[type="radio"] {
   flex: none;
   width: 24px;
   height: 24px;
@@ -649,5 +649,12 @@
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
+  gap: 12px;
+}
+
+/* Twee knoppen rechts naast de titel (Willekeurige quiz hosten, Nieuwe quiz). */
+.admin-page__actions {
+  display: flex;
+  flex-wrap: wrap;
   gap: 12px;
 }

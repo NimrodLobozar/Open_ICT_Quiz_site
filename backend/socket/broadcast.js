@@ -12,7 +12,7 @@ export function sendLobbyUpdate(io, game) {
     playerCount: players.length,
     locked: game.locked,
     questionCount: game.questionCount,
-    skillAverages: game.getSkillAverages(),
+    skillAverages: game.getSkillAverage(),
   });
 }
 

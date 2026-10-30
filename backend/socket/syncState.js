@@ -22,7 +22,7 @@ export function buildSyncState(game, { role, playerId }) {
       playerCount: players.length,
       locked: game.locked,
       questionCount: game.questionCount,
-      skillAverages: game.getSkillAverages(),
+      skillAverages: game.getSkillAverage(),
     },
     me: null,
     question: null, // zelfde als question:show

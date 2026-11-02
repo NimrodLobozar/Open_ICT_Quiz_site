@@ -6,22 +6,21 @@ import { SKILL_CODES } from "../../src/utils/skills.js";
 
 export const MAX_SKILL = 5; // het bereik van de sliders is 0 t/m 5
 
-// Grenzen voor de moeilijkheid: 0 tot 1.7 = makkelijk, 1.7 tot 3.4 = gemiddeld, 3.4 tot 5 = moeilijk.
-// Als constanten, zodat het team ze op één plek kan bijstellen.
-export const EASY_BELOW = 1.7;
-export const MEDIUM_BELOW = 3.4;
+// Niveaus van de vragen: 1 (makkelijk) t/m 5 (moeilijk). Zonder gegevens nemen we het midden.
+export const MIN_LEVEL = 1;
+export const MAX_LEVEL = 5;
+export const MIDDLE_LEVEL = 3;
 
 /**
- * Welke moeilijkheid past bij het gemiddelde van de lobby voor één vaardigheid?
- * null = niemand heeft deze vaardigheid ingevuld: dan gemiddeld (2).
+ * Welk niveau past bij het gemiddelde van de lobby voor één vaardigheid?
+ * Afronden op een heel getal, met 1 als minimum: gemiddelde 0 of 0,4 = niveau 1, 2,5 = 3, 4,6 = 5.
+ * null = niemand heeft deze vaardigheid ingevuld: dan het midden (3).
  * @param {number | null} average
- * @returns {1 | 2 | 3}
+ * @returns {1 | 2 | 3 | 4 | 5}
  */
 export function difficultyFor(average) {
-  if (average === null) return 2;
-  if (average < EASY_BELOW) return 1;
-  if (average < MEDIUM_BELOW) return 2;
-  return 3;
+  if (average === null) return MIDDLE_LEVEL;
+  return Math.min(MAX_LEVEL, Math.max(MIN_LEVEL, Math.round(average)));
 }
 
 /**

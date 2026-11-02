@@ -65,7 +65,7 @@ describe('quizzen beheren (story 7)', () => {
 
   it.each([
     ['geen titel', { title: '' }],
-    ['twee goede antwoorden', { questions: [{ text: 'V', options: [{ text: 'a', isCorrect: true }, { text: 'b', isCorrect: true }] }] }],
+    ['alle antwoorden goed', { questions: [{ text: 'V', options: [{ text: 'a', isCorrect: true }, { text: 'b', isCorrect: true }] }] }],
     ['geen goed antwoord', { questions: [{ text: 'V', options: [{ text: 'a' }, { text: 'b' }] }] }],
     ['maar één antwoord', { questions: [{ text: 'V', options: [{ text: 'a', isCorrect: true }] }] }],
     ['klaar zonder vragen', { status: 'READY', questions: [] }],
@@ -92,6 +92,8 @@ describe('hosten met een quizId (story 7)', () => {
     expect(game.questions[0]).toEqual({
       text: 'Hoeveel bits zitten er in een byte?',
       timeLimitSec: 20,
+      skill: null,
+      difficulty: null,
       options: [
         { id: 1, text: '4', isCorrect: false },
         { id: 2, text: '8', isCorrect: true },

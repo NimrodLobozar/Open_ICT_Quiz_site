@@ -8,7 +8,8 @@ export const EVENTS = {
   // Client → server
   GAME_SYNC: "game:sync",
   HOST_START: "host:start", // lobby → vraag 1 (minimaal 2 spelers)
-  HOST_NEXT: "host:next", // één stap verder: leestijd overslaan, tijd stoppen, volgende vraag
+  HOST_NEXT: "host:next", // één stap verder: leestijd overslaan, naar de tussenstand, volgende vraag
+  HOST_PAUSE: "host:pause", // "Tijd stoppen": de klok staat stil, de vraag blijft staan
   HOST_RESTART: "host:restart",
   HOST_KICK_PLAYER: "host:kick-player", // alleen in de lobby: speler verwijderen
   HOST_LOCK: "host:lock", // alleen in de lobby: { locked } = nieuwe spelers weigeren of weer toelaten

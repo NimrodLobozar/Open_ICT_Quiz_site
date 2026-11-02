@@ -1,4 +1,5 @@
 import { useSearchParams } from "react-router-dom";
+import QuestionMeta from "../../components/QuestionMeta.jsx";
 import QuizHeader from "../../components/QuizHeader.jsx";
 import Scoreboard from "../../components/Scoreboard.jsx";
 import {
@@ -18,7 +19,9 @@ import "./PlayerQuestion.css";
  * @param {{ code: string, question: import("../QuestionPage_Host/QuestionPreviewPage.jsx").QuestionShow,
  *   correctOptionId: number, ranking: Array<{ id: number, nickname: string, score: number, rank: number,
  *   isVerified: boolean, pointsGained: number }>,
- *   myResult: { answered: boolean, correct: boolean, pointsGained: number }, myPlayerId: number }} props
+ *   myResult: { answered: boolean, correct: boolean, pointsGained: number }, myPlayerId: number,
+ *   correctOptionIds?: number[], skill?: string | null, difficulty?: number | null }} props
+ *   correctOptionIds: alle goede antwoorden (bij een vraag met meerdere goede); anders alleen correctOptionId.
  *   correctOptionId en ranking komen uit question:end (ranking via getRanking op de server),
  *   myResult uit question:my-result. Hier wordt niets berekend dat niet uit ranking te halen is.
  */
@@ -29,12 +32,16 @@ export function PlayerQuestionResult({
   ranking,
   myResult,
   myPlayerId,
+  correctOptionIds,
+  skill = null,
+  difficulty = null,
 }) {
   // Zelfde functie als het eindscherm: plek, "nog X punten tot de Ye plek".
   const standing = buildPlayerResult(ranking, myPlayerId, question.total);
-  const correctOption = question.options.find(
-    (option) => option.id === correctOptionId,
-  );
+  const correctIds = correctOptionIds ?? [correctOptionId];
+  const correctTexts = question.options
+    .filter((option) => correctIds.includes(option.id))
+    .map((option) => option.text);
   const isLast = question.index + 1 >= question.total;
 
   return (
@@ -43,9 +50,19 @@ export function PlayerQuestionResult({
 
       <main className="page__main player-question__main player-question__main--result">
         <Verdict myResult={myResult} />
-        {correctOption && (
+        {/* De vraag nog eens, zodat je hem samen met het goede antwoord kunt teruglezen. */}
+        <p className="player-question__question-was">{question.text}</p>
+        <QuestionMeta skill={skill} difficulty={difficulty} />
+        {correctTexts.length > 0 && (
           <p className="player-question__answer-was">
-            Het goede antwoord was <strong>{correctOption.text}</strong>.
+            {correctTexts.length === 1 ? "Het goede antwoord was " : "De goede antwoorden waren "}
+            {correctTexts.map((text, i) => (
+              <span key={text}>
+                {i > 0 && (i === correctTexts.length - 1 ? " en " : ", ")}
+                <strong>{text}</strong>
+              </span>
+            ))}
+            .
           </p>
         )}
 

@@ -6,6 +6,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { api } from "../../api/http.js";
+import AccountBadge from "../../components/AccountBadge.jsx";
 import { SkillBars } from "../../components/AccountUi.jsx";
 import LockButton from "../../components/LockButton.jsx";
 import QuestionCountPicker from "../../components/QuestionCountPicker.jsx";
@@ -191,6 +192,16 @@ export default function HostGamePage() {
       setError(response?.message ?? "Geen antwoord van de server.");
   }
 
+  // "Tijd stoppen": de klok staat stil, de vraag blijft staan. Daarna gaat next() naar de tussenstand.
+  async function pauseTime() {
+    setError(null);
+    const response = await emitWithAck(EVENTS.HOST_PAUSE, {
+      questionIndex: game.question?.index,
+    }).catch(() => null);
+    if (!response?.ok && response?.error !== "WRONG_PHASE")
+      setError(response?.message ?? "Geen antwoord van de server.");
+  }
+
   async function restart() {
     setError(null);
     const response = await emitWithAck(EVENTS.HOST_RESTART).catch(() => null);
@@ -270,7 +281,8 @@ export default function HostGamePage() {
           question={game.question}
           answeredCount={game.progress?.answeredCount ?? 0}
           playerCount={game.progress?.playerCount ?? game.lobby.playerCount}
-          onStopTime={next}
+          onStopTime={pauseTime}
+          onNext={next}
         />
       </>
     );
@@ -284,6 +296,10 @@ export default function HostGamePage() {
           code={code}
           question={game.question}
           correctOptionId={game.questionEnd.correctOptionId}
+          correctOptionIds={game.questionEnd.correctOptionIds}
+          correctPlayerCount={game.questionEnd.correctPlayerCount}
+          skill={game.questionEnd.skill}
+          difficulty={game.questionEnd.difficulty}
           answerCounts={game.questionEnd.answerCounts}
           playerCount={game.questionEnd.ranking.length}
           ranking={game.questionEnd.ranking}
@@ -365,6 +381,7 @@ export default function HostGamePage() {
                 onClick={() => kickPlayer(player.id)}
               >
                 <span className="host-game__kick-name">{player.nickname}</span>
+                <AccountBadge show={player.isVerified} />
                 {!player.connected && <span> (offline)</span>}
               </button>
             </li>

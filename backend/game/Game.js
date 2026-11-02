@@ -60,6 +60,10 @@ export class Game {
     // Voor de database: welke ronde dit is (+1 bij herstart) en wanneer de lobby openging.
     this.round = 1;
     this.startedAt = new Date();
+    // Per opgeslagen ronde: het id van de GameSession (een Promise, want opslaan gebeurt op de achtergrond)
+    // en welke spelers erin stonden. Nodig om de score van een gast later aan zijn nieuwe account te koppelen.
+    /** @type {Map<number, { sessionId: Promise<number | null>, playerIds: Set<number> }>} */
+    this.savedRounds = new Map();
   }
 
   /** Nieuwe speler in de lobby. Gooit een GameError als het niet mag. */
@@ -82,12 +86,16 @@ export class Game {
         400,
       );
 
+    // Dubbele namen. Een account mag altijd mee, ook als een gast al dezelfde naam heeft:
+    // de accountnaam is van hem, en het account-icoontje (isVerified) laat zien wie wie is.
+    // Een gast mag geen naam nemen die al in de lobby zit, ook niet die van een account.
     const key = nameKey(nickname);
-    if (
-      [...this.players.values()].some(
-        (player) => nameKey(player.nickname) === key,
-      )
-    ) {
+    const isAccount = userId !== null;
+    const clash = [...this.players.values()].some(
+      (player) =>
+        nameKey(player.nickname) === key && (!isAccount || player.isVerified),
+    );
+    if (clash) {
       throw new GameError(
         "NAME_TAKEN",
         "Deze naam is al bezet. Kies een andere naam.",
@@ -114,6 +122,19 @@ export class Game {
 
   getPlayer(playerId) {
     return this.players.get(playerId) ?? null;
+  }
+
+  /**
+   * Een gast heeft tijdens of na de game een account gemaakt of is ingelogd (zie claimGuestResults).
+   * Vanaf nu hoort deze speler bij dat account, ook in de vastgezette eindstand.
+   */
+  linkAccount(playerId, userId) {
+    const player = this.getPlayer(playerId);
+    if (!player || player.userId !== null) return;
+    player.userId = userId;
+    player.isVerified = true;
+    const row = this.finalRanking?.find((entry) => entry.id === playerId);
+    if (row) row.isVerified = true;
   }
 
   /** Speler vertrekt zelf. Mag altijd, ook op het podium ("Terug naar start"). */
@@ -268,8 +289,27 @@ export class Game {
     this.phase = PHASES.QUESTION_ACTIVE;
   }
 
-  /** Een speler kiest een antwoord. Of het goed was, hoort hij pas als de vraag voorbij is. */
-  submitAnswer(playerId, { questionIndex, optionId }, now = Date.now()) {
+  /**
+   * host:pause, "Tijd stoppen": de klok staat stil, maar de vraag blijft staan.
+   * Zo kan de docent de vraag met de klas bespreken. Daarna gaat host:next naar de tussenstand.
+   * Spelers mogen tijdens de pauze nog antwoorden; hun punten tellen alsof ze op het pauzemoment antwoordden,
+   * zodat wachten op de uitleg van de docent geen extra punten oplevert.
+   */
+  pauseTimer(now = Date.now()) {
+    if (this.phase !== PHASES.QUESTION_ACTIVE)
+      throw new GameError("WRONG_PHASE", "Er loopt nu geen tijd.", 409);
+    if (this.paused)
+      throw new GameError("WRONG_PHASE", "De tijd staat al stil.", 409);
+    this.paused = true;
+    // Nooit later dan het einde van de tijd: dan was de vraag eigenlijk al voorbij.
+    this.pausedAt = Math.min(now, this.endsAt);
+  }
+
+  /**
+   * Een speler kiest een antwoord. Of het goed was, hoort hij pas als de vraag voorbij is.
+   * Gewone vraag: optionId. Vraag met meerdere goede antwoorden: optionIds (alle antwoorden die je aanvinkt).
+   */
+  submitAnswer(playerId, { questionIndex, optionId, optionIds }, now = Date.now()) {
     if (!this.getPlayer(playerId))
       throw new GameError("NO_SESSION", "Je zit niet in deze game.", 403);
     if (
@@ -285,17 +325,16 @@ export class Game {
     // Eén antwoord per vraag: anders kun je alle vier de knoppen proberen.
     if (this.currentAnswers.has(playerId))
       throw new GameError("ALREADY_ANSWERED", "Je hebt al geantwoord.", 409);
-    if (now > this.endsAt + LATE_GRACE_MS)
+    // Staat de tijd stil (pauze), dan is hij ook niet op.
+    if (!this.paused && now > this.endsAt + LATE_GRACE_MS)
       throw new GameError("TOO_LATE", "De tijd is op.", 409);
-    if (
-      !this.currentQuestion.options.some((option) => option.id === optionId)
-    ) {
-      throw new GameError("INVALID_OPTION", "Dit antwoord bestaat niet.", 400);
-    }
+    const chosen = cleanChoice(this.currentQuestion, { optionId, optionIds });
     // De server meet de tijd, niet de client: een client kan liegen over hoe snel hij was.
+    // Tijdens een pauze telt het pauzemoment, niet "nu".
+    const answeredAt = this.paused ? this.pausedAt : now;
     this.currentAnswers.set(playerId, {
-      optionId,
-      responseMs: Math.max(0, now - this.startsAt),
+      optionIds: chosen,
+      responseMs: Math.max(0, answeredAt - this.startsAt),
     });
   }
 
@@ -321,35 +360,47 @@ export class Game {
     if (this.phase !== PHASES.QUESTION_ACTIVE)
       throw new GameError("WRONG_PHASE", "De vraag is al gestopt.", 409);
     const question = this.currentQuestion;
-    const correctOptionId = question.options.find(
-      (option) => option.isCorrect,
-    ).id;
+    const correctOptionIds = question.options
+      .filter((option) => option.isCorrect)
+      .map((option) => option.id);
     const answerCounts = Object.fromEntries(
       question.options.map((option) => [option.id, 0]),
     );
+    let correctPlayerCount = 0;
 
     for (const player of this.players.values()) {
       const answer = this.currentAnswers.get(player.id);
-      if (answer) answerCounts[answer.optionId] += 1;
-      const correct = answer?.optionId === correctOptionId;
+      for (const id of answer?.optionIds ?? []) answerCounts[id] += 1;
+      // Goed = precies de goede antwoorden gekozen. Bij meerdere goede: allemaal, en geen foute erbij.
+      const correct =
+        Boolean(answer) && sameIds(answer.optionIds, correctOptionIds);
+      if (correct) correctPlayerCount += 1;
       const points = calculatePoints({
         correct,
         responseMs: answer?.responseMs ?? 0,
         timeLimitSec: question.timeLimitSec,
+        difficulty: question.difficulty,
       });
       // Geen antwoord telt als fout: 0 punten, maar wel een regel in answers (zo klopt "x van 8 goed").
       this.recordAnswer(player.id, {
         questionIndex: this.questionIndex,
         correct,
         points,
-        optionId: answer?.optionId ?? null,
+        optionIds: answer?.optionIds ?? [],
       });
     }
 
     this.lastQuestionEnd = {
       questionIndex: this.questionIndex,
-      correctOptionId,
+      // correctOptionId (het eerste goede) blijft voor oudere schermen; correctOptionIds is de hele lijst.
+      correctOptionId: correctOptionIds[0],
+      correctOptionIds,
+      correctPlayerCount,
       answerCounts,
+      // Pas ná de vraag: bij welke vaardigheid (beroepsrol) de vraag hoorde en hoe moeilijk hij was.
+      // Tijdens de vraag sturen we dit niet mee (zie getQuestionPayload).
+      skill: question.skill ?? null,
+      difficulty: question.difficulty ?? null,
     };
     this.phase = PHASES.QUESTION_RESULT;
   }
@@ -358,6 +409,8 @@ export class Game {
     this.questionIndex = index;
     this.currentAnswers = new Map();
     this.lastQuestionEnd = null;
+    this.paused = false;
+    this.pausedAt = null;
     this.startsAt = now + this.previewSeconds * 1000;
     this.phase =
       this.previewSeconds > 0
@@ -369,9 +422,12 @@ export class Game {
     this.questionIndex = -1;
     // Moment (ms) waarop je mag gaan antwoorden. Daarvóór is het leestijd.
     this.startsAt = null;
-    /** @type {Map<number, { optionId: number, responseMs: number }>} antwoorden op de huidige vraag */
+    // "Tijd stoppen": paused = de klok staat stil sinds pausedAt (ms).
+    this.paused = false;
+    this.pausedAt = null;
+    /** @type {Map<number, { optionIds: number[], responseMs: number }>} antwoorden op de huidige vraag */
     this.currentAnswers = new Map();
-    /** @type {{ questionIndex: number, correctOptionId: number, answerCounts: Record<number, number> } | null} */
+    /** @type {{ questionIndex: number, correctOptionId: number, correctOptionIds: number[], correctPlayerCount: number, answerCounts: Record<number, number> } | null} */
     this.lastQuestionEnd = null;
   }
 
@@ -389,9 +445,14 @@ export class Game {
       total: this.totalQuestions,
       text: question.text,
       options: question.options.map(({ id, text }) => ({ id, text })),
+      // Meerdere goede antwoorden? Dan vinkt de speler aan en verstuurt hij zelf. Hoeveel er goed zijn, zeggen we niet.
+      multiple: isMultiple(question),
       timeLimitSec: question.timeLimitSec,
       previewSeconds: this.previewSeconds,
       startsAt: this.startsAt,
+      // Tijd gestopt? Dan tonen de schermen een stilstaande klok met zoveel ms over.
+      paused: this.paused,
+      pausedMsLeft: this.paused ? Math.max(0, this.endsAt - this.pausedAt) : null,
       serverTime: now,
     };
   }
@@ -425,16 +486,24 @@ export class Game {
     if (!answer) return null;
     return {
       questionIndex: answer.questionIndex,
-      answered: answer.optionId != null,
-      optionId: answer.optionId,
+      answered: answer.optionIds.length > 0,
+      optionId: answer.optionIds[0] ?? null,
+      optionIds: answer.optionIds,
       correct: answer.correct,
       pointsGained: answer.points,
     };
   }
 
-  /** Wat deze speler bij de huidige vraag al koos (na verversen blijft je keuze zo zichtbaar). */
+  /**
+   * Wat deze speler bij de huidige vraag al koos (na verversen blijft je keuze zo zichtbaar).
+   * Gewone vraag: één optionId. Vraag met meerdere goede antwoorden: de lijst optionIds.
+   */
   getMyAnswer(playerId) {
-    return this.currentAnswers.get(playerId)?.optionId ?? null;
+    const answer = this.currentAnswers.get(playerId);
+    if (!answer) return null;
+    return isMultiple(this.currentQuestion)
+      ? answer.optionIds
+      : answer.optionIds[0];
   }
 
   #answerTo(playerId, questionIndex) {
@@ -446,10 +515,10 @@ export class Game {
   }
 
   /** Antwoord op één vraag verwerken. De punten zijn al door de server berekend. */
-  recordAnswer(playerId, { questionIndex, correct, points, optionId = null }) {
+  recordAnswer(playerId, { questionIndex, correct, points, optionIds = [] }) {
     const player = this.getPlayer(playerId);
     if (!player) return;
-    player.answers.push({ questionIndex, correct, points, optionId });
+    player.answers.push({ questionIndex, correct, points, optionIds });
     player.score += points;
     if (correct) player.correctCount += 1;
   }
@@ -557,6 +626,33 @@ export class Game {
   }
 }
 
+/** Heeft deze vraag meer dan één goed antwoord? */
+function isMultiple(question) {
+  return question.options.filter((option) => option.isCorrect).length > 1;
+}
+
+/** Zelfde getallen, volgorde maakt niet uit. */
+function sameIds(a, b) {
+  return a.length === b.length && a.every((id) => b.includes(id));
+}
+
+/**
+ * Controleert de keuze van een speler en geeft een gesorteerde lijst optionIds terug.
+ * Nooit blind geloven wat de browser stuurt: bestaande antwoorden, geen dubbele, en bij een gewone vraag precies één.
+ */
+function cleanChoice(question, { optionId, optionIds }) {
+  const ids = Array.isArray(optionIds) ? optionIds : [optionId];
+  const valid =
+    ids.length > 0 &&
+    new Set(ids).size === ids.length &&
+    ids.every((id) => question.options.some((option) => option.id === id));
+  if (!valid)
+    throw new GameError("INVALID_OPTION", "Dit antwoord bestaat niet.", 400);
+  if (!isMultiple(question) && ids.length !== 1)
+    throw new GameError("INVALID_OPTION", "Kies één antwoord.", 400);
+  return [...ids].sort((a, b) => a - b);
+}
+
 // De client stuurt { "Frontend": 3, ... } mee bij het joinen. Nooit blind opslaan wat een
 // browser stuurt: alleen een paar korte namen met een getal van 0 t/m 5 (het bereik van de slider).
 function cleanSkills(skills) {
@@ -574,13 +670,14 @@ function cleanSkills(skills) {
 }
 
 /**
- * @typedef {{ text: string, timeLimitSec: number,
+ * @typedef {{ text: string, timeLimitSec: number, skill?: string | null, difficulty?: number | null,
  *   options: Array<{ id: number, text: string, isCorrect: boolean }> }} Question
+ *   Meer dan één isCorrect = een vraag waarbij de speler alle goede antwoorden kiest.
  */
 
 /**
  * @typedef {{ id: number, nickname: string, score: number, correctCount: number,
- *   answers: Array<{ questionIndex: number, correct: boolean, points: number, optionId: number | null }>,
+ *   answers: Array<{ questionIndex: number, correct: boolean, points: number, optionIds: number[] }>,
  *   connected: boolean, userId: number | null, isVerified: boolean, isBot: boolean,
  *   skills: Record<string, number> }} Player
  */

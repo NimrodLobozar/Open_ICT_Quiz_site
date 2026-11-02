@@ -118,13 +118,14 @@ export default function PlayerGamePage() {
 
   // Antwoord kiezen. We tonen je keuze meteen (anders voelt het traag op slechte wifi),
   // en draaien dat terug als de server het weigert.
-  async function answer(optionId) {
+  // choice = één optionId, of een lijst bij een vraag met meerdere goede antwoorden.
+  async function answer(choice) {
     const questionIndex = game.question.index;
     setAnswerError(null);
-    setGame((current) => current && { ...current, myAnswer: optionId });
+    setGame((current) => current && { ...current, myAnswer: choice });
     const response = await emitWithAck(EVENTS.PLAYER_ANSWER, {
       questionIndex,
-      optionId,
+      ...(Array.isArray(choice) ? { optionIds: choice } : { optionId: choice }),
     }).catch(() => null);
     if (response?.ok || response?.error === "ALREADY_ANSWERED") return;
     // Alleen terugdraaien als we nog bij dezelfde vraag zijn.
@@ -200,7 +201,7 @@ function PhaseScreen({
         question={game.question}
         nickname={game.me?.nickname}
         score={game.me?.score ?? 0}
-        chosenOptionId={game.myAnswer}
+        chosenAnswer={game.myAnswer}
         onAnswer={onAnswer}
         error={answerError}
       />
@@ -217,6 +218,9 @@ function PhaseScreen({
         code={code}
         question={game.question}
         correctOptionId={game.questionEnd.correctOptionId}
+        correctOptionIds={game.questionEnd.correctOptionIds}
+        skill={game.questionEnd.skill}
+        difficulty={game.questionEnd.difficulty}
         ranking={game.questionEnd.ranking}
         myResult={game.myQuestionResult}
         myPlayerId={game.me?.playerId}

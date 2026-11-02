@@ -25,9 +25,10 @@ import "./PlayerQuestion.css";
  * Speler, fases QUESTION_PREVIEW en QUESTION_ACTIVE: de vraag met vier antwoordknoppen.
  * De vraagtekst staat er ook, zodat je niet per se naar het bord hoeft te kijken (projectplan 3.2).
  * @param {{ code: string, question: import("../QuestionPage_Host/QuestionPreviewPage.jsx").QuestionShow,
- *   nickname: string, score: number, chosenOptionId: number | null, onAnswer: (optionId: number) => void,
- *   error?: string | null }} props
- *   question = de payload van question:show. chosenOptionId = wat je al gekozen hebt (null = nog niets).
+ *   nickname: string, score: number, chosenAnswer: number | number[] | null,
+ *   onAnswer: (choice: number | number[]) => void, error?: string | null }} props
+ *   question = de payload van question:show. chosenAnswer = wat je al verstuurd hebt (null = nog niets):
+ *   één optionId, of een lijst bij een vraag met meerdere goede antwoorden (question.multiple).
  *   onAnswer stuurt player:answer. Of het goed was, hoor je pas bij de uitslag.
  *   error = melding als je antwoord niet aankwam (bijv. te laat).
  */
@@ -36,17 +37,32 @@ export function PlayerQuestion({
   question,
   nickname,
   score,
-  chosenOptionId,
+  chosenAnswer,
   onAnswer,
   error = null,
 }) {
   const limitMs = question.timeLimitSec * 1000;
+  const paused = Boolean(question.paused);
   // Eerst leestijd (tot startsAt), daarna loopt de tijd voor het antwoorden.
   const previewMsLeft = useCountdown(question.startsAt);
-  const msLeft = useCountdown(question.startsAt + limitMs);
-  const reading = previewMsLeft > 0;
-  const timeUp = msLeft === 0;
-  const answered = chosenOptionId != null;
+  // Heeft de host de tijd gestopt, dan staat de klok stil op wat er nog over was.
+  const countdown = useCountdown(paused ? null : question.startsAt + limitMs);
+  const msLeft = paused ? question.pausedMsLeft : countdown;
+  const reading = !paused && previewMsLeft > 0;
+  const timeUp = !paused && msLeft === 0;
+  const answered = chosenAnswer != null;
+  const multiple = Boolean(question.multiple);
+  // Meerdere goede antwoorden: eerst aanvinken (alleen op dit scherm), dan zelf versturen.
+  const [ticked, setTicked] = useState([]);
+  const sentIds = answered ? [chosenAnswer].flat() : [];
+  const isChosen = (id) => (answered ? sentIds.includes(id) : ticked.includes(id));
+
+  function choose(id) {
+    if (!multiple) return onAnswer(id);
+    setTicked((current) =>
+      current.includes(id) ? current.filter((x) => x !== id) : [...current, id],
+    );
+  }
 
   return (
     <div className="page player-question">
@@ -61,6 +77,12 @@ export function PlayerQuestion({
 
         <h1 className="player-question__text">{question.text}</h1>
 
+        {multiple && !reading && (
+          <p className="player-question__multiple" role="note">
+            Meerdere antwoorden zijn goed. Kies ze allemaal en druk op Versturen.
+          </p>
+        )}
+
         {reading ? (
           <p className="player-question__reading" role="status">
             Lees de vraag. De antwoorden komen over{" "}
@@ -69,7 +91,7 @@ export function PlayerQuestion({
         ) : (
           <div className="player-question__options">
             {question.options.map((option, i) => {
-              const chosen = option.id === chosenOptionId;
+              const chosen = isChosen(option.id);
               return (
                 <button
                   key={option.id}
@@ -81,7 +103,7 @@ export function PlayerQuestion({
                   disabled={answered || timeUp}
                   aria-pressed={chosen}
                   aria-label={`Antwoord ${getAnswerStyle(i).name}: ${option.text}`}
-                  onClick={() => onAnswer(option.id)}
+                  onClick={() => choose(option.id)}
                 >
                   <AnswerShape index={i} />
                   <span>{option.text}</span>
@@ -91,14 +113,29 @@ export function PlayerQuestion({
           </div>
         )}
 
+        {multiple && !reading && !answered && (
+          <button
+            type="button"
+            className="player-question__send"
+            disabled={ticked.length === 0 || timeUp}
+            onClick={() => onAnswer(ticked)}
+          >
+            Versturen{ticked.length > 0 ? ` (${ticked.length})` : ""}
+          </button>
+        )}
+
         {/* role="status": een schermlezer leest dit voor zodra het verschijnt. */}
         <p className="player-question__feedback" role="status">
           {error ??
             (answered
-              ? "Antwoord verstuurd! Wachten op de anderen…"
-              : timeUp && !reading
-                ? "De tijd is op."
-                : "")}
+              ? paused
+                ? "Antwoord verstuurd! De host bespreekt de vraag…"
+                : "Antwoord verstuurd! Wachten op de anderen…"
+              : paused
+                ? "De tijd is gestopt. Je kunt nog antwoorden."
+                : timeUp && !reading
+                  ? "De tijd is op."
+                  : "")}
         </p>
 
         <div className="player-question__footer">
@@ -163,7 +200,7 @@ export default function PlayerQuestionPage() {
       question={question}
       nickname={me.nickname}
       score={getDemoScoreBefore(DEMO_PLAYER_ID, index)}
-      chosenOptionId={myAnswer?.optionId ?? null}
+      chosenAnswer={myAnswer?.optionId ?? null}
       onAnswer={answer}
     />
   );

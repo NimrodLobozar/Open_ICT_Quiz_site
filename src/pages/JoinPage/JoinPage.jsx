@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../api/http.js'
 import { useAuth } from '../../auth/AuthContext.jsx'
 import QuizHeader from '../../components/QuizHeader.jsx'
+import { joinStartSkills } from '../../utils/skills.js'
 import { LoginForm as AccountLoginForm } from '../Auth/AuthPage.jsx'
 import './JoinPage.css'
 
@@ -233,10 +234,16 @@ function NicknameStep({ code, locked, quizTitle }) {
   const { user } = useAuth()
   const [error, setError] = useState(null)
   const [sending, setSending] = useState(false)
-  const [skillValues, setSkillValues] = useState(
-    // Met een account beginnen de sliders bij je opgeslagen vaardigheden.
-    () => Object.fromEntries(skillDefinitions.map(({ label }) => [label, user?.skills?.[label] ?? 5])),
-  )
+  // Met een account beginnen de sliders bij je opgeslagen vaardigheden.
+  const [skillValues, setSkillValues] = useState(() => joinStartSkills(user))
+
+  // Het account komt soms pas binnen ná de eerste render (useAuth vraagt /auth/me op).
+  // Dan de sliders alsnog op je accountwaarden zetten, anders bleven ze op de gast-waarde staan.
+  const userId = user?.id
+  useEffect(() => {
+    if (userId) setSkillValues(joinStartSkills(user))
+    // Alleen opnieuw als er een ánder account inlogt, niet bij elke render (dan zou schuiven niet werken).
+  }, [userId])
 
   // Rejoin: heeft deze browser al een speler-cookie voor deze game, dan meteen door naar het spel.
   useEffect(() => {

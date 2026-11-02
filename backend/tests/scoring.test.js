@@ -12,6 +12,16 @@ describe('calculatePoints', () => {
     expect(calculatePoints({ correct: false, responseMs: 0, timeLimitSec: 20 })).toBe(0)
   })
 
+  it('geeft meer punten bij een hoger niveau: ×1 bij niveau 1 tot ×2 bij niveau 5', () => {
+    const direct = (difficulty) => calculatePoints({ correct: true, responseMs: 0, timeLimitSec: 20, difficulty })
+    expect(direct(1)).toBe(1000)
+    expect(direct(3)).toBe(1500)
+    expect(direct(5)).toBe(2000)
+    expect(direct(null)).toBe(1000) // geen niveau (oude quiz): gewone punten
+    expect(direct(9)).toBe(1000) // onzin telt als geen niveau
+    expect(calculatePoints({ correct: false, responseMs: 0, timeLimitSec: 20, difficulty: 5 })).toBe(0)
+  })
+
   it('blijft tussen 500 en 1000, ook bij rare tijden', () => {
     expect(calculatePoints({ correct: true, responseMs: -500, timeLimitSec: 20 })).toBe(1000)
     expect(calculatePoints({ correct: true, responseMs: 25_000, timeLimitSec: 20 })).toBe(500)

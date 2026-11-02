@@ -1,4 +1,6 @@
 import { ApiError } from '../utils/ApiError.js'
+import { DIFFICULTY_LEVELS } from '../../src/utils/scoring.js'
+import { SKILL_CODES } from '../../src/utils/skills.js'
 
 // Regels voor quizzen (story 7 en 8). Zonder database, zodat ze makkelijk te testen zijn.
 
@@ -120,10 +122,19 @@ function parseQuestion(raw, number) {
     }
     return { text: optionText, isCorrect: option.isCorrect === true }
   })
-  if (cleanOptions.filter((option) => option.isCorrect).length !== 1) {
-    fail(`Vraag ${number}: kies precies één goed antwoord.`)
+  // Meer dan één goed antwoord mag: dan kiest de speler alle goede antwoorden (en krijgt alleen punten als ze allemaal kloppen).
+  // Alle antwoorden goed mag niet: dan valt er niets te kiezen.
+  const correctCount = cleanOptions.filter((option) => option.isCorrect).length
+  if (correctCount === 0) fail(`Vraag ${number}: kies minstens één goed antwoord.`)
+  if (correctCount === cleanOptions.length) fail(`Vraag ${number}: er moet minstens één fout antwoord zijn.`)
+  // Vaardigheid en niveau zijn optioneel: leeg (null) = niet getoond, en gewone punten.
+  const skill = question.skill ?? null
+  if (skill !== null && !SKILL_CODES.includes(skill)) fail(`Vraag ${number}: kies een geldige vaardigheid.`)
+  const difficulty = question.difficulty ?? null
+  if (difficulty !== null && !DIFFICULTY_LEVELS.includes(difficulty)) {
+    fail(`Vraag ${number}: het niveau moet 1 t/m 5 zijn.`)
   }
-  return { text, timeLimitSec, options: cleanOptions }
+  return { text, timeLimitSec, skill, difficulty, options: cleanOptions }
 }
 
 function fail(message) {

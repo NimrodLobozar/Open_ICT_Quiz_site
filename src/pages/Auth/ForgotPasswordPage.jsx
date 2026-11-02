@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../../api/http.js'
 import { Notice, TextField } from '../../components/AccountUi.jsx'
+import { HU_EMAIL_MESSAGE, isResetEmailAllowed } from '../../utils/schoolEmail.js'
 import PageRings from '../../components/PageRings.jsx'
 import QuizHeader from '../../components/QuizHeader.jsx'
+import { ResendButton } from './ResendVerification.jsx'
 import './AuthPage.css'
 
 /**
@@ -16,6 +18,8 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState(null)
   const [busy, setBusy] = useState(false)
 
+  const sendLink = () => api('/auth/forgot', { method: 'POST', body: { email } })
+
   async function submit(event) {
     event.preventDefault()
     setError(null)
@@ -23,9 +27,14 @@ export default function ForgotPasswordPage() {
       setError('Vul een geldig e-mailadres in.')
       return
     }
+    // Zelfde regel als de server (gedeeld bestand): alleen je HU-adres.
+    if (!isResetEmailAllowed(email)) {
+      setError(HU_EMAIL_MESSAGE)
+      return
+    }
     setBusy(true)
     try {
-      await api('/auth/forgot', { method: 'POST', body: { email } })
+      await sendLink()
       setSent(true)
     } catch (apiError) {
       setError(apiError.message)
@@ -47,8 +56,11 @@ export default function ForgotPasswordPage() {
                 Als er een account bij dit e-mailadres hoort, krijg je binnen een paar minuten een mail met een link.
               </Notice>
               <p className="auth-page__switch">
-                De link werkt één keer en is een uur geldig. Niets ontvangen? Kijk ook in je spam.
+                De link is een uur geldig. Vraag je een nieuwe aan, dan werkt de vorige ook nog; zodra je er één
+                gebruikt, vervallen de andere. Niets ontvangen? Kijk ook in je spam.
               </p>
+              {/* Meteen wachten: de eerste mail is net verstuurd. */}
+              <ResendButton send={sendLink} startWaiting />
               <Link to="/inloggen" className="ui-btn ui-btn--block">
                 Terug naar inloggen
               </Link>
@@ -59,7 +71,7 @@ export default function ForgotPasswordPage() {
                 <p className="auth-page__welcome">Geen probleem.</p>
                 <h1 className="ui-title">WACHTWOORD VERGETEN</h1>
               </div>
-              <p className="auth-page__welcome">Vul je e-mailadres in. Je krijgt een link om een nieuw wachtwoord te kiezen.</p>
+              <p className="auth-page__welcome">Vul je HU-mailadres in. Je krijgt een link om een nieuw wachtwoord te kiezen.</p>
               <TextField label="E-mailadres" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
               <Notice>{error}</Notice>
               <button type="submit" className="ui-btn ui-btn--primary ui-btn--block" disabled={busy}>

@@ -9,6 +9,7 @@ import { sendLobbyUpdate } from "../socket/broadcast.js";
 import { afterAnswer } from "../socket/gameLoop.js";
 import { assertCanHost } from "../quiz/quizRules.js";
 import { playerRoom } from "../socket/rooms.js";
+import { cleanAccountSkills, SKILL_CODES } from "../../src/utils/skills.js";
 import {
   clearSessionCookie,
   HOST_COOKIE,
@@ -23,6 +24,13 @@ const router = Router();
 
 // De Socket.IO-server, zodat routes ook live-berichten kunnen sturen (zet index.js met app.set('io', io)).
 const getIo = (request) => request.app.get("io");
+
+// { SD: 3 } → { SD: 3, AI: 0, ... }: wat je nog niet invulde op je account telt als 0.
+function withZeros(skills) {
+  return Object.fromEntries(
+    SKILL_CODES.map((code) => [code, skills[code] ?? 0]),
+  );
+}
 
 function findGame(code) {
   const game = gameManager.getGame(code);
@@ -106,10 +114,14 @@ router.post("/:code/players", (request, response) => {
   // Ingelogd? Dan speel je onder je accountnaam en komt de uitslag op "Mijn account" (story 4).
   // De naam komt dan uit de database, niet uit het formulier: zo kun je niet onder een andere accountnaam spelen.
   const account = request.user;
+  // Stuurt een ingelogde speler geen vaardigheden mee, dan die van zijn account (een nieuw account: alles 0).
+  const skills =
+    request.body?.skills ??
+    (account ? withZeros(cleanAccountSkills(account.skills)) : undefined);
   const player = game.addPlayer(
     account ? account.username : request.body?.nickname,
     {
-      skills: request.body?.skills,
+      skills,
       userId: account?.id ?? null,
     },
   );

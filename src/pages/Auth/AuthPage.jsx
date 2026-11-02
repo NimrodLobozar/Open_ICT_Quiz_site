@@ -138,6 +138,8 @@ function RegisterForm() {
   const [busy, setBusy] = useState(false)
   // Na het registreren: het adres waar de bevestigingsmail heen ging (story 14).
   const [sentTo, setSentTo] = useState(null)
+  // Speelde je net als gast? Dan staat die score nu ook op je nieuwe account.
+  const [claimed, setClaimed] = useState(0)
   const set = (name) => (event) => {
     const value = event.target.type === 'checkbox' ? event.target.checked : event.target.value
     setFields((current) => ({ ...current, [name]: value }))
@@ -164,6 +166,7 @@ function RegisterForm() {
     try {
       const user = await register(fields)
       // Story 14: nog niet ingelogd. Eerst de link in de mail, dan inloggen.
+      setClaimed(user.claimedResults)
       setSentTo(user.email)
     } catch (apiError) {
       setErrors({ [FIELD_FOR_ERROR[apiError.code] ?? 'general']: apiError.message })
@@ -178,11 +181,14 @@ function RegisterForm() {
         <Notice type="success">
           Je account is gemaakt. We hebben een mail gestuurd naar <strong>{sentTo}</strong>.
         </Notice>
+        {claimed > 0 && (
+          <Notice type="success">Je score van de quiz die je net als gast speelde, staat nu op je account.</Notice>
+        )}
         <p className="auth-page__switch">
           Klik op de link in de mail om je e-mailadres te bevestigen (24 uur geldig). Daarna kun je inloggen. Niets ontvangen?
           Kijk ook in je spam.
         </p>
-        <ResendVerification email={sentTo} />
+        <ResendVerification email={sentTo} startWaiting />
         <Link to="/inloggen" className="ui-btn ui-btn--primary ui-btn--block">
           Naar inloggen
         </Link>

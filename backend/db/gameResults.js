@@ -7,7 +7,16 @@ import { prisma } from './prisma.js'
 export async function saveGameResults(game) {
   const record = game.toSessionRecord()
   if (!record) return null
+  const saving = insertSession(record)
+  // Onthouden welke ronde in welke GameSession staat (zie claimGuestResults).
+  game.savedRounds.set(game.round, {
+    sessionId: saving.then((session) => session.id).catch(() => null),
+    playerIds: new Set(game.finalRanking.map((row) => row.id)),
+  })
+  return saving
+}
 
+async function insertSession(record) {
   const { results, ...session } = record
   // Heeft een speler tijdens de ronde zijn account verwijderd, dan bestaat zijn userId niet meer.
   // Zonder deze check zou de hele eindstand niet opgeslagen worden (foreign key), voor iedereen.
@@ -22,6 +31,35 @@ export async function saveGameResults(game) {
   return prisma.gameSession.create({
     data: { ...session, results: { create: rows } },
   })
+}
+
+/**
+ * Bug "account maken en score bewaren": een gast speelt, maakt daarna een account (of logt in),
+ * en dan moet de score van die quiz op zijn account komen.
+ * Hoe weten we dat het dezelfde persoon is? Zijn browser heeft nog de speler-cookie van deze game.
+ * Alleen die browser kan dus deze score claimen, en maar één keer (userId moet nog leeg zijn).
+ * @returns {Promise<number>} hoeveel uitslagen (rondes) er gekoppeld zijn
+ */
+export async function claimGuestResults(game, playerId, userId) {
+  const player = game.getPlayer(playerId)
+  // Speelde hij al met een account, dan staat de score al goed.
+  if (!player || player.userId !== null || player.isBot) return 0
+  let claimed = 0
+  for (const { sessionId, playerIds } of game.savedRounds.values()) {
+    if (!playerIds.has(playerId)) continue
+    const id = await sessionId
+    if (!id) continue
+    // Gastnamen zijn uniek binnen een ronde (Game.addPlayer), dus naam + "nog geen account" wijst één rij aan.
+    const { count } = await prisma.gameResult.updateMany({
+      where: { sessionId: id, nickname: player.nickname, userId: null, isBot: false },
+      data: { userId },
+    })
+    claimed += count
+  }
+  // Vanaf nu speelt hij in deze game met zijn account: een volgende ronde komt dan vanzelf op zijn account,
+  // en het eindscherm noemt hem geen gast meer (ook na verversen, via game:sync).
+  game.linkAccount(playerId, userId)
+  return claimed
 }
 
 /**

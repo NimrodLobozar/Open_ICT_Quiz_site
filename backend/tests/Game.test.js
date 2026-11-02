@@ -19,6 +19,28 @@ describe("Game", () => {
     );
   });
 
+  it("laat een account meedoen als een gast al dezelfde naam heeft (met account-icoontje)", () => {
+    const guest = game.addPlayer("John");
+    const account = game.addPlayer("john", { userId: 7 });
+    expect(guest.isVerified).toBe(false);
+    expect(account.isVerified).toBe(true);
+    expect(game.getLobbyPlayers()).toHaveLength(2);
+  });
+
+  it("weigert een gast met de naam van een account dat al in de lobby zit", () => {
+    game.addPlayer("John", { userId: 7 });
+    expect(() => game.addPlayer("JOHN")).toThrow(
+      expect.objectContaining({ code: "NAME_TAKEN" }),
+    );
+  });
+
+  it("laat hetzelfde account niet twee keer meedoen", () => {
+    game.addPlayer("John", { userId: 7 });
+    expect(() => game.addPlayer("John", { userId: 7 })).toThrow(
+      expect.objectContaining({ code: "NAME_TAKEN" }),
+    );
+  });
+
   it("weigert te korte, te lange en rare namen", () => {
     expect(() => game.addPlayer("A")).toThrow(
       expect.objectContaining({ code: "NAME_INVALID" }),
@@ -360,5 +382,156 @@ describe("Game: willekeurige quiz", () => {
     expect(() => normal.setQuestionCount(5)).toThrow(
       expect.objectContaining({ code: "NOT_RANDOM_QUIZ" }),
     );
+  });
+});
+
+describe("Game: meerdere goede antwoorden en niveaus", () => {
+  const T0 = 1_000_000;
+  // Vraag met twee goede antwoorden (1 en 3), niveau 5, vaardigheid AI.
+  const MULTI = {
+    text: "Welke zijn programmeertalen?",
+    timeLimitSec: 20,
+    skill: "AI",
+    difficulty: 5,
+    options: [
+      { id: 1, text: "Python", isCorrect: true },
+      { id: 2, text: "HTML", isCorrect: false },
+      { id: 3, text: "Java", isCorrect: true },
+      { id: 4, text: "CSS", isCorrect: false },
+    ],
+  };
+  let game, emma, sam, lisa;
+
+  beforeEach(() => {
+    game = new Game("777777", { questions: [MULTI], previewSeconds: 0 });
+    emma = game.addPlayer("Emma");
+    sam = game.addPlayer("Sam");
+    lisa = game.addPlayer("Lisa");
+    game.start(T0);
+  });
+
+  it("vertelt spelers dat er meerdere goede antwoorden zijn, maar niet welke of hoeveel", () => {
+    const payload = game.getQuestionPayload(T0);
+    expect(payload.multiple).toBe(true);
+    expect(JSON.stringify(payload)).not.toMatch(/isCorrect/);
+  });
+
+  it("geeft alleen punten als je precies alle goede antwoorden kiest", () => {
+    game.submitAnswer(emma.id, { questionIndex: 0, optionIds: [3, 1] }, T0); // allebei goed
+    game.submitAnswer(sam.id, { questionIndex: 0, optionIds: [1] }, T0); // één vergeten
+    game.submitAnswer(lisa.id, { questionIndex: 0, optionIds: [1, 2, 3] }, T0); // een foute erbij
+    game.endQuestion();
+
+    expect(game.getPlayer(emma.id).score).toBeGreaterThan(0);
+    expect(game.getPlayer(sam.id).score).toBe(0);
+    expect(game.getPlayer(lisa.id).score).toBe(0);
+    expect(game.getQuestionEndPayload()).toMatchObject({
+      correctOptionIds: [1, 3],
+      correctPlayerCount: 1,
+      answerCounts: { 1: 3, 2: 1, 3: 2, 4: 0 },
+    });
+    expect(game.getMyQuestionResult(emma.id)).toMatchObject({
+      correct: true,
+      optionIds: [1, 3],
+    });
+  });
+
+  it("geeft meer punten voor een moeilijke vraag (niveau 5 = dubbel)", () => {
+    game.submitAnswer(emma.id, { questionIndex: 0, optionIds: [1, 3] }, T0);
+    game.endQuestion();
+    expect(game.getPlayer(emma.id).score).toBe(2000);
+  });
+
+  it("laat vaardigheid en niveau pas na de vraag zien", () => {
+    expect(game.getQuestionPayload(T0)).not.toHaveProperty("skill");
+    game.endQuestion();
+    expect(game.getQuestionEndPayload()).toMatchObject({
+      skill: "AI",
+      difficulty: 5,
+    });
+  });
+
+  it("weigert dubbele, onbekende of lege keuzes", () => {
+    for (const optionIds of [[1, 1], [9], []]) {
+      expect(() =>
+        game.submitAnswer(emma.id, { questionIndex: 0, optionIds }, T0),
+      ).toThrow(expect.objectContaining({ code: "INVALID_OPTION" }));
+    }
+  });
+
+  it("weigert meerdere antwoorden bij een gewone vraag", () => {
+    const single = new Game("888888", {
+      questions: QUIZ_QUESTIONS.slice(0, 1),
+      previewSeconds: 0,
+    });
+    const a = single.addPlayer("Anna");
+    single.addPlayer("Bram");
+    single.start(T0);
+    expect(single.getQuestionPayload(T0).multiple).toBe(false);
+    expect(() =>
+      single.submitAnswer(a.id, { questionIndex: 0, optionIds: [1, 2] }, T0),
+    ).toThrow(expect.objectContaining({ code: "INVALID_OPTION" }));
+  });
+
+  it("onthoudt na verversen welke antwoorden je aanvinkte", () => {
+    game.submitAnswer(emma.id, { questionIndex: 0, optionIds: [3, 1] }, T0);
+    expect(game.getMyAnswer(emma.id)).toEqual([1, 3]);
+  });
+});
+
+describe("Game: tijd stoppen (pauze)", () => {
+  const T0 = 1_000_000;
+  let game, emma;
+
+  beforeEach(() => {
+    game = new Game("999999", {
+      questions: QUIZ_QUESTIONS.slice(0, 2),
+      previewSeconds: 0,
+    });
+    emma = game.addPlayer("Emma");
+    game.addPlayer("Sam"); // minimaal 2 spelers om te starten
+    game.start(T0);
+  });
+
+  it("houdt de vraag op het scherm in plaats van naar de tussenstand te gaan", () => {
+    game.pauseTimer(T0 + 5000);
+    expect(game.phase).toBe(PHASES.QUESTION_ACTIVE);
+    const payload = game.getQuestionPayload(T0 + 9000);
+    expect(payload.paused).toBe(true);
+    expect(payload.pausedMsLeft).toBe(15000); // 20 s - 5 s, ook als er later om gevraagd wordt
+  });
+
+  it("laat spelers nog antwoorden na de tijd, met de punten van het pauzemoment", () => {
+    game.pauseTimer(T0 + 10000);
+    // Ver na het einde van de tijd: met pauze geen TOO_LATE.
+    game.submitAnswer(emma.id, { questionIndex: 0, optionId: 1 }, T0 + 60000);
+    game.endQuestion();
+    // Geantwoord "op 10 van 20 seconden": 750 punten, niet 500.
+    expect(game.getPlayer(emma.id).score).toBe(750);
+  });
+
+  it("gaat pas met host:next naar de tussenstand", () => {
+    game.pauseTimer(T0);
+    game.next(T0 + 1000);
+    expect(game.phase).toBe(PHASES.QUESTION_RESULT);
+  });
+
+  it("kan alleen tijdens een lopende vraag, en maar één keer", () => {
+    game.pauseTimer(T0);
+    expect(() => game.pauseTimer(T0)).toThrow(
+      expect.objectContaining({ code: "WRONG_PHASE" }),
+    );
+    game.endQuestion();
+    expect(() => game.pauseTimer(T0)).toThrow(
+      expect.objectContaining({ code: "WRONG_PHASE" }),
+    );
+  });
+
+  it("de volgende vraag begint weer met een lopende klok", () => {
+    game.pauseTimer(T0);
+    game.next(T0); // tussenstand
+    game.next(T0); // vraag 2
+    expect(game.paused).toBe(false);
+    expect(game.getQuestionPayload(T0).paused).toBe(false);
   });
 });

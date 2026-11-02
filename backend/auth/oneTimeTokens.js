@@ -16,15 +16,21 @@ const LIFETIME_MS = {
 /** Met deze links kies je een wachtwoord. */
 export const PASSWORD_PURPOSES = ['RESET', 'INVITE']
 
-/** Maakt een nieuwe link. Oude, ongebruikte links van hetzelfde soort werken daarna niet meer. */
+/**
+ * Maakt een nieuwe link.
+ * - RESET en VERIFY (de gebruiker vraagt zelf een nieuwe mail): eerdere links blijven werken tot ze verlopen.
+ *   Een mail komt soms pas na een minuut binnen. Vroeg je intussen een nieuwe aan en klik je dan op de
+ *   eerste mail, dan moet die gewoon werken. Zodra één link gebruikt is, vervallen de andere (zie markUsed).
+ * - INVITE (de beheerder stuurt een uitnodiging opnieuw, bijv. naar een verbeterd adres): alleen de nieuwste werkt.
+ */
 export async function createOneTimeToken(userId, purpose) {
   const token = newToken()
   const created = await prisma.oneTimeToken.create({
     data: { tokenHash: hashToken(token), userId, purpose, expiresAt: new Date(Date.now() + LIFETIME_MS[purpose]) },
   })
-  // Pas daarna de oudere links weghalen, op id. Komen twee aanvragen tegelijk binnen,
-  // dan blijft zo altijd precies de nieuwste over (eerst wissen en dan maken liet er soms twee staan).
-  await prisma.oneTimeToken.deleteMany({ where: { userId, purpose, usedAt: null, id: { lt: created.id } } })
+  // Pas ná het maken opruimen, op id: komen twee aanvragen tegelijk binnen, dan blijft de nieuwste altijd staan.
+  const old = purpose === 'INVITE' ? {} : { expiresAt: { lte: new Date() } }
+  await prisma.oneTimeToken.deleteMany({ where: { userId, purpose, usedAt: null, id: { lt: created.id }, ...old } })
   return token
 }
 
@@ -43,14 +49,22 @@ export async function findUsableToken(token, purposes) {
   return record && purposes.includes(record.purpose) && isTokenUsable(record) ? record : null
 }
 
-/** Markeert de link als gebruikt. false als een ander verzoek hem net eerder gebruikte. */
-async function markUsed(tx, record) {
+/**
+ * Markeert de link als gebruikt. false als een ander verzoek hem net eerder gebruikte.
+ * De andere, nog ongebruikte links met hetzelfde doel vervallen dan: je hebt er maar één nodig.
+ * @param {string[]} purposes de doelen die samen één soort link zijn (bijv. RESET en INVITE)
+ */
+async function markUsed(tx, record, purposes) {
   // "usedAt: null" in de where: klikt iemand twee keer tegelijk, dan lukt het maar één keer.
   const { count } = await tx.oneTimeToken.updateMany({
     where: { id: record.id, usedAt: null },
     data: { usedAt: new Date() },
   })
-  return count > 0
+  if (count === 0) return false
+  await tx.oneTimeToken.deleteMany({
+    where: { userId: record.userId, purpose: { in: purposes }, usedAt: null, id: { not: record.id } },
+  })
+  return true
 }
 
 /**
@@ -63,7 +77,7 @@ export async function usePasswordToken(token, newPassword) {
 
   const passwordHash = await hashPassword(newPassword)
   return prisma.$transaction(async (tx) => {
-    if (!(await markUsed(tx, record))) return false
+    if (!(await markUsed(tx, record, PASSWORD_PURPOSES))) return false
     // De link kwam via de mail binnen, dus het adres is van deze persoon: meteen ook bevestigd (story 14).
     // Zo is een docent die zijn uitnodiging gebruikt ook bevestigd.
     await tx.user.update({
@@ -84,7 +98,7 @@ export async function useVerifyToken(token) {
   const record = await findUsableToken(token, ['VERIFY'])
   if (!record) return false
   return prisma.$transaction(async (tx) => {
-    if (!(await markUsed(tx, record))) return false
+    if (!(await markUsed(tx, record, ['VERIFY']))) return false
     await tx.user.update({ where: { id: record.userId }, data: { emailVerifiedAt: new Date() } })
     return true
   })

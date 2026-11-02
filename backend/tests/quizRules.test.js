@@ -61,6 +61,8 @@ describe('quiz-invoer controleren', () => {
         {
           text: 'V',
           timeLimitSec: undefined,
+          skill: null,
+          difficulty: null,
           options: [
             { text: 'a', isCorrect: true },
             { text: 'b', isCorrect: false },
@@ -68,6 +70,23 @@ describe('quiz-invoer controleren', () => {
         },
       ],
     })
+  })
+
+  it('meer dan één goed antwoord mag, maar niet alles goed of niets goed', () => {
+    const two = { text: 'V', options: [{ text: 'a', isCorrect: true }, { text: 'b', isCorrect: true }, { text: 'c' }] }
+    expect(parseQuizInput({ title: 'Q', questions: [two] }).questions[0].options.filter((o) => o.isCorrect)).toHaveLength(2)
+    const all = { text: 'V', options: [{ text: 'a', isCorrect: true }, { text: 'b', isCorrect: true }] }
+    expect(() => parseQuizInput({ title: 'Q', questions: [all] })).toThrow(/fout antwoord/)
+    const none = { text: 'V', options: [{ text: 'a' }, { text: 'b' }] }
+    expect(() => parseQuizInput({ title: 'Q', questions: [none] })).toThrow(/minstens één goed/)
+  })
+
+  it('vaardigheid en niveau (1 t/m 5) zijn optioneel, maar moeten geldig zijn', () => {
+    const ok = parseQuizInput({ title: 'Q', questions: [{ ...question, skill: 'AI', difficulty: 5 }] })
+    expect(ok.questions[0]).toMatchObject({ skill: 'AI', difficulty: 5 })
+    expect(() => parseQuizInput({ title: 'Q', questions: [{ ...question, skill: 'XX' }] })).toThrow(/vaardigheid/)
+    expect(() => parseQuizInput({ title: 'Q', questions: [{ ...question, difficulty: 6 }] })).toThrow(/niveau/)
+    expect(() => parseQuizInput({ title: 'Q', questions: [{ ...question, difficulty: 0 }] })).toThrow(/niveau/)
   })
 
   it('cleanQuizDefaults maakt van onzin de systeemstandaard', () => {

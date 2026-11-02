@@ -8,6 +8,14 @@
   gap: 16px;
 }
 
+.leaderboard-roles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+}
+
 .leaderboard-options-btn {
   display: inline-flex;
   align-items: center;
@@ -31,6 +39,13 @@
 .leaderboard-options-btn-active {
   border-color: var(--quiz-accent);
   background: var(--quiz-accent);
+}
+
+.leaderboard-role-btn {
+  min-width: 88px;
+  min-height: 44px;
+  padding: 0 16px;
+  font-size: 18px;
 }
 
 .end-screen__main {

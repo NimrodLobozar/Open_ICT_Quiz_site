@@ -2,6 +2,7 @@ import { createServer } from 'node:http'
 import { Server } from 'socket.io'
 import app from './app.js'
 import { prisma } from './db/prisma.js'
+import { seedDatabase } from './db/seed.js'
 import { registerSocketHandlers } from './socket/index.js'
 
 const port = 3000
@@ -18,6 +19,9 @@ registerSocketHandlers(io)
 app.set('io', io)
 
 // Let op: httpServer.listen, níet app.listen. Anders draait Socket.IO niet mee.
+// Eerste beheerder en voorbeeldquiz (alleen als ze er nog niet zijn). Lukt het niet, dan draait de server toch.
+seedDatabase().catch((error) => console.error('Seed mislukt:', error))
+
 httpServer.listen(port, () => {
   console.log(`API + Socket.IO running at http://localhost:${port}`)
 })

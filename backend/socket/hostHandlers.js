@@ -106,6 +106,16 @@ export function registerHostHandlers(io, socket, game) {
       ack?.(toErrorResponse(error));
     }
   });
+
+  socket.on(EVENTS.HOST_SET_QUESTION_COUNT, ({ count } = {}, ack) => {
+    try {
+      game.setQuestionCount(count);
+      sendLobbyUpdate(io, game);
+      ack?.({ ok: true, questionCount: game.questionCount });
+    } catch (error) {
+      ack?.(toErrorResponse(error));
+    }
+  });
 }
 
 // Elke ack heeft dezelfde vorm: { ok: true, ... } of { ok: false, error, message } (projectplan 8).

@@ -1,7 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { api } from "../../api/http.js";
+import { SkillBars } from "../../components/AccountUi.jsx";
 import LockButton from "../../components/LockButton.jsx";
+import QuestionCountPicker from "../../components/QuestionCountPicker.jsx";
 import QuizHeader from "../../components/QuizHeader.jsx";
 import { useQuestionEvents } from "../../hooks/useQuestionEvents.js";
 import { useSocketEvent } from "../../hooks/useSocketEvent.js";
@@ -13,6 +20,7 @@ import { HostLeaderboard } from "../QuestionPage_Host/LeaderboardPage.jsx";
 import { HostQuestionAnswers } from "../QuestionPage_Host/QuestionAnswersPage.jsx";
 import { HostQuestionPreview } from "../QuestionPage_Host/QuestionPreviewPage.jsx";
 import "./HostGamePage.css";
+import { QRCode, Space } from "antd";
 
 // Zelfde grens als MIN_PLAYERS in backend/game/Game.js. De server controleert het ook;
 // hier is het alleen om de knop al uit te zetten.
@@ -24,9 +32,15 @@ const isLocalhost = ["localhost", "127.0.0.1", "[::1]"].includes(
   window.location.hostname,
 );
 
-/** /host/new: maakt een game aan (de server zet de host-cookie) en gaat door naar /host/:code. */
+/**
+ * /host/new?quiz=<id>: maakt een game aan met die quiz uit de database (story 7).
+ * De server zet de host-cookie; daarna gaan we door naar /host/:code.
+ */
 export function HostCreatePage() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const quizId = Number(params.get("quiz"));
+  const random = params.get("random") === "1";
   const [error, setError] = useState(null);
   // StrictMode draait effects in development twee keer; zonder deze ref maak je twee games.
   const started = useRef(false);
@@ -34,16 +48,22 @@ export function HostCreatePage() {
   useEffect(() => {
     if (started.current) return;
     started.current = true;
-    api("/games", { method: "POST" })
+    if (!quizId && !random) {
+      setError("Kies eerst een quiz in het beheerportaal.");
+      return;
+    }
+    const body = random ? { random: true } : { quizId };
+    api("/games", { method: "POST", body })
       .then(({ gameCode }) => navigate(`/host/${gameCode}`, { replace: true }))
       .catch((apiError) => setError(apiError.message));
-  }, [navigate]);
+  }, [navigate, quizId, random]);
 
   return (
     <div className="page">
       <QuizHeader large />
       <main className="page__main host-game">
         <p role="status">{error ?? "Lobby wordt aangemaakt…"}</p>
+        {error && <Link to="/admin">Naar mijn quizzen</Link>}
       </main>
     </div>
   );
@@ -75,6 +95,9 @@ export default function HostGamePage() {
       socket.disconnect();
     };
   }, [code, navigate]);
+
+  //QR_CODE
+  const qrCodeValue = `${window.location.protocol}//${window.location.host}/join/${code}`;
 
   useSocketEvent("connect", async () => {
     const response = await emitWithAck(EVENTS.GAME_SYNC).catch(() => null);
@@ -137,6 +160,19 @@ export default function HostGamePage() {
     setError(null);
     const response = await emitWithAck(EVENTS.HOST_LOCK, {
       locked: !game.lobby.locked,
+    }).catch(() => null);
+    if (!response?.ok)
+      setError(response?.message ?? "Geen antwoord van de server.");
+    setBusy(false);
+  }
+
+  // Willekeurige quiz: aantal vragen kiezen. Net als bij het slot wachten we op lobby:update:
+  // zo laat het scherm altijd het aantal zien dat de server echt gebruikt.
+  async function changeQuestionCount(count) {
+    setBusy(true);
+    setError(null);
+    const response = await emitWithAck(EVENTS.HOST_SET_QUESTION_COUNT, {
+      count,
     }).catch(() => null);
     if (!response?.ok)
       setError(response?.message ?? "Geen antwoord van de server.");
@@ -251,13 +287,18 @@ export default function HostGamePage() {
           answerCounts={game.questionEnd.answerCounts}
           playerCount={game.questionEnd.ranking.length}
           ranking={game.questionEnd.ranking}
+          showCorrectAnswer={
+            game.questionEnd.display?.showCorrectAnswer ?? true
+          }
+          showStandings={game.questionEnd.display?.showStandings ?? true}
           onNext={next}
         />
       </>
     );
   }
 
-  const { players, playerCount, locked } = game.lobby;
+  const { players, playerCount, locked, questionCount, skillAverages } =
+    game.lobby;
   const canStart = playerCount >= MIN_PLAYERS;
   return (
     <div className="page">
@@ -280,10 +321,35 @@ export default function HostGamePage() {
         </p>
         <p className="host-game__code">{code}</p>
         <LockButton locked={locked} onToggle={toggleLock} disabled={busy} />
+        {/* Alleen bij een willekeurige quiz: bij een quiz uit de database is questionCount null. */}
+        {questionCount != null && (
+          <section
+            className="host-game__random"
+            aria-labelledby="host-game-random-title"
+          >
+            <h2 id="host-game-random-title" className="host-game__random-title">
+              Willekeurige quiz
+            </h2>
+            <QuestionCountPicker
+              value={questionCount}
+              onChange={changeQuestionCount}
+              disabled={busy}
+            />
+            <p className="host-game__random-hint">
+              Gemiddelde vaardigheden van deze lobby. Bij de start komen er meer
+              vragen over de zwakste vaardigheden, op een niveau dat bij jullie
+              past.
+            </p>
+            <SkillBars skills={roundAverages(skillAverages)} />
+          </section>
+        )}
+
         <h1 className="host-game__title">
           {playerCount} {playerCount === 1 ? "speler" : "spelers"}
         </h1>
-
+        <Space className="QRCode">
+          <QRCode type="canvas" value={qrCodeValue} />
+        </Space>
         <ul className="host-game__players">
           {players.map((player) => (
             <li
@@ -304,7 +370,6 @@ export default function HostGamePage() {
             </li>
           ))}
         </ul>
-
         <button
           type="button"
           className="host-game__start"
@@ -318,7 +383,6 @@ export default function HostGamePage() {
             Er zijn minimaal {MIN_PLAYERS} spelers nodig om te starten.
           </p>
         )}
-
         {/* {import.meta.env.DEV && (
           <section className="host-game__dev" aria-label="Alleen voor testen">
             <p>
@@ -349,5 +413,16 @@ export default function HostGamePage() {
         )}
       </main>
     </div>
+  );
+}
+
+// De server stuurt bijv. 2.3333…; op het scherm is één decimaal genoeg.
+// null (nog niemand heeft deze vaardigheid ingevuld) tonen we als 0.
+function roundAverages(averages = {}) {
+  return Object.fromEntries(
+    Object.entries(averages).map(([code, value]) => [
+      code,
+      Math.round((value ?? 0) * 10) / 10,
+    ]),
   );
 }

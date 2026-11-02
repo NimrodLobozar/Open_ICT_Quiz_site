@@ -1,0 +1,228 @@
+/* Mijn account (student) en Instellingen. Bouwstenen (ui-...) staan in src/components/AccountUi.css. */
+
+.account-page__main {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding-top: 48px;
+}
+
+.account-page__profile {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 24px 32px;
+  border-radius: 28px;
+  padding: 32px 36px;
+}
+
+.account-page__who {
+  flex: 1 1 320px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.account-page__since {
+  font-size: 14px;
+}
+
+.account-page__who .ui-title {
+  font-size: 64px;
+}
+
+.account-page__email {
+  font-size: 18px;
+  color: var(--quiz-muted);
+  overflow-wrap: anywhere;
+}
+
+.account-page__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.account-page__section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.account-page__columns {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.account-page__skills {
+  flex: 1 1 320px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.account-page__recent {
+  flex: 999 1 480px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.account-page__section-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.account-page__small-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 15px;
+}
+
+.account-page__games {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.account-page__game {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 18px 12px 12px;
+  border-radius: 18px;
+  background: var(--quiz-bg);
+  border: 2px solid var(--quiz-border);
+}
+
+/* Gewonnen: gevuld, net als de eigen rij op het podium. */
+.account-page__game.is-first {
+  background: var(--quiz-accent);
+}
+
+.account-page__place {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--quiz-surface);
+  font-family: 'Anton', sans-serif;
+  font-size: 26px;
+  color: var(--quiz-primary);
+}
+
+.account-page__game-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.account-page__game-info strong {
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+
+.account-page__game-info span {
+  font-size: 15px;
+  color: var(--quiz-muted);
+}
+
+.account-page__score {
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+
+.account-page__all {
+  align-self: flex-start;
+}
+
+.account-page__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 20px;
+  border-radius: 18px;
+  border: 2px dashed var(--quiz-border);
+}
+
+.account-page__empty p {
+  margin: 0;
+}
+
+/* Telefoon (design "6 · Mijn account — telefoon"): alles onder elkaar, profiel gecentreerd. */
+@media (max-width: 640px) {
+  .account-page__main {
+    gap: 20px;
+    padding-top: 20px;
+  }
+  .account-page__profile {
+    flex-direction: column;
+    text-align: center;
+    padding: 24px 20px;
+  }
+  .account-page__who {
+    flex: none;
+    align-items: center;
+  }
+  .account-page__who .ui-title {
+    font-size: 44px;
+  }
+  .account-page__actions,
+  .account-page__actions .ui-btn {
+    width: 100%;
+  }
+  .account-page__game {
+    grid-template-columns: 52px minmax(0, 1fr) auto;
+    gap: 12px;
+    padding: 10px 12px 10px 10px;
+  }
+}
+
+/* ---------- Instellingen ---------- */
+
+.settings-page__main {
+  max-width: 760px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.settings-page__back {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.settings-page__section {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.settings-page__danger {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  border-color: var(--quiz-error-border);
+}
+
+.settings-page__danger p {
+  margin: 0;
+}

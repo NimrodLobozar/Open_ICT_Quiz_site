@@ -5,6 +5,12 @@ import { PHASES } from "./phases.js";
 import { buildPlayerResult } from "../../src/utils/playerResult.js";
 import { calculatePoints } from "../../src/utils/scoring.js";
 import { QUIZ_QUESTIONS } from "./quizQuestions.js";
+import { selectQuestions } from "./questionSelector.js";
+import { SKILL_CODES } from "../../src/utils/skills.js";
+import {
+  DEFAULT_QUESTION_COUNT,
+  QUESTION_COUNT_OPTIONS,
+} from "../../src/utils/randomQuiz.js";
 
 // Met minder dan 2 spelers is het geen wedstrijd.
 export const MIN_PLAYERS = 2;
@@ -17,14 +23,32 @@ const LATE_GRACE_MS = 500;
 export class Game {
   /**
    * @param {string} code
-   * @param {{ questions?: Array<Question>, previewSeconds?: number }} [options]
+   * @param {{ questions?: Array<Question>, previewSeconds?: number, quizId?: number | null,
+   *   quizTitle?: string | null, settings?: { lockLobbyOnStart?: boolean } }} [options]
    *   previewSeconds = leestijd per vraag voordat je mag antwoorden (projectplan 3.4). 0 = meteen antwoorden.
+   *   quizId/quizTitle = de quiz uit de database (story 7), voor de uitslagen.
+   *   settings = instellingen van die quiz (story 8).
    */
-  constructor(code, { questions = QUIZ_QUESTIONS, previewSeconds = 5 } = {}) {
+  constructor(
+    code,
+    {
+      questions = QUIZ_QUESTIONS,
+      previewSeconds = 5,
+      quizId = null,
+      quizTitle = null,
+      settings = {},
+      questionBank = null,
+    } = {},
+  ) {
     this.code = code;
+    this.quizId = quizId;
+    this.quizTitle = quizTitle;
+    this.settings = settings;
     this.phase = PHASES.LOBBY;
     this.locked = false;
-    this.questions = questions;
+    this.questionBank = questionBank;
+    this.questionCount = questionBank ? DEFAULT_QUESTION_COUNT : null;
+    this.questions = questionBank ? [] : questions;
     this.previewSeconds = previewSeconds;
     this.#resetQuestions();
     /** @type {Map<number, Player>} */
@@ -39,7 +63,11 @@ export class Game {
   }
 
   /** Nieuwe speler in de lobby. Gooit een GameError als het niet mag. */
-  addPlayer(rawNickname, { isBot = false, skills } = {}) {
+  /**
+   * @param {{ isBot?: boolean, skills?: object, userId?: number | null }} [options]
+   *   userId = het account van een ingelogde speler; die krijgt het account-icoontje (isVerified).
+   */
+  addPlayer(rawNickname, { isBot = false, skills, userId = null } = {}) {
     if (this.phase !== PHASES.LOBBY)
       throw new GameError("WRONG_PHASE", "De quiz is al begonnen.", 403);
     if (this.locked)
@@ -75,7 +103,8 @@ export class Game {
       // Punten per vraag. De totaalscore is altijd de som hiervan, zo kun je het narekenen.
       answers: [],
       connected: false,
-      isVerified: false, // pas true met een account (L1)
+      userId,
+      isVerified: userId !== null, // ingelogd met een account (sprint 2)
       isBot,
       skills: cleanSkills(skills),
     };
@@ -119,6 +148,46 @@ export class Game {
     this.locked = Boolean(locked);
   }
 
+  setQuestionCount(count) {
+    if (!this.questionBank) {
+      throw new GameError(
+        "NOT_RANDOM_QUIZ",
+        "Het aantal vragen kies je alleen bij een willekeurige quiz.",
+        409,
+      );
+    }
+    if (this.phase !== PHASES.LOBBY) {
+      throw new GameError(
+        "WRONG_PHASE",
+        "Het aantal vragen kan alleen in de lobby worden gekozen.",
+        409,
+      );
+    }
+    if (!QUESTION_COUNT_OPTIONS.includes(count)) {
+      throw new GameError(
+        "INVALID_QUESTION_COUNT",
+        "Kies een geldig aantal vragen.",
+        400,
+      );
+    }
+    this.questionCount = count;
+  }
+
+  getSkillAverage() {
+    const players = [...this.players.values()].filter(
+      (player) => !player.isBot,
+    );
+    return Object.fromEntries(
+      SKILL_CODES.map((code) => {
+        const values = players
+          .map((player) => player.skills[code])
+          .filter((value) => value !== undefined);
+        if (values.length === 0) return [code, null];
+        const total = values.reduce((sum, value) => sum + value, 0);
+        return [code, total / values.length];
+      }),
+    );
+  }
   setConnected(playerId, connected) {
     const player = this.getPlayer(playerId);
     if (player) player.connected = connected;
@@ -147,7 +216,7 @@ export class Game {
   // Zo kan een test de tijd zelf kiezen ("antwoord na 5 seconden") zonder echt te wachten.
 
   /** Host start de quiz: de lobby gaat dicht en vraag 1 verschijnt. */
-  start(now = Date.now()) {
+  start(now = Date.now(), random = Math.random) {
     if (this.phase !== PHASES.LOBBY)
       throw new GameError("WRONG_PHASE", "De quiz is al begonnen.", 409);
     if (this.players.size < MIN_PLAYERS) {
@@ -155,6 +224,17 @@ export class Game {
         "NOT_ENOUGH_PLAYERS",
         `Er zijn minimaal ${MIN_PLAYERS} spelers nodig.`,
         409,
+      );
+    }
+    // Instelling van de quiz (story 8): na de start gaat de lobby op slot,
+    // dus ook na "opnieuw spelen" kan er niemand meer bij tot de host hem weer openzet.
+    if (this.settings.lockLobbyOnStart) this.locked = true;
+    if (this.questionBank) {
+      this.questions = selectQuestions(
+        this.questionBank,
+        this.getSkillAverage(),
+        this.questionCount,
+        random,
       );
     }
     this.#showQuestion(0, now);
@@ -330,7 +410,12 @@ export class Game {
         pointsGained: this.#answerTo(id, questionIndex)?.points ?? 0,
       }),
     );
-    return { ...this.lastQuestionEnd, ranking };
+    // Instellingen van de quiz (story 8): goede antwoord en tussenstand wel of niet op het grote scherm.
+    const display = {
+      showCorrectAnswer: this.settings.showCorrectAnswer ?? true,
+      showStandings: this.settings.showStandings ?? true,
+    };
+    return { ...this.lastQuestionEnd, ranking, display };
   }
 
   /** Eigen uitslag van de laatste vraag, alleen voor die speler: goed/fout en punten erbij. */
@@ -449,6 +534,9 @@ export class Game {
       round: this.round,
       startedAt: this.startedAt,
       endedAt,
+      quizId: this.quizId,
+      quizTitle: this.quizTitle,
+      questionCount: this.totalQuestions,
       results: this.finalRanking.map(
         ({ id, nickname, score, rank, correctCount }) => {
           // skills en isBot staan niet in de ranking, dus die komen uit players.
@@ -461,6 +549,7 @@ export class Game {
             correctCount,
             skills: player?.skills ?? {},
             isBot: player?.isBot ?? false,
+            userId: player?.userId ?? null,
           };
         },
       ),
@@ -492,5 +581,6 @@ function cleanSkills(skills) {
 /**
  * @typedef {{ id: number, nickname: string, score: number, correctCount: number,
  *   answers: Array<{ questionIndex: number, correct: boolean, points: number, optionId: number | null }>,
- *   connected: boolean, isVerified: boolean, isBot: boolean, skills: Record<string, number> }} Player
+ *   connected: boolean, userId: number | null, isVerified: boolean, isBot: boolean,
+ *   skills: Record<string, number> }} Player
  */

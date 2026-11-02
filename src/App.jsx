@@ -25,7 +25,7 @@ import LobbyPlayer from "./pages/Lobby/LobbyPlayer.jsx";
 import PlayerGamePage from "./pages/PlayerGamePage/PlayerGamePage.jsx";
 import PlayerQuestionPage from "./pages/QuestionPage_Player/PlayerQuestionPage.jsx";
 import PlayerResultPage from "./pages/QuestionPage_Player/PlayerResultPage.jsx";
-import LeaderboardPage from "./pages/QuestionPage_Host/LeaderboardPage.jsx";
+import LeaderboardPage from "./pages/Leaderboard/LeaderboardPage.jsx";
 import QuestionAnswersPage from "./pages/QuestionPage_Host/QuestionAnswersPage.jsx";
 import QuestionPreviewPage from "./pages/QuestionPage_Host/QuestionPreviewPage.jsx";
 import TemplatePage from "./pages/_Template/TemplatePage.jsx";
@@ -91,6 +91,7 @@ export default function App() {
           }
         />
         <Route path="/host/:code" element={<HostGamePage />} />
+        <Route path="/leaderboard" element={<LeaderboardPage />} />
         {/* Demo's met nepdata, om de designs te bekijken. */}
         <Route path="/end" element={<EndScreenPageHost />} />
         <Route path="/end-player" element={<EndScreenPagePlayer />} />

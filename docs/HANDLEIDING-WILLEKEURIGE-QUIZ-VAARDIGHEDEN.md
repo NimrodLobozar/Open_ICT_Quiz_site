@@ -39,7 +39,7 @@ In de chat vroeg een student hoe je de vaardigheden die spelers bij het joinen i
 
 - **Gemiddelde per vaardigheid** van de lobby, op de server (niet in React). Let op een lege lobby: nooit delen door 0.
 - **Moeilijkheid** koppelen aan het gemiddelde met vaste grenzen: 0 tot 1,7 = makkelijk, 1,7 tot 3,4 = gemiddeld, 3,4 tot 5 = moeilijk.
-- **Welk onderwerp vaker:** de student koos voor *meer vragen over de zwakste vaardigheid*. Niet altijd de laagste kiezen (dan krijg je steeds hetzelfde onderwerp), maar een **gewogen willekeurige keuze** met gewicht = 6 min het gemiddelde.
+- **Welk onderwerp vaker:** de student koos voor _meer vragen over de zwakste vaardigheid_. Niet altijd de laagste kiezen (dan krijg je steeds hetzelfde onderwerp), maar een **gewogen willekeurige keuze** met gewicht = 6 min het gemiddelde.
 - **Vragen** krijgen een `skill` en een `difficulty`, dan is kiezen gewoon filteren.
 - **Testen:** gemiddelde narekenen met nepdata, en het algoritme 1000 keer draaien en tellen.
 
@@ -47,26 +47,26 @@ In de chat vroeg een student hoe je de vaardigheden die spelers bij het joinen i
 
 De chat zag maar een deel van de code. In deze codebase pakken een paar dingen anders uit:
 
-| In de chat | In deze codebase |
-|---|---|
-| "Voeg kolommen toe en draai `npx prisma migrate dev`." | **Niet nodig.** Spelers van een live game staan in het geheugen van de server (`backend/game/Game.js`), met hun `skills` er al bij. Het project gebruikt ook geen migraties maar `prisma db push`. Deze handleiding verandert de database niet. |
+| In de chat                                                                                              | In deze codebase                                                                                                                                                                                                                                      |
+| ------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "Voeg kolommen toe en draai `npx prisma migrate dev`."                                                  | **Niet nodig.** Spelers van een live game staan in het geheugen van de server (`backend/game/Game.js`), met hun `skills` er al bij. Het project gebruikt ook geen migraties maar `prisma db push`. Deze handleiding verandert de database niet.       |
 | "Frontend en backend kunnen niet van elkaar importeren, dus je hebt twee lijsten met skillnamen nodig." | **Wel één lijst.** De map `src/utils/` wordt gedeeld: Docker zet hem ook in de backend-container. `src/utils/skills.js` bestaat al, met `SKILL_CODES` (`SD`, `AI`, `TI`, `CSC`, `GD`, `BI`), en de backend gebruikt hem al in `backend/routes/me.js`. |
-| "Deel door het aantal spelers." | **Deel door het aantal spelers dat die vaardigheid heeft ingevuld**, en tel testspelers (bots) niet mee. Anders trekt een speler zonder ingevulde waarde het gemiddelde omlaag. |
-| "Kijk wat `cleanSkills` doet." | Gedaan: `cleanSkills` (onderaan `Game.js`) laat alleen hele getallen van 0 t/m 5 door, maar accepteert elke naam tot 40 tekens. Dat is geen probleem: het gemiddelde loopt alleen over `SKILL_CODES`, dus onbekende namen tellen nergens mee. |
-| "Haal de vragen uit de vragenbank met `skill` en `difficulty`." | Quizzen uit de database (gemaakt in het beheerportaal) blijven **precies zoals ze zijn**. De willekeurige quiz gebruikt een **vaste vragenbank in de code** (`backend/game/questionBank.js`), net zoals `backend/game/quizQuestions.js` dat al doet. |
+| "Deel door het aantal spelers."                                                                         | **Deel door het aantal spelers dat die vaardigheid heeft ingevuld**, en tel testspelers (bots) niet mee. Anders trekt een speler zonder ingevulde waarde het gemiddelde omlaag.                                                                       |
+| "Kijk wat `cleanSkills` doet."                                                                          | Gedaan: `cleanSkills` (onderaan `Game.js`) laat alleen hele getallen van 0 t/m 5 door, maar accepteert elke naam tot 40 tekens. Dat is geen probleem: het gemiddelde loopt alleen over `SKILL_CODES`, dus onbekende namen tellen nergens mee.         |
+| "Haal de vragen uit de vragenbank met `skill` en `difficulty`."                                         | Quizzen uit de database (gemaakt in het beheerportaal) blijven **precies zoals ze zijn**. De willekeurige quiz gebruikt een **vaste vragenbank in de code** (`backend/game/questionBank.js`), net zoals `backend/game/quizQuestions.js` dat al doet.  |
 
 ### 0.3 Wat bestaat al, wat bouw jij?
 
-| Onderdeel | Bestaat al? | Waar zit het? |
-|---|---|---|
-| Spelers vullen vaardigheden in bij het joinen | Ja | `src/pages/JoinPage/JoinPage.jsx` (sliders), verstuurd met `POST /api/games/:code/players` |
-| De server bewaart ze bij de speler | Ja | `Game.addPlayer` in `backend/game/Game.js`: `skills: cleanSkills(skills)` |
-| Eén gedeelde lijst met vaardigheden | Ja | `src/utils/skills.js` (`SKILLS`, `SKILL_CODES`) |
-| Balkjes om vaardigheden te tonen | Ja | `SkillBars` in `src/components/AccountUi.jsx` (gebruikt op Mijn account) |
-| Gemiddelde per vaardigheid van de lobby | **Nee, dit bouw jij** | — |
-| Vragenbank met vaardigheid en moeilijkheid | **Nee, dit bouw jij** | — |
-| Het algoritme dat vragen kiest | **Nee, dit bouw jij** | — |
-| Knop "Willekeurige quiz hosten" + aantal vragen kiezen | **Nee, dit bouw jij** | — |
+| Onderdeel                                              | Bestaat al?           | Waar zit het?                                                                              |
+| ------------------------------------------------------ | --------------------- | ------------------------------------------------------------------------------------------ |
+| Spelers vullen vaardigheden in bij het joinen          | Ja                    | `src/pages/JoinPage/JoinPage.jsx` (sliders), verstuurd met `POST /api/games/:code/players` |
+| De server bewaart ze bij de speler                     | Ja                    | `Game.addPlayer` in `backend/game/Game.js`: `skills: cleanSkills(skills)`                  |
+| Eén gedeelde lijst met vaardigheden                    | Ja                    | `src/utils/skills.js` (`SKILLS`, `SKILL_CODES`)                                            |
+| Balkjes om vaardigheden te tonen                       | Ja                    | `SkillBars` in `src/components/AccountUi.jsx` (gebruikt op Mijn account)                   |
+| Gemiddelde per vaardigheid van de lobby                | **Nee, dit bouw jij** | —                                                                                          |
+| Vragenbank met vaardigheid en moeilijkheid             | **Nee, dit bouw jij** | —                                                                                          |
+| Het algoritme dat vragen kiest                         | **Nee, dit bouw jij** | —                                                                                          |
+| Knop "Willekeurige quiz hosten" + aantal vragen kiezen | **Nee, dit bouw jij** | —                                                                                          |
 
 ### Wat de host straks ziet
 
@@ -104,22 +104,22 @@ En een speler ziet in de wachtruimte: **Willekeurige quiz: 10 vragen, gekozen op
 
 ## 1. Een paar woorden die je moet kennen
 
-| Woord | Betekenis in deze app |
-|---|---|
-| **Frontend** | Wat in de browser draait: de schermen. Staat in de map `src/`. Gemaakt met **React**. |
-| **Backend / server** | Het programma dat op de server draait en de regels bewaakt. Staat in `backend/`. |
-| **Host** | De docent die de quiz op het grote scherm laat zien. |
-| **Lobby** | De wachtruimte vóór de quiz start. |
-| **Vaardigheid (skill)** | Hoe goed een speler zichzelf vindt in een onderdeel van Open ICT, van 0 t/m 5. De codes: `SD`, `AI`, `TI`, `CSC`, `GD`, `BI`. |
-| **Gemiddelde** | Alle waarden optellen en delen door hoeveel het er zijn. (0 + 4) / 2 = 2. |
-| **Vragenbank** | Een lijst met veel vragen. Uit die lijst kiest het algoritme er een paar voor één ronde. |
-| **Moeilijkheid (difficulty)** | 1 = makkelijk, 2 = gemiddeld, 3 = moeilijk. |
-| **Gewicht** | Hoe groot de kans is dat iets gekozen wordt. Gewicht 6 heeft zes keer zoveel kans als gewicht 1. |
-| **Algoritme** | Een vast stappenplan dat de computer uitvoert. Hier: "kies vragen die bij deze lobby passen". |
-| **Pure functie** | Een functie die alleen met haar invoer rekent en niets anders verandert. Dezelfde invoer geeft dezelfde uitvoer. Zo'n functie is makkelijk te testen. |
-| **Socket.IO / event / ack** | De "telefoonlijn" tussen browser en server. Een **event** is een bericht met een naam (bijv. `host:lock`); de **ack** is het antwoord: `{ ok: true }` of `{ ok: false, message: "..." }`. |
-| **Component / state** | Een bouwsteen van een scherm in React / wat een scherm op dit moment "weet". |
-| **Test** | Een klein stukje code dat controleert of jouw code doet wat het moet doen. Draai je met `npm test`. |
+| Woord                         | Betekenis in deze app                                                                                                                                                                     |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Frontend**                  | Wat in de browser draait: de schermen. Staat in de map `src/`. Gemaakt met **React**.                                                                                                     |
+| **Backend / server**          | Het programma dat op de server draait en de regels bewaakt. Staat in `backend/`.                                                                                                          |
+| **Host**                      | De docent die de quiz op het grote scherm laat zien.                                                                                                                                      |
+| **Lobby**                     | De wachtruimte vóór de quiz start.                                                                                                                                                        |
+| **Vaardigheid (skill)**       | Hoe goed een speler zichzelf vindt in een onderdeel van Open ICT, van 0 t/m 5. De codes: `SD`, `AI`, `TI`, `CSC`, `GD`, `BI`.                                                             |
+| **Gemiddelde**                | Alle waarden optellen en delen door hoeveel het er zijn. (0 + 4) / 2 = 2.                                                                                                                 |
+| **Vragenbank**                | Een lijst met veel vragen. Uit die lijst kiest het algoritme er een paar voor één ronde.                                                                                                  |
+| **Moeilijkheid (difficulty)** | 1 = makkelijk, 2 = gemiddeld, 3 = moeilijk.                                                                                                                                               |
+| **Gewicht**                   | Hoe groot de kans is dat iets gekozen wordt. Gewicht 6 heeft zes keer zoveel kans als gewicht 1.                                                                                          |
+| **Algoritme**                 | Een vast stappenplan dat de computer uitvoert. Hier: "kies vragen die bij deze lobby passen".                                                                                             |
+| **Pure functie**              | Een functie die alleen met haar invoer rekent en niets anders verandert. Dezelfde invoer geeft dezelfde uitvoer. Zo'n functie is makkelijk te testen.                                     |
+| **Socket.IO / event / ack**   | De "telefoonlijn" tussen browser en server. Een **event** is een bericht met een naam (bijv. `host:lock`); de **ack** is het antwoord: `{ ok: true }` of `{ ok: false, message: "..." }`. |
+| **Component / state**         | Een bouwsteen van een scherm in React / wat een scherm op dit moment "weet".                                                                                                              |
+| **Test**                      | Een klein stukje code dat controleert of jouw code doet wat het moet doen. Draai je met `npm test`.                                                                                       |
 
 ---
 
@@ -141,7 +141,7 @@ Installeer deze als je ze nog niet hebt:
 
 ### 2.3 Een eigen branch maken
 
-Een *branch* is je eigen kopie van de code waarin je veilig kunt werken. We beginnen vanaf `dev` (zo is het afgesproken in dit team):
+Een _branch_ is je eigen kopie van de code waarin je veilig kunt werken. We beginnen vanaf `dev` (zo is het afgesproken in dit team):
 
 ```bash
 git checkout dev
@@ -213,24 +213,24 @@ Onderaan moet staan: **Tests ... passed** en geen `failed`. Onthoud het aantal t
 
 ### Welke bestanden je aanraakt
 
-| # | Bestand | Wat |
-|---|---|---|
-| 1 | `src/utils/randomQuiz.js` | **Nieuw:** titel en keuzes voor het aantal vragen (gedeeld) |
-| 2 | `backend/game/questionBank.js` | **Nieuw:** de vragenbank (36 vragen) |
-| 3 | `backend/game/questionSelector.js` | **Nieuw:** het algoritme |
-| 4 | `backend/tests/questionSelector.test.js` | **Nieuw:** tests voor stap 2 en 3 |
-| 5 | `backend/game/Game.js` | Gemiddelde, aantal vragen, vragen kiezen bij de start |
-| 6 | `backend/tests/Game.test.js` | Tests voor stap 5 |
-| 7 | `backend/routes/games.js` | Een willekeurige quiz aanmaken |
-| 8 | `backend/tests/api/quizzes.test.js` | Test voor stap 7 |
-| 9 | `backend/socket/events.js` en `src/socket/events.js` | Naam van het nieuwe event |
-| 10 | `backend/socket/hostHandlers.js` | Het event van de host ontvangen |
-| 11 | `backend/socket/broadcast.js` en `backend/socket/syncState.js` | Aantal vragen en gemiddelden meesturen |
-| 12 | `src/components/QuestionCountPicker.jsx` + `.css` | **Nieuw:** de keuzeknoppen |
-| 13 | `src/pages/Admin/OverviewPage.jsx`, `QuizzesPage.jsx`, `Admin.css` | De knop "Willekeurige quiz hosten" |
-| 14 | `src/pages/HostGamePage/HostGamePage.jsx` + `.css` | Aanmaken + de lobby van de host |
-| 15 | `src/pages/PlayerGamePage/PlayerGamePage.jsx` | Spelers zien hoeveel vragen er komen |
-| 16 | `docs/SOCKET-EVENTS.md` | Documentatie |
+| #   | Bestand                                                            | Wat                                                         |
+| --- | ------------------------------------------------------------------ | ----------------------------------------------------------- |
+| 1   | `src/utils/randomQuiz.js`                                          | **Nieuw:** titel en keuzes voor het aantal vragen (gedeeld) |
+| 2   | `backend/game/questionBank.js`                                     | **Nieuw:** de vragenbank (36 vragen)                        |
+| 3   | `backend/game/questionSelector.js`                                 | **Nieuw:** het algoritme                                    |
+| 4   | `backend/tests/questionSelector.test.js`                           | **Nieuw:** tests voor stap 2 en 3                           |
+| 5   | `backend/game/Game.js`                                             | Gemiddelde, aantal vragen, vragen kiezen bij de start       |
+| 6   | `backend/tests/Game.test.js`                                       | Tests voor stap 5                                           |
+| 7   | `backend/routes/games.js`                                          | Een willekeurige quiz aanmaken                              |
+| 8   | `backend/tests/api/quizzes.test.js`                                | Test voor stap 7                                            |
+| 9   | `backend/socket/events.js` en `src/socket/events.js`               | Naam van het nieuwe event                                   |
+| 10  | `backend/socket/hostHandlers.js`                                   | Het event van de host ontvangen                             |
+| 11  | `backend/socket/broadcast.js` en `backend/socket/syncState.js`     | Aantal vragen en gemiddelden meesturen                      |
+| 12  | `src/components/QuestionCountPicker.jsx` + `.css`                  | **Nieuw:** de keuzeknoppen                                  |
+| 13  | `src/pages/Admin/OverviewPage.jsx`, `QuizzesPage.jsx`, `Admin.css` | De knop "Willekeurige quiz hosten"                          |
+| 14  | `src/pages/HostGamePage/HostGamePage.jsx` + `.css`                 | Aanmaken + de lobby van de host                             |
+| 15  | `src/pages/PlayerGamePage/PlayerGamePage.jsx`                      | Spelers zien hoeveel vragen er komen                        |
+| 16  | `docs/SOCKET-EVENTS.md`                                            | Documentatie                                                |
 
 We beginnen bij de regels (algoritme en `Game.js`), dan de verbinding, en als laatste de schermen.
 
@@ -245,11 +245,11 @@ Plak deze code erin:
 ```js
 // Instellingen van een willekeurige quiz. Gedeeld door frontend (keuzeknoppen) en backend (controle in Game.js),
 // zodat er maar één lijst met keuzes is.
-export const RANDOM_QUIZ_TITLE = 'Willekeurige quiz'
+export const RANDOM_QUIZ_TITLE = "Willekeurige quiz";
 
 // Hoeveel vragen de host in de lobby kan kiezen.
-export const QUESTION_COUNT_OPTIONS = [5, 10, 15, 20]
-export const DEFAULT_QUESTION_COUNT = 10
+export const QUESTION_COUNT_OPTIONS = [5, 10, 15, 20];
+export const DEFAULT_QUESTION_COUNT = 10;
 ```
 
 **Waarom in `src/utils/`?** Deze map gebruiken frontend én backend (Docker zet hem ook in de backend-container, zie `docker-compose.yml`). De knoppen in de browser en de controle op de server lezen dus **dezelfde** lijst. Wil het team later 25 vragen kunnen kiezen, dan pas je alleen deze regel aan.
@@ -279,223 +279,275 @@ Plak deze code erin (het is lang, maar je kunt het in één keer kopiëren):
 // de test "de vragenbank" controleert of alles klopt.
 export const QUESTION_BANK = [
   // ---------- SD: software development ----------
-  bankQuestion('SD', 1, 'Welke van deze talen draait standaard in de browser?', [
-    ['Python'],
-    ['JavaScript', true],
-    ['C#'],
-    ['PHP'],
+  bankQuestion(
+    "SD",
+    1,
+    "Welke van deze talen draait standaard in de browser?",
+    [["Python"], ["JavaScript", true], ["C#"], ["PHP"]],
+  ),
+  bankQuestion("SD", 1, "Wat doet git commit?", [
+    ["Code naar GitHub sturen"],
+    ["Een nieuwe branch maken"],
+    ["Wijzigingen lokaal vastleggen", true],
+    ["Twee branches samenvoegen"],
   ]),
-  bankQuestion('SD', 1, 'Wat doet git commit?', [
-    ['Code naar GitHub sturen'],
-    ['Een nieuwe branch maken'],
-    ['Wijzigingen lokaal vastleggen', true],
-    ['Twee branches samenvoegen'],
-  ]),
-  bankQuestion('SD', 2, 'Wat geeft [1, 2, 3].map((x) => x * 2) in JavaScript?', [
-    ['[2, 4, 6]', true],
-    ['12'],
-    ['[1, 2, 3, 1, 2, 3]'],
-    ['6'],
-  ]),
-  bankQuestion('SD', 2, 'Welke HTTP-methode gebruik je meestal om iets nieuws aan te maken in een REST-API?', [
-    ['GET'],
-    ['DELETE'],
-    ['HEAD'],
-    ['POST', true],
-  ]),
-  bankQuestion('SD', 3, 'Hoe snel is binair zoeken in een gesorteerde lijst (tijdscomplexiteit)?', [
-    ['O(1)'],
-    ['O(log n)', true],
-    ['O(n)'],
-    ['O(n²)'],
-  ]),
-  bankQuestion('SD', 3, 'Waar staat de "S" voor in de SOLID-principes?', [
-    ['Static typing'],
-    ['Secure by default'],
-    ['Single responsibility', true],
-    ['Separation of data'],
+  bankQuestion(
+    "SD",
+    2,
+    "Wat geeft [1, 2, 3].map((x) => x * 2) in JavaScript?",
+    [["[2, 4, 6]", true], ["12"], ["[1, 2, 3, 1, 2, 3]"], ["6"]],
+  ),
+  bankQuestion(
+    "SD",
+    2,
+    "Welke HTTP-methode gebruik je meestal om iets nieuws aan te maken in een REST-API?",
+    [["GET"], ["DELETE"], ["HEAD"], ["POST", true]],
+  ),
+  bankQuestion(
+    "SD",
+    3,
+    "Hoe snel is binair zoeken in een gesorteerde lijst (tijdscomplexiteit)?",
+    [["O(1)"], ["O(log n)", true], ["O(n)"], ["O(n²)"]],
+  ),
+  bankQuestion("SD", 3, 'Waar staat de "S" voor in de SOLID-principes?', [
+    ["Static typing"],
+    ["Secure by default"],
+    ["Single responsibility", true],
+    ["Separation of data"],
   ]),
 
   // ---------- AI: artificial intelligence ----------
-  bankQuestion('AI', 1, 'Waar staat de afkorting AI voor?', [
-    ['Automatische Invoer'],
-    ['Artificial Intelligence', true],
-    ['Advanced Internet'],
-    ['Analoge Informatica'],
+  bankQuestion("AI", 1, "Waar staat de afkorting AI voor?", [
+    ["Automatische Invoer"],
+    ["Artificial Intelligence", true],
+    ["Advanced Internet"],
+    ["Analoge Informatica"],
   ]),
-  bankQuestion('AI', 1, 'Waar leert een machine-learningmodel van?', [
-    ['Van data', true],
-    ['Van een snellere muis'],
-    ['Van een groter beeldscherm'],
-    ['Van een printer'],
+  bankQuestion("AI", 1, "Waar leert een machine-learningmodel van?", [
+    ["Van data", true],
+    ["Van een snellere muis"],
+    ["Van een groter beeldscherm"],
+    ["Van een printer"],
   ]),
-  bankQuestion('AI', 2, 'Hoe heet leren met voorbeelden waarvan het goede antwoord (label) al bekend is?', [
-    ['Unsupervised learning'],
-    ['Reinforcement learning'],
-    ['Supervised learning', true],
-    ['Deep linking'],
+  bankQuestion(
+    "AI",
+    2,
+    "Hoe heet leren met voorbeelden waarvan het goede antwoord (label) al bekend is?",
+    [
+      ["Unsupervised learning"],
+      ["Reinforcement learning"],
+      ["Supervised learning", true],
+      ["Deep linking"],
+    ],
+  ),
+  bankQuestion("AI", 2, "Wat betekent overfitting?", [
+    ["Het model is te groot voor de computer"],
+    [
+      "Het model leert de trainingsdata uit het hoofd en werkt slecht op nieuwe data",
+      true,
+    ],
+    ["Het model traint te snel"],
+    ["Het model heeft te weinig opslag"],
   ]),
-  bankQuestion('AI', 2, 'Wat betekent overfitting?', [
-    ['Het model is te groot voor de computer'],
-    ['Het model leert de trainingsdata uit het hoofd en werkt slecht op nieuwe data', true],
-    ['Het model traint te snel'],
-    ['Het model heeft te weinig opslag'],
-  ]),
-  bankQuestion('AI', 3, 'Waarvoor gebruik je een validatieset bij het trainen van een model?', [
-    ['Om het model sneller te maken'],
-    ['Om de trainingsdata groter te maken'],
-    ['Om het model op te slaan'],
-    ['Om instellingen te kiezen en overfitting te zien, met data waarop niet getraind is', true],
-  ]),
-  bankQuestion('AI', 3, 'Welke activatiefunctie berekent max(0, x)?', [
-    ['Sigmoid'],
-    ['ReLU', true],
-    ['Softmax'],
-    ['Tanh'],
+  bankQuestion(
+    "AI",
+    3,
+    "Waarvoor gebruik je een validatieset bij het trainen van een model?",
+    [
+      ["Om het model sneller te maken"],
+      ["Om de trainingsdata groter te maken"],
+      ["Om het model op te slaan"],
+      [
+        "Om instellingen te kiezen en overfitting te zien, met data waarop niet getraind is",
+        true,
+      ],
+    ],
+  ),
+  bankQuestion("AI", 3, "Welke activatiefunctie berekent max(0, x)?", [
+    ["Sigmoid"],
+    ["ReLU", true],
+    ["Softmax"],
+    ["Tanh"],
   ]),
 
   // ---------- TI: technische informatica ----------
-  bankQuestion('TI', 1, 'Hoeveel bits zitten er in één byte?', [['4'], ['8', true], ['16'], ['32']]),
-  bankQuestion('TI', 1, 'Welk onderdeel van een computer voert de berekeningen uit?', [
-    ['De voeding'],
-    ['De harde schijf'],
-    ['De CPU', true],
-    ['De ventilator'],
+  bankQuestion("TI", 1, "Hoeveel bits zitten er in één byte?", [
+    ["4"],
+    ["8", true],
+    ["16"],
+    ["32"],
   ]),
-  bankQuestion('TI', 2, 'Wat is het binaire getal 1010 in het tientallige stelsel?', [
-    ['8'],
-    ['10', true],
-    ['12'],
-    ['20'],
-  ]),
-  bankQuestion('TI', 2, 'Wat doet een pull-up-weerstand bij een knop op een microcontroller?', [
-    ['De ingang hoog houden als de knop niet is ingedrukt', true],
-    ['De knop sneller laten reageren'],
-    ['De spanning verhogen naar 12 volt'],
-    ['De stroom meten'],
-  ]),
-  bankQuestion('TI', 3, 'Hoeveel verschillende waarden kun je opslaan in 10 bits?', [
-    ['100'],
-    ['512'],
-    ['2048'],
-    ['1024', true],
-  ]),
-  bankQuestion('TI', 3, 'Wat is het hexadecimale getal 0xFF in het tientallige stelsel?', [
-    ['15'],
-    ['255', true],
-    ['256'],
-    ['1600'],
-  ]),
+  bankQuestion(
+    "TI",
+    1,
+    "Welk onderdeel van een computer voert de berekeningen uit?",
+    [["De voeding"], ["De harde schijf"], ["De CPU", true], ["De ventilator"]],
+  ),
+  bankQuestion(
+    "TI",
+    2,
+    "Wat is het binaire getal 1010 in het tientallige stelsel?",
+    [["8"], ["10", true], ["12"], ["20"]],
+  ),
+  bankQuestion(
+    "TI",
+    2,
+    "Wat doet een pull-up-weerstand bij een knop op een microcontroller?",
+    [
+      ["De ingang hoog houden als de knop niet is ingedrukt", true],
+      ["De knop sneller laten reageren"],
+      ["De spanning verhogen naar 12 volt"],
+      ["De stroom meten"],
+    ],
+  ),
+  bankQuestion(
+    "TI",
+    3,
+    "Hoeveel verschillende waarden kun je opslaan in 10 bits?",
+    [["100"], ["512"], ["2048"], ["1024", true]],
+  ),
+  bankQuestion(
+    "TI",
+    3,
+    "Wat is het hexadecimale getal 0xFF in het tientallige stelsel?",
+    [["15"], ["255", true], ["256"], ["1600"]],
+  ),
 
   // ---------- CSC: cyber security en cloud ----------
-  bankQuestion('CSC', 1, 'Wat is phishing?', [
-    ['Een soort firewall'],
-    ['Een programmeertaal'],
-    ['Nepberichten om gegevens te stelen', true],
-    ['Een back-upmethode'],
+  bankQuestion("CSC", 1, "Wat is phishing?", [
+    ["Een soort firewall"],
+    ["Een programmeertaal"],
+    ["Nepberichten om gegevens te stelen", true],
+    ["Een back-upmethode"],
   ]),
-  bankQuestion('CSC', 1, 'Welk wachtwoord is het veiligst?', [
-    ['Je geboortedatum'],
-    ['Een lang wachtwoord dat je nergens anders gebruikt', true],
-    ['Hetzelfde wachtwoord voor alle websites'],
-    ['Alleen kleine letters'],
+  bankQuestion("CSC", 1, "Welk wachtwoord is het veiligst?", [
+    ["Je geboortedatum"],
+    ["Een lang wachtwoord dat je nergens anders gebruikt", true],
+    ["Hetzelfde wachtwoord voor alle websites"],
+    ["Alleen kleine letters"],
   ]),
-  bankQuestion('CSC', 2, 'Waar staat de S in HTTPS voor?', [['Speed'], ['Server'], ['Simple'], ['Secure', true]]),
-  bankQuestion('CSC', 2, 'Wat is tweestapsverificatie (2FA)?', [
-    ['Inloggen met iets wat je weet én iets wat je hebt, zoals een code op je telefoon', true],
-    ['Twee keer je wachtwoord typen'],
-    ['Op twee apparaten tegelijk inloggen'],
-    ['Een wachtwoord van twee woorden'],
+  bankQuestion("CSC", 2, "Waar staat de S in HTTPS voor?", [
+    ["Speed"],
+    ["Server"],
+    ["Simple"],
+    ["Secure", true],
   ]),
-  bankQuestion('CSC', 3, 'Waarom sla je wachtwoorden op als hash (bijv. bcrypt) en niet als gewone tekst?', [
-    ['Een hash neemt minder ruimte in'],
-    ['Dan kan de gebruiker zonder wachtwoord inloggen'],
-    ['Lekt de database, dan kan niemand de wachtwoorden zomaar lezen', true],
-    ['Dan kun je het wachtwoord later terugmailen'],
+  bankQuestion("CSC", 2, "Wat is tweestapsverificatie (2FA)?", [
+    [
+      "Inloggen met iets wat je weet én iets wat je hebt, zoals een code op je telefoon",
+      true,
+    ],
+    ["Twee keer je wachtwoord typen"],
+    ["Op twee apparaten tegelijk inloggen"],
+    ["Een wachtwoord van twee woorden"],
   ]),
-  bankQuestion('CSC', 3, 'Wat is SQL-injectie?', [
-    ['Een snelle manier om een database te vullen'],
-    ['Invoer van een gebruiker die als SQL-code wordt uitgevoerd', true],
-    ['Een back-up terugzetten'],
-    ['Een index toevoegen aan een tabel'],
+  bankQuestion(
+    "CSC",
+    3,
+    "Waarom sla je wachtwoorden op als hash (bijv. bcrypt) en niet als gewone tekst?",
+    [
+      ["Een hash neemt minder ruimte in"],
+      ["Dan kan de gebruiker zonder wachtwoord inloggen"],
+      ["Lekt de database, dan kan niemand de wachtwoorden zomaar lezen", true],
+      ["Dan kun je het wachtwoord later terugmailen"],
+    ],
+  ),
+  bankQuestion("CSC", 3, "Wat is SQL-injectie?", [
+    ["Een snelle manier om een database te vullen"],
+    ["Invoer van een gebruiker die als SQL-code wordt uitgevoerd", true],
+    ["Een back-up terugzetten"],
+    ["Een index toevoegen aan een tabel"],
   ]),
 
   // ---------- GD: game development ----------
-  bankQuestion('GD', 1, 'Waar staat FPS voor bij een game?', [
-    ['Frames per second', true],
-    ['Files per server'],
-    ['Fast player speed'],
-    ['Free points system'],
+  bankQuestion("GD", 1, "Waar staat FPS voor bij een game?", [
+    ["Frames per second", true],
+    ["Files per server"],
+    ["Fast player speed"],
+    ["Free points system"],
   ]),
-  bankQuestion('GD', 1, 'Wat is een sprite in een 2D-game?', [
-    ['Een geluidseffect'],
-    ['Een plaatje of figuurtje dat in de game beweegt', true],
-    ['Een soort level'],
-    ['Een opgeslagen spel'],
+  bankQuestion("GD", 1, "Wat is een sprite in een 2D-game?", [
+    ["Een geluidseffect"],
+    ["Een plaatje of figuurtje dat in de game beweegt", true],
+    ["Een soort level"],
+    ["Een opgeslagen spel"],
   ]),
-  bankQuestion('GD', 2, 'Waarom vermenigvuldig je een beweging met deltaTime?', [
-    ['Zodat de game minder geheugen gebruikt'],
-    ['Zodat de graphics scherper worden'],
-    ['Zodat de snelheid gelijk blijft, ook als de framerate verandert', true],
-    ['Zodat het geluid gelijk loopt met het beeld'],
+  bankQuestion(
+    "GD",
+    2,
+    "Waarom vermenigvuldig je een beweging met deltaTime?",
+    [
+      ["Zodat de game minder geheugen gebruikt"],
+      ["Zodat de graphics scherper worden"],
+      ["Zodat de snelheid gelijk blijft, ook als de framerate verandert", true],
+      ["Zodat het geluid gelijk loopt met het beeld"],
+    ],
+  ),
+  bankQuestion("GD", 2, "Wat is een hitbox?", [
+    ["Een doos met power-ups"],
+    ["Het pauzemenu van een game"],
+    ["Een grafische kaart"],
+    ["Een (onzichtbare) vorm waarmee de game botsingen bepaalt", true],
   ]),
-  bankQuestion('GD', 2, 'Wat is een hitbox?', [
-    ['Een doos met power-ups'],
-    ['Het pauzemenu van een game'],
-    ['Een grafische kaart'],
-    ['Een (onzichtbare) vorm waarmee de game botsingen bepaalt', true],
-  ]),
-  bankQuestion('GD', 3, 'Waarvoor gebruikt een 3D-engine meestal een quaternion?', [
-    ['Om een rotatie op te slaan zonder gimbal lock', true],
-    ['Om een kleur op te slaan'],
-    ['Om een geluid af te spelen'],
-    ['Om een texture te comprimeren'],
-  ]),
-  bankQuestion('GD', 3, 'Wat is culling in game-graphics?', [
-    ['Alle objecten twee keer tekenen'],
-    ['Objecten die je toch niet ziet, niet tekenen', true],
-    ['Textures groter maken'],
-    ['De framerate vastzetten'],
+  bankQuestion(
+    "GD",
+    3,
+    "Waarvoor gebruikt een 3D-engine meestal een quaternion?",
+    [
+      ["Om een rotatie op te slaan zonder gimbal lock", true],
+      ["Om een kleur op te slaan"],
+      ["Om een geluid af te spelen"],
+      ["Om een texture te comprimeren"],
+    ],
+  ),
+  bankQuestion("GD", 3, "Wat is culling in game-graphics?", [
+    ["Alle objecten twee keer tekenen"],
+    ["Objecten die je toch niet ziet, niet tekenen", true],
+    ["Textures groter maken"],
+    ["De framerate vastzetten"],
   ]),
 
   // ---------- BI: business en IT ----------
-  bankQuestion('BI', 1, 'Wat is een database?', [
-    ['Een soort beeldscherm'],
-    ['Een programmeertaal'],
-    ['Een georganiseerde verzameling gegevens', true],
-    ['Een netwerkkabel'],
+  bankQuestion("BI", 1, "Wat is een database?", [
+    ["Een soort beeldscherm"],
+    ["Een programmeertaal"],
+    ["Een georganiseerde verzameling gegevens", true],
+    ["Een netwerkkabel"],
   ]),
-  bankQuestion('BI', 1, 'Waar staat de afkorting KPI voor?', [
-    ['Key Performance Indicator', true],
-    ['Klant Product Index'],
-    ['Key Program Interface'],
-    ['Kwaliteit Per Item'],
+  bankQuestion("BI", 1, "Waar staat de afkorting KPI voor?", [
+    ["Key Performance Indicator", true],
+    ["Klant Product Index"],
+    ["Key Program Interface"],
+    ["Kwaliteit Per Item"],
   ]),
-  bankQuestion('BI', 2, 'Welke SQL-opdracht haalt rijen op uit een tabel?', [
-    ['GET'],
-    ['SELECT', true],
-    ['FETCH'],
-    ['PULL'],
+  bankQuestion("BI", 2, "Welke SQL-opdracht haalt rijen op uit een tabel?", [
+    ["GET"],
+    ["SELECT", true],
+    ["FETCH"],
+    ["PULL"],
   ]),
-  bankQuestion('BI', 2, 'Wat is een stakeholder in een IT-project?', [
-    ['De server waarop het project draait'],
-    ['Het eerste deel van de code'],
-    ['Een soort testscript'],
-    ['Iemand die belang heeft bij het project of er invloed op heeft', true],
+  bankQuestion("BI", 2, "Wat is een stakeholder in een IT-project?", [
+    ["De server waarop het project draait"],
+    ["Het eerste deel van de code"],
+    ["Een soort testscript"],
+    ["Iemand die belang heeft bij het project of er invloed op heeft", true],
   ]),
-  bankQuestion('BI', 3, 'Wat doet GROUP BY in SQL?', [
-    ['Rijen met dezelfde waarde samennemen, bijvoorbeeld om per groep te tellen', true],
-    ['Rijen sorteren'],
-    ['Een tabel verwijderen'],
-    ['Twee databases koppelen'],
+  bankQuestion("BI", 3, "Wat doet GROUP BY in SQL?", [
+    [
+      "Rijen met dezelfde waarde samennemen, bijvoorbeeld om per groep te tellen",
+      true,
+    ],
+    ["Rijen sorteren"],
+    ["Een tabel verwijderen"],
+    ["Twee databases koppelen"],
   ]),
-  bankQuestion('BI', 3, 'Wat is het doel van een database normaliseren?', [
-    ['De database sneller laten opstarten'],
-    ['Dubbele gegevens voorkomen en de structuur logisch houden', true],
-    ['Alle tabellen samenvoegen tot één tabel'],
-    ['De gegevens versleutelen'],
+  bankQuestion("BI", 3, "Wat is het doel van een database normaliseren?", [
+    ["De database sneller laten opstarten"],
+    ["Dubbele gegevens voorkomen en de structuur logisch houden", true],
+    ["Alle tabellen samenvoegen tot één tabel"],
+    ["De gegevens versleutelen"],
   ]),
-]
+];
 
 // Korte schrijfwijze, net als in quizQuestions.js: [tekst, true] is het goede antwoord.
 // De ids tellen per vraag vanaf 1: de schermen koppelen daar de kleuren en vormen aan.
@@ -505,8 +557,12 @@ function bankQuestion(skill, difficulty, text, options, timeLimitSec = 20) {
     difficulty,
     text,
     timeLimitSec,
-    options: options.map(([optionText, isCorrect = false], i) => ({ id: i + 1, text: optionText, isCorrect })),
-  }
+    options: options.map(([optionText, isCorrect = false], i) => ({
+      id: i + 1,
+      text: optionText,
+      isCorrect,
+    })),
+  };
 }
 ```
 
@@ -532,18 +588,18 @@ Dit is het hart van de story. Het bestand is **puur**: het krijgt de gemiddelden
 Plak deze code erin:
 
 ```js
-import { SKILL_CODES } from '../../src/utils/skills.js'
+import { SKILL_CODES } from "../../src/utils/skills.js";
 
 // Het algoritme van de willekeurige quiz: welke vragen uit de vragenbank komen erin?
 // Puur: gemiddelden en vragen erin, gekozen vragen eruit. Geen Game, geen sockets, geen database.
 // Daardoor kun je het testen zonder server (backend/tests/questionSelector.test.js).
 
-export const MAX_SKILL = 5 // het bereik van de sliders is 0 t/m 5
+export const MAX_SKILL = 5; // het bereik van de sliders is 0 t/m 5
 
 // Grenzen voor de moeilijkheid: 0 tot 1.7 = makkelijk, 1.7 tot 3.4 = gemiddeld, 3.4 tot 5 = moeilijk.
 // Als constanten, zodat het team ze op één plek kan bijstellen.
-export const EASY_BELOW = 1.7
-export const MEDIUM_BELOW = 3.4
+export const EASY_BELOW = 1.7;
+export const MEDIUM_BELOW = 3.4;
 
 /**
  * Welke moeilijkheid past bij het gemiddelde van de lobby voor één vaardigheid?
@@ -552,10 +608,10 @@ export const MEDIUM_BELOW = 3.4
  * @returns {1 | 2 | 3}
  */
 export function difficultyFor(average) {
-  if (average === null) return 2
-  if (average < EASY_BELOW) return 1
-  if (average < MEDIUM_BELOW) return 2
-  return 3
+  if (average === null) return 2;
+  if (average < EASY_BELOW) return 1;
+  if (average < MEDIUM_BELOW) return 2;
+  return 3;
 }
 
 /**
@@ -567,7 +623,7 @@ export function difficultyFor(average) {
  * @param {number | null} average
  */
 export function skillWeight(average) {
-  return MAX_SKILL + 1 - (average ?? MAX_SKILL / 2)
+  return MAX_SKILL + 1 - (average ?? MAX_SKILL / 2);
 }
 
 /**
@@ -576,15 +632,15 @@ export function skillWeight(average) {
  * @param {() => number} random geeft een getal van 0 tot 1; een test geeft hier een vaste functie mee.
  */
 export function pickWeighted(items, weightOf, random = Math.random) {
-  const total = items.reduce((sum, item) => sum + weightOf(item), 0)
+  const total = items.reduce((sum, item) => sum + weightOf(item), 0);
   // Stel je alle gewichten voor als stukken van één lange lat. We prikken op een willekeurige plek
   // en kijken in welk stuk we zitten. Een groter gewicht = een groter stuk = meer kans.
-  let ticket = random() * total
+  let ticket = random() * total;
   for (const item of items) {
-    ticket -= weightOf(item)
-    if (ticket < 0) return item
+    ticket -= weightOf(item);
+    if (ticket < 0) return item;
   }
-  return items[items.length - 1] // alleen bij afrondingsfoutjes
+  return items[items.length - 1]; // alleen bij afrondingsfoutjes
 }
 
 /**
@@ -598,29 +654,39 @@ export function pickWeighted(items, weightOf, random = Math.random) {
  */
 export function selectQuestions(bank, averages, count, random = Math.random) {
   // Een kopie: we halen er vragen uit, maar de bank zelf moet heel blijven voor de volgende game.
-  const remaining = bank.filter((question) => SKILL_CODES.includes(question.skill))
-  const chosen = []
+  const remaining = bank.filter((question) =>
+    SKILL_CODES.includes(question.skill),
+  );
+  const chosen = [];
 
   while (chosen.length < count && remaining.length > 0) {
     // 1. Welke vaardigheid? Alleen vaardigheden waarvan nog vragen over zijn.
-    const skills = SKILL_CODES.filter((code) => remaining.some((question) => question.skill === code))
-    const skill = pickWeighted(skills, (code) => skillWeight(averages[code] ?? null), random)
+    const skills = SKILL_CODES.filter((code) =>
+      remaining.some((question) => question.skill === code),
+    );
+    const skill = pickWeighted(
+      skills,
+      (code) => skillWeight(averages[code] ?? null),
+      random,
+    );
 
     // 2. Welke moeilijkheid past bij de lobby voor deze vaardigheid?
-    const target = difficultyFor(averages[skill] ?? null)
+    const target = difficultyFor(averages[skill] ?? null);
 
     // 3. De vragen van deze vaardigheid die het dichtst bij die moeilijkheid zitten.
-    const ofSkill = remaining.filter((question) => question.skill === skill)
-    const distance = (question) => Math.abs(question.difficulty - target)
-    const closest = Math.min(...ofSkill.map(distance))
-    const candidates = ofSkill.filter((question) => distance(question) === closest)
-    const question = candidates[Math.floor(random() * candidates.length)]
+    const ofSkill = remaining.filter((question) => question.skill === skill);
+    const distance = (question) => Math.abs(question.difficulty - target);
+    const closest = Math.min(...ofSkill.map(distance));
+    const candidates = ofSkill.filter(
+      (question) => distance(question) === closest,
+    );
+    const question = candidates[Math.floor(random() * candidates.length)];
 
     // 4. Opnemen in de quiz en uit de pot halen.
-    chosen.push(question)
-    remaining.splice(remaining.indexOf(question), 1)
+    chosen.push(question);
+    remaining.splice(remaining.indexOf(question), 1);
   }
-  return chosen
+  return chosen;
 }
 ```
 
@@ -630,12 +696,12 @@ Sla op. Lees daarna de uitleg hieronder rustig door: dit is het stuk waar je het
 
 Een rij `if`-regels van laag naar hoog. De eerste die klopt, wint (`return` stopt de functie meteen):
 
-| Gemiddelde | Uitkomst |
-|---|---|
+| Gemiddelde                    | Uitkomst     |
+| ----------------------------- | ------------ |
 | `null` (niemand vulde het in) | 2, gemiddeld |
-| 0 tot 1,7 | 1, makkelijk |
-| 1,7 tot 3,4 | 2, gemiddeld |
-| 3,4 tot en met 5 | 3, moeilijk |
+| 0 tot 1,7                     | 1, makkelijk |
+| 1,7 tot 3,4                   | 2, gemiddeld |
+| 3,4 tot en met 5              | 3, moeilijk  |
 
 Let op: in JavaScript schrijf je een komma-getal met een **punt**: `1.7`, niet `1,7`.
 
@@ -644,14 +710,14 @@ Let op: in JavaScript schrijf je een komma-getal met een **punt**: `1.7`, niet `
 `MAX_SKILL + 1 - gemiddelde` = `6 - gemiddelde`. Een voorbeeld met een lobby die goed is in SD en slecht in GD:
 
 | Vaardigheid | Gemiddelde | Gewicht | Kans (gewicht / totaal) |
-|---|---|---|---|
-| SD | 5 | 1 | 1 / 11 ≈ 9 % |
-| AI | 5 | 1 | 9 % |
-| TI | 5 | 1 | 9 % |
-| CSC | 5 | 1 | 9 % |
-| GD | 0 | 6 | 6 / 11 ≈ 55 % |
-| BI | 5 | 1 | 9 % |
-| **Totaal** | | **11** | 100 % |
+| ----------- | ---------- | ------- | ----------------------- |
+| SD          | 5          | 1       | 1 / 11 ≈ 9 %            |
+| AI          | 5          | 1       | 9 %                     |
+| TI          | 5          | 1       | 9 %                     |
+| CSC         | 5          | 1       | 9 %                     |
+| GD          | 0          | 6       | 6 / 11 ≈ 55 %           |
+| BI          | 5          | 1       | 9 %                     |
+| **Totaal**  |            | **11**  | 100 %                   |
 
 GD komt dus ongeveer de helft van de tijd, maar de andere vaardigheden komen ook nog voor. Dat is precies wat de chat bedoelde met "niet altijd de laagste kiezen".
 
@@ -680,92 +746,109 @@ Stel je een lat voor van 11 cm lang (het totaal van de gewichten). Elke vaardigh
 **Nieuw bestand:** `backend/tests/questionSelector.test.js`
 
 ```js
-import { describe, expect, it } from 'vitest'
-import { QUESTION_BANK } from '../game/questionBank.js'
-import { difficultyFor, pickWeighted, selectQuestions, skillWeight } from '../game/questionSelector.js'
-import { SKILL_CODES } from '../../src/utils/skills.js'
+import { describe, expect, it } from "vitest";
+import { QUESTION_BANK } from "../game/questionBank.js";
+import {
+  difficultyFor,
+  pickWeighted,
+  selectQuestions,
+  skillWeight,
+} from "../game/questionSelector.js";
+import { SKILL_CODES } from "../../src/utils/skills.js";
 
 // Een lobby waarin elke vaardigheid hetzelfde gemiddelde heeft, bijv. allSkills(5) = { SD: 5, AI: 5, ... }.
-const allSkills = (average) => Object.fromEntries(SKILL_CODES.map((code) => [code, average]))
+const allSkills = (average) =>
+  Object.fromEntries(SKILL_CODES.map((code) => [code, average]));
 
-describe('de vragenbank', () => {
-  it('heeft per vaardigheid en per moeilijkheid minstens 2 vragen', () => {
+describe("de vragenbank", () => {
+  it("heeft per vaardigheid en per moeilijkheid minstens 2 vragen", () => {
     for (const skill of SKILL_CODES) {
       for (const difficulty of [1, 2, 3]) {
-        const found = QUESTION_BANK.filter((question) => question.skill === skill && question.difficulty === difficulty)
-        expect(found.length, `${skill}, moeilijkheid ${difficulty}`).toBeGreaterThanOrEqual(2)
+        const found = QUESTION_BANK.filter(
+          (question) =>
+            question.skill === skill && question.difficulty === difficulty,
+        );
+        expect(
+          found.length,
+          `${skill}, moeilijkheid ${difficulty}`,
+        ).toBeGreaterThanOrEqual(2);
       }
     }
-  })
+  });
 
-  it('heeft alleen bekende vaardigheden en precies één goed antwoord per vraag', () => {
+  it("heeft alleen bekende vaardigheden en precies één goed antwoord per vraag", () => {
     for (const question of QUESTION_BANK) {
-      expect(SKILL_CODES, question.text).toContain(question.skill)
-      expect(question.options.filter((option) => option.isCorrect), question.text).toHaveLength(1)
+      expect(SKILL_CODES, question.text).toContain(question.skill);
+      expect(
+        question.options.filter((option) => option.isCorrect),
+        question.text,
+      ).toHaveLength(1);
     }
-  })
-})
+  });
+});
 
-describe('questionSelector', () => {
-  it('koppelt een gemiddelde aan een moeilijkheid', () => {
-    expect(difficultyFor(0)).toBe(1)
-    expect(difficultyFor(1.6)).toBe(1)
-    expect(difficultyFor(1.7)).toBe(2)
-    expect(difficultyFor(3.3)).toBe(2)
-    expect(difficultyFor(3.4)).toBe(3)
-    expect(difficultyFor(5)).toBe(3)
-    expect(difficultyFor(null)).toBe(2) // niemand vulde iets in
-  })
+describe("questionSelector", () => {
+  it("koppelt een gemiddelde aan een moeilijkheid", () => {
+    expect(difficultyFor(0)).toBe(1);
+    expect(difficultyFor(1.6)).toBe(1);
+    expect(difficultyFor(1.7)).toBe(2);
+    expect(difficultyFor(3.3)).toBe(2);
+    expect(difficultyFor(3.4)).toBe(3);
+    expect(difficultyFor(5)).toBe(3);
+    expect(difficultyFor(null)).toBe(2); // niemand vulde iets in
+  });
 
-  it('geeft de zwakste vaardigheid het hoogste gewicht, maar nooit 0', () => {
-    expect(skillWeight(0)).toBe(6)
-    expect(skillWeight(5)).toBe(1)
-    expect(skillWeight(null)).toBe(3.5)
-  })
+  it("geeft de zwakste vaardigheid het hoogste gewicht, maar nooit 0", () => {
+    expect(skillWeight(0)).toBe(6);
+    expect(skillWeight(5)).toBe(1);
+    expect(skillWeight(null)).toBe(3.5);
+  });
 
-  it('kiest met pickWeighted naar verhouding van het gewicht', () => {
-    const weights = { a: 1, b: 3 } // samen 4: a is het stuk 0–1 van de lat, b het stuk 1–4
-    const weightOf = (item) => weights[item]
-    expect(pickWeighted(['a', 'b'], weightOf, () => 0.2)).toBe('a') // 0.2 × 4 = 0.8 → in het stuk van a
-    expect(pickWeighted(['a', 'b'], weightOf, () => 0.3)).toBe('b') // 0.3 × 4 = 1.2 → in het stuk van b
-  })
+  it("kiest met pickWeighted naar verhouding van het gewicht", () => {
+    const weights = { a: 1, b: 3 }; // samen 4: a is het stuk 0–1 van de lat, b het stuk 1–4
+    const weightOf = (item) => weights[item];
+    expect(pickWeighted(["a", "b"], weightOf, () => 0.2)).toBe("a"); // 0.2 × 4 = 0.8 → in het stuk van a
+    expect(pickWeighted(["a", "b"], weightOf, () => 0.3)).toBe("b"); // 0.3 × 4 = 1.2 → in het stuk van b
+  });
 
-  it('kiest precies het gevraagde aantal vragen, zonder dubbele', () => {
-    const chosen = selectQuestions(QUESTION_BANK, allSkills(2.5), 10)
-    expect(chosen).toHaveLength(10)
-    expect(new Set(chosen).size).toBe(10)
-  })
+  it("kiest precies het gevraagde aantal vragen, zonder dubbele", () => {
+    const chosen = selectQuestions(QUESTION_BANK, allSkills(2.5), 10);
+    expect(chosen).toHaveLength(10);
+    expect(new Set(chosen).size).toBe(10);
+  });
 
-  it('geeft nooit meer vragen dan er in de bank staan', () => {
-    expect(selectQuestions(QUESTION_BANK.slice(0, 3), allSkills(2.5), 10)).toHaveLength(3)
-  })
+  it("geeft nooit meer vragen dan er in de bank staan", () => {
+    expect(
+      selectQuestions(QUESTION_BANK.slice(0, 3), allSkills(2.5), 10),
+    ).toHaveLength(3);
+  });
 
-  it('kiest de moeilijkheid die bij het gemiddelde past, en anders de dichtstbijzijnde', () => {
-    const sdOnly = QUESTION_BANK.filter((question) => question.skill === 'SD')
+  it("kiest de moeilijkheid die bij het gemiddelde past, en anders de dichtstbijzijnde", () => {
+    const sdOnly = QUESTION_BANK.filter((question) => question.skill === "SD");
 
     // Beginners (0): eerst de 2 makkelijke SD-vragen, daarna is "gemiddeld" het dichtstbij.
-    const beginners = selectQuestions(sdOnly, allSkills(0), 3)
-    expect(beginners.map((question) => question.difficulty)).toEqual([1, 1, 2])
+    const beginners = selectQuestions(sdOnly, allSkills(0), 3);
+    expect(beginners.map((question) => question.difficulty)).toEqual([1, 1, 2]);
 
     // Experts (5): de 2 moeilijke vragen.
-    const experts = selectQuestions(sdOnly, allSkills(5), 2)
-    expect(experts.map((question) => question.difficulty)).toEqual([3, 3])
-  })
+    const experts = selectQuestions(sdOnly, allSkills(5), 2);
+    expect(experts.map((question) => question.difficulty)).toEqual([3, 3]);
+  });
 
-  it('kiest vaker een vraag over de zwakste vaardigheid (1000 keer geprobeerd)', () => {
-    const averages = { ...allSkills(5), GD: 0 } // iedereen is goed in alles, behalve GD
-    const counts = Object.fromEntries(SKILL_CODES.map((code) => [code, 0]))
+  it("kiest vaker een vraag over de zwakste vaardigheid (1000 keer geprobeerd)", () => {
+    const averages = { ...allSkills(5), GD: 0 }; // iedereen is goed in alles, behalve GD
+    const counts = Object.fromEntries(SKILL_CODES.map((code) => [code, 0]));
     for (let i = 0; i < 1000; i++) {
-      const [question] = selectQuestions(QUESTION_BANK, averages, 1)
-      counts[question.skill] += 1
+      const [question] = selectQuestions(QUESTION_BANK, averages, 1);
+      counts[question.skill] += 1;
     }
     // Gewichten: GD 6, de vijf andere elk 1. GD hoort dus ongeveer 6 van de 11 keer (± 545 keer) te komen.
-    expect(counts.GD).toBeGreaterThan(450)
-    for (const code of SKILL_CODES.filter((code) => code !== 'GD')) {
-      expect(counts[code]).toBeLessThan(counts.GD)
+    expect(counts.GD).toBeGreaterThan(450);
+    for (const code of SKILL_CODES.filter((code) => code !== "GD")) {
+      expect(counts[code]).toBeLessThan(counts.GD);
     }
-  })
-})
+  });
+});
 ```
 
 **Hoe lees je een test?**
@@ -845,17 +928,17 @@ Er is maar één ding bijgekomen: `questionBank = null`. De rest staat nu onder 
 Zoek in de constructor (**regel 36**):
 
 ```js
-    this.questions = questions;
+this.questions = questions;
 ```
 
 **Vervang die regel** door:
 
 ```js
-    // Willekeurige quiz: geen vaste vragen, maar een vragenbank. Welke vragen het worden,
-    // kiest start() pas, want dan pas weet je wie er meedoen en welke vaardigheden ze hebben.
-    this.questionBank = questionBank;
-    this.questionCount = questionBank ? DEFAULT_QUESTION_COUNT : null;
-    this.questions = questionBank ? [] : questions;
+// Willekeurige quiz: geen vaste vragen, maar een vragenbank. Welke vragen het worden,
+// kiest start() pas, want dan pas weet je wie er meedoen en welke vaardigheden ze hebben.
+this.questionBank = questionBank;
+this.questionCount = questionBank ? DEFAULT_QUESTION_COUNT : null;
+this.questions = questionBank ? [] : questions;
 ```
 
 **Uitleg:**
@@ -970,22 +1053,22 @@ Vervang door:
 Zoek in dezelfde functie (**regel 176**):
 
 ```js
-    if (this.settings.lockLobbyOnStart) this.locked = true;
+if (this.settings.lockLobbyOnStart) this.locked = true;
 ```
 
 Zet **direct daaronder**:
 
 ```js
-    // Willekeurige quiz: nu de spelers bekend zijn, kiest het algoritme de vragen.
-    // Na "Opnieuw spelen" gebeurt dit opnieuw, dus dan komen er (meestal) andere vragen.
-    if (this.questionBank) {
-      this.questions = selectQuestions(
-        this.questionBank,
-        this.getSkillAverages(),
-        this.questionCount,
-        random,
-      );
-    }
+// Willekeurige quiz: nu de spelers bekend zijn, kiest het algoritme de vragen.
+// Na "Opnieuw spelen" gebeurt dit opnieuw, dus dan komen er (meestal) andere vragen.
+if (this.questionBank) {
+  this.questions = selectQuestions(
+    this.questionBank,
+    this.getSkillAverages(),
+    this.questionCount,
+    random,
+  );
+}
 ```
 
 **Uitleg:**
@@ -1008,14 +1091,14 @@ Sla op (`Ctrl+S`).
 Zoek bovenaan (**regel 4**):
 
 ```js
-import { QUIZ_QUESTIONS } from '../game/quizQuestions.js'
+import { QUIZ_QUESTIONS } from "../game/quizQuestions.js";
 ```
 
 Zet **direct daaronder**:
 
 ```js
-import { QUESTION_BANK } from '../game/questionBank.js'
-import { DEFAULT_QUESTION_COUNT } from '../../src/utils/randomQuiz.js'
+import { QUESTION_BANK } from "../game/questionBank.js";
+import { DEFAULT_QUESTION_COUNT } from "../../src/utils/randomQuiz.js";
 ```
 
 ### 6b. De tests
@@ -1023,57 +1106,66 @@ import { DEFAULT_QUESTION_COUNT } from '../../src/utils/randomQuiz.js'
 Ga naar het **einde** van het bestand (`Ctrl+End`). Zet na de allerlaatste regel `})` een lege regel en dan:
 
 ```js
-
-describe('Game: willekeurige quiz', () => {
-  let game
-  const T0 = 1_000_000
+describe("Game: willekeurige quiz", () => {
+  let game;
+  const T0 = 1_000_000;
 
   beforeEach(() => {
-    game = new Game('482913', { questionBank: QUESTION_BANK })
-  })
+    game = new Game("482913", { questionBank: QUESTION_BANK });
+  });
 
-  it('rekent het gemiddelde per vaardigheid uit, zonder bots', () => {
+  it("rekent het gemiddelde per vaardigheid uit, zonder bots", () => {
     // Lege lobby: nog niemand, dus null (en geen deling door 0).
-    expect(game.getSkillAverages().SD).toBeNull()
+    expect(game.getSkillAverages().SD).toBeNull();
 
-    game.addPlayer('Emma', { skills: { SD: 0, AI: 5 } })
-    game.addPlayer('Sam', { skills: { SD: 4 } })
-    game.addPlayer('Testbot', { isBot: true, skills: { SD: 5 } })
+    game.addPlayer("Emma", { skills: { SD: 0, AI: 5 } });
+    game.addPlayer("Sam", { skills: { SD: 4 } });
+    game.addPlayer("Testbot", { isBot: true, skills: { SD: 5 } });
 
     // SD: (0 + 4) / 2 = 2. AI: alleen Emma vulde het in. GD: niemand.
-    expect(game.getSkillAverages()).toMatchObject({ SD: 2, AI: 5, GD: null })
-  })
+    expect(game.getSkillAverages()).toMatchObject({ SD: 2, AI: 5, GD: null });
+  });
 
-  it('laat de host het aantal vragen kiezen, alleen in de lobby', () => {
-    expect(game.questionCount).toBe(DEFAULT_QUESTION_COUNT)
-    expect(() => game.setQuestionCount(7)).toThrow(expect.objectContaining({ code: 'INVALID_QUESTION_COUNT' }))
-    expect(() => game.setQuestionCount('5')).toThrow(expect.objectContaining({ code: 'INVALID_QUESTION_COUNT' }))
+  it("laat de host het aantal vragen kiezen, alleen in de lobby", () => {
+    expect(game.questionCount).toBe(DEFAULT_QUESTION_COUNT);
+    expect(() => game.setQuestionCount(7)).toThrow(
+      expect.objectContaining({ code: "INVALID_QUESTION_COUNT" }),
+    );
+    expect(() => game.setQuestionCount("5")).toThrow(
+      expect.objectContaining({ code: "INVALID_QUESTION_COUNT" }),
+    );
 
-    game.setQuestionCount(5)
-    game.addPlayer('Emma', { skills: { SD: 1 } })
-    game.addPlayer('Sam', { skills: { SD: 3 } })
-    game.start(T0)
+    game.setQuestionCount(5);
+    game.addPlayer("Emma", { skills: { SD: 1 } });
+    game.addPlayer("Sam", { skills: { SD: 3 } });
+    game.start(T0);
 
-    expect(game.totalQuestions).toBe(5)
-    expect(game.questions.every((question) => QUESTION_BANK.includes(question))).toBe(true)
-    expect(() => game.setQuestionCount(10)).toThrow(expect.objectContaining({ code: 'WRONG_PHASE' }))
-  })
+    expect(game.totalQuestions).toBe(5);
+    expect(
+      game.questions.every((question) => QUESTION_BANK.includes(question)),
+    ).toBe(true);
+    expect(() => game.setQuestionCount(10)).toThrow(
+      expect.objectContaining({ code: "WRONG_PHASE" }),
+    );
+  });
 
-  it('stuurt de vaardigheid en moeilijkheid van een vraag niet naar de spelers', () => {
-    game.addPlayer('Emma')
-    game.addPlayer('Sam')
-    game.start(T0)
-    const payload = game.getQuestionPayload(T0)
-    expect(payload).not.toHaveProperty('skill')
-    expect(payload).not.toHaveProperty('difficulty')
-  })
+  it("stuurt de vaardigheid en moeilijkheid van een vraag niet naar de spelers", () => {
+    game.addPlayer("Emma");
+    game.addPlayer("Sam");
+    game.start(T0);
+    const payload = game.getQuestionPayload(T0);
+    expect(payload).not.toHaveProperty("skill");
+    expect(payload).not.toHaveProperty("difficulty");
+  });
 
-  it('weigert een aantal vragen bij een quiz uit de database', () => {
-    const normal = new Game('111111', { questions: QUIZ_QUESTIONS })
-    expect(normal.questionCount).toBeNull()
-    expect(() => normal.setQuestionCount(5)).toThrow(expect.objectContaining({ code: 'NOT_RANDOM_QUIZ' }))
-  })
-})
+  it("weigert een aantal vragen bij een quiz uit de database", () => {
+    const normal = new Game("111111", { questions: QUIZ_QUESTIONS });
+    expect(normal.questionCount).toBeNull();
+    expect(() => normal.setQuestionCount(5)).toThrow(
+      expect.objectContaining({ code: "NOT_RANDOM_QUIZ" }),
+    );
+  });
+});
 ```
 
 **Uitleg:**
@@ -1106,14 +1198,14 @@ Een game aanmaken gaat via REST (`POST /api/games`), omdat alleen een HTTP-antwo
 Zoek bovenaan (**regel 4**):
 
 ```js
-import { GameError } from '../game/GameError.js'
+import { GameError } from "../game/GameError.js";
 ```
 
 Zet **direct daaronder**:
 
 ```js
-import { QUESTION_BANK } from '../game/questionBank.js'
-import { RANDOM_QUIZ_TITLE } from '../../src/utils/randomQuiz.js'
+import { QUESTION_BANK } from "../game/questionBank.js";
+import { RANDOM_QUIZ_TITLE } from "../../src/utils/randomQuiz.js";
 ```
 
 ### 7b. De route
@@ -1127,15 +1219,17 @@ router.post('/', requireRole('TEACHER', 'ADMIN'), async (request, response) => {
 Zet **direct daaronder** (dus als eerste regels binnen de route, vóór `const quizId = ...`):
 
 ```js
-  // Willekeurige quiz: geen quiz uit de database, maar de vragenbank.
-  // Welke vragen het worden, kiest Game.start() pas als bekend is wie er meedoen.
-  if (request.body?.random === true) {
-    const game = gameManager.createGame({ questionBank: QUESTION_BANK, quizTitle: RANDOM_QUIZ_TITLE })
-    const token = gameManager.createSession({ code: game.code, role: 'host' })
-    setSessionCookie(response, HOST_COOKIE, token)
-    return response.status(201).json({ gameCode: game.code })
-  }
-
+// Willekeurige quiz: geen quiz uit de database, maar de vragenbank.
+// Welke vragen het worden, kiest Game.start() pas als bekend is wie er meedoen.
+if (request.body?.random === true) {
+  const game = gameManager.createGame({
+    questionBank: QUESTION_BANK,
+    quizTitle: RANDOM_QUIZ_TITLE,
+  });
+  const token = gameManager.createSession({ code: game.code, role: "host" });
+  setSessionCookie(response, HOST_COOKIE, token);
+  return response.status(201).json({ gameCode: game.code });
+}
 ```
 
 **Uitleg:**
@@ -1154,25 +1248,26 @@ Zet **direct daaronder** (dus als eerste regels binnen de route, vóór `const q
 Ga naar het **einde** van het bestand en zet na de laatste regel een lege regel en dan:
 
 ```js
+describe("willekeurige quiz hosten", () => {
+  it("een docent start een willekeurige quiz zonder quizId", async () => {
+    const { agent } = await loggedIn({ role: "TEACHER" });
+    const response = await agent.post("/api/games").send({ random: true });
+    expect(response.status).toBe(201);
 
-describe('willekeurige quiz hosten', () => {
-  it('een docent start een willekeurige quiz zonder quizId', async () => {
-    const { agent } = await loggedIn({ role: 'TEACHER' })
-    const response = await agent.post('/api/games').send({ random: true })
-    expect(response.status).toBe(201)
-
-    const game = gameManager.getGame(response.body.gameCode)
-    expect(game.quizTitle).toBe('Willekeurige quiz')
-    expect(game.questionCount).toBe(10)
+    const game = gameManager.getGame(response.body.gameCode);
+    expect(game.quizTitle).toBe("Willekeurige quiz");
+    expect(game.questionCount).toBe(10);
     // De vragen worden pas bij de start gekozen, als bekend is wie er meedoen.
-    expect(game.questions).toEqual([])
-  })
+    expect(game.questions).toEqual([]);
+  });
 
-  it('een student mag ook geen willekeurige quiz hosten', async () => {
-    const { agent } = await loggedIn({ role: 'STUDENT' })
-    expect((await agent.post('/api/games').send({ random: true })).status).toBe(403)
-  })
-})
+  it("een student mag ook geen willekeurige quiz hosten", async () => {
+    const { agent } = await loggedIn({ role: "STUDENT" });
+    expect((await agent.post("/api/games").send({ random: true })).status).toBe(
+      403,
+    );
+  });
+});
 ```
 
 `loggedIn` en `gameManager` staan al bovenaan dit bestand. Deze tests draaien met `npm run test:api` (Docker moet aan staan; ze gebruiken een aparte testdatabase `quiz_test`, dus je eigen data blijft heel). Dat doen we in hoofdstuk 17.
@@ -1232,32 +1327,31 @@ Hier staan alle berichten die **alleen de host** mag sturen. Een speler kan dit 
 Zoek het einde van het blok voor `HOST_LOCK` (**regel 100–108**):
 
 ```js
-  socket.on(EVENTS.HOST_LOCK, ({ locked } = {}, ack) => {
-    try {
-      game.setLocked(locked);
-      sendLobbyUpdate(io, game);
-      ack?.({ ok: true, locked: game.locked });
-    } catch (error) {
-      ack?.(toErrorResponse(error));
-    }
-  });
+socket.on(EVENTS.HOST_LOCK, ({ locked } = {}, ack) => {
+  try {
+    game.setLocked(locked);
+    sendLobbyUpdate(io, game);
+    ack?.({ ok: true, locked: game.locked });
+  } catch (error) {
+    ack?.(toErrorResponse(error));
+  }
+});
 ```
 
 Zet **direct na die laatste regel `});`** een lege regel en dan:
 
 ```js
-
-  // Willekeurige quiz: aantal vragen kiezen. Game.setQuestionCount controleert of het mag;
-  // lobby:update vertelt daarna iedereen (host én spelers) het nieuwe aantal.
-  socket.on(EVENTS.HOST_SET_QUESTION_COUNT, ({ count } = {}, ack) => {
-    try {
-      game.setQuestionCount(count);
-      sendLobbyUpdate(io, game);
-      ack?.({ ok: true, questionCount: game.questionCount });
-    } catch (error) {
-      ack?.(toErrorResponse(error));
-    }
-  });
+// Willekeurige quiz: aantal vragen kiezen. Game.setQuestionCount controleert of het mag;
+// lobby:update vertelt daarna iedereen (host én spelers) het nieuwe aantal.
+socket.on(EVENTS.HOST_SET_QUESTION_COUNT, ({ count } = {}, ack) => {
+  try {
+    game.setQuestionCount(count);
+    sendLobbyUpdate(io, game);
+    ack?.({ ok: true, questionCount: game.questionCount });
+  } catch (error) {
+    ack?.(toErrorResponse(error));
+  }
+});
 ```
 
 > Let op: dit moet **binnen** de functie `registerHostHandlers` staan, dus vóór de `}` die die functie afsluit (en vóór de functie `toErrorResponse`).
@@ -1327,7 +1421,7 @@ Vervang door:
 
 Sla beide bestanden op.
 
-**De server is nu klaar.** Docker herstart de server vanzelf als je een bestand opslaat (dat doet *nodemon*). Draai voor de zekerheid `npm test`: alles moet groen zijn.
+**De server is nu klaar.** Docker herstart de server vanzelf als je een bestand opslaat (dat doet _nodemon_). Draai voor de zekerheid `npm test`: alles moet groen zijn.
 
 ---
 
@@ -1349,9 +1443,17 @@ import "./QuestionCountPicker.css";
  * zodat de knoppen na verversen of in een tweede tabblad hetzelfde laten zien als de server.
  * @param {{ value: number, onChange: (count: number) => void, disabled?: boolean }} props
  */
-export default function QuestionCountPicker({ value, onChange, disabled = false }) {
+export default function QuestionCountPicker({
+  value,
+  onChange,
+  disabled = false,
+}) {
   return (
-    <div className="count-picker" role="group" aria-labelledby="count-picker-label">
+    <div
+      className="count-picker"
+      role="group"
+      aria-labelledby="count-picker-label"
+    >
       <p id="count-picker-label" className="count-picker__label">
         Aantal vragen
       </p>
@@ -1478,7 +1580,7 @@ export function RandomQuizButton() {
     <Link to="/host/new?random=1" className="ui-btn">
       Willekeurige quiz hosten
     </Link>
-  )
+  );
 }
 
 /** De knoppen rechts naast de titel: willekeurige quiz hosten en een nieuwe quiz maken. */
@@ -1488,9 +1590,8 @@ export function QuizActions() {
       <RandomQuizButton />
       <NewQuizButton />
     </div>
-  )
+  );
 }
-
 ```
 
 Zoek daarna in dezelfde file (**regel 59**, na je toevoeging een stuk lager):
@@ -1509,7 +1610,7 @@ Vervang door:
 
 - `<Link to="...">` is een link binnen de app (van react-router): de pagina laadt niet opnieuw. `Link` is bovenaan dit bestand al geïmporteerd.
 - `className="ui-btn"` is de gewone knopstijl (wit met rand). "Nieuwe quiz" heeft `ui-btn--primary` (gevuld); zo blijft "Nieuwe quiz" de hoofdknop.
-- `/host/new?random=1`: het stukje na het `?` heet een *query parameter*. In stap 13a lezen we hem uit.
+- `/host/new?random=1`: het stukje na het `?` heet een _query parameter_. In stap 13a lezen we hem uit.
 - `AdminLayout` heeft één plek voor een knop (`action`). Daarom zetten we de twee knoppen samen in één `<div>`.
 
 ### 12b. Dezelfde knoppen op de pagina "Quizzen"
@@ -1519,13 +1620,13 @@ Vervang door:
 Zoek (**regel 8**):
 
 ```jsx
-import { NewQuizButton } from './OverviewPage.jsx'
+import { NewQuizButton } from "./OverviewPage.jsx";
 ```
 
 Vervang door:
 
 ```jsx
-import { QuizActions } from './OverviewPage.jsx'
+import { QuizActions } from "./OverviewPage.jsx";
 ```
 
 Zoek (**regel 42**) in de regel met `<AdminLayout`:
@@ -1547,7 +1648,6 @@ action={<QuizActions />}
 Zet **helemaal onderaan** het bestand:
 
 ```css
-
 /* Twee knoppen rechts naast de titel (Willekeurige quiz hosten, Nieuwe quiz). */
 .admin-page__actions {
   display: flex;
@@ -1591,34 +1691,34 @@ import QuestionCountPicker from "../../components/QuestionCountPicker.jsx";
 Zoek in `HostCreatePage` (**regel 34**):
 
 ```jsx
-  const quizId = Number(params.get("quiz"));
+const quizId = Number(params.get("quiz"));
 ```
 
 Zet **direct daaronder**:
 
 ```jsx
-  const random = params.get("random") === "1";
+const random = params.get("random") === "1";
 ```
 
 Zoek iets lager (**regel 42–46**):
 
 ```jsx
-    if (!quizId) {
-      setError("Kies eerst een quiz in het beheerportaal.");
-      return;
-    }
-    api("/games", { method: "POST", body: { quizId } })
+if (!quizId) {
+  setError("Kies eerst een quiz in het beheerportaal.");
+  return;
+}
+api("/games", { method: "POST", body: { quizId } });
 ```
 
 Vervang die 5 regels door:
 
 ```jsx
-    if (!quizId && !random) {
-      setError("Kies eerst een quiz in het beheerportaal.");
-      return;
-    }
-    const body = random ? { random: true } : { quizId };
-    api("/games", { method: "POST", body })
+if (!quizId && !random) {
+  setError("Kies eerst een quiz in het beheerportaal.");
+  return;
+}
+const body = random ? { random: true } : { quizId };
+api("/games", { method: "POST", body });
 ```
 
 En zoek (**regel 49**):
@@ -1644,25 +1744,24 @@ Vervang door:
 Zoek in `HostGamePage` (**regel 156**):
 
 ```jsx
-  // Eén actie voor "Antwoorden nu tonen", "Tijd stoppen" en "Volgende vraag" (zie Game.next op de server).
+// Eén actie voor "Antwoorden nu tonen", "Tijd stoppen" en "Volgende vraag" (zie Game.next op de server).
 ```
 
 Zet **direct erboven** (dus tussen de functie `toggleLock` en dit commentaar):
 
 ```jsx
-  // Willekeurige quiz: aantal vragen kiezen. Net als bij het slot wachten we op lobby:update:
-  // zo laat het scherm altijd het aantal zien dat de server echt gebruikt.
-  async function changeQuestionCount(count) {
-    setBusy(true);
-    setError(null);
-    const response = await emitWithAck(EVENTS.HOST_SET_QUESTION_COUNT, {
-      count,
-    }).catch(() => null);
-    if (!response?.ok)
-      setError(response?.message ?? "Geen antwoord van de server.");
-    setBusy(false);
-  }
-
+// Willekeurige quiz: aantal vragen kiezen. Net als bij het slot wachten we op lobby:update:
+// zo laat het scherm altijd het aantal zien dat de server echt gebruikt.
+async function changeQuestionCount(count) {
+  setBusy(true);
+  setError(null);
+  const response = await emitWithAck(EVENTS.HOST_SET_QUESTION_COUNT, {
+    count,
+  }).catch(() => null);
+  if (!response?.ok)
+    setError(response?.message ?? "Geen antwoord van de server.");
+  setBusy(false);
+}
 ```
 
 **Uitleg:**
@@ -1677,14 +1776,14 @@ Zet **direct erboven** (dus tussen de functie `toggleLock` en dit commentaar):
 Zoek (**regel 272**, na 13c een stuk lager):
 
 ```jsx
-  const { players, playerCount, locked } = game.lobby;
+const { players, playerCount, locked } = game.lobby;
 ```
 
 Vervang door:
 
 ```jsx
-  const { players, playerCount, locked, questionCount, skillAverages } =
-    game.lobby;
+const { players, playerCount, locked, questionCount, skillAverages } =
+  game.lobby;
 ```
 
 > Heb je de tijdslimiet-handleiding al gedaan? Dan staat hier ook `timeLimitSec`. Laat die staan en zet `questionCount, skillAverages` erachter.
@@ -1694,34 +1793,37 @@ Vervang door:
 Zoek (**regel 294**):
 
 ```jsx
-        <LockButton locked={locked} onToggle={toggleLock} disabled={busy} />
+<LockButton locked={locked} onToggle={toggleLock} disabled={busy} />
 ```
 
 Zet **direct daaronder**:
 
 ```jsx
-        {/* Alleen bij een willekeurige quiz: bij een quiz uit de database is questionCount null. */}
-        {questionCount != null && (
-          <section
-            className="host-game__random"
-            aria-labelledby="host-game-random-title"
-          >
-            <h2 id="host-game-random-title" className="host-game__random-title">
-              Willekeurige quiz
-            </h2>
-            <QuestionCountPicker
-              value={questionCount}
-              onChange={changeQuestionCount}
-              disabled={busy}
-            />
-            <p className="host-game__random-hint">
-              Gemiddelde vaardigheden van deze lobby. Bij de start komen er meer
-              vragen over de zwakste vaardigheden, op een niveau dat bij jullie
-              past.
-            </p>
-            <SkillBars skills={roundAverages(skillAverages)} />
-          </section>
-        )}
+{
+  /* Alleen bij een willekeurige quiz: bij een quiz uit de database is questionCount null. */
+}
+{
+  questionCount != null && (
+    <section
+      className="host-game__random"
+      aria-labelledby="host-game-random-title"
+    >
+      <h2 id="host-game-random-title" className="host-game__random-title">
+        Willekeurige quiz
+      </h2>
+      <QuestionCountPicker
+        value={questionCount}
+        onChange={changeQuestionCount}
+        disabled={busy}
+      />
+      <p className="host-game__random-hint">
+        Gemiddelde vaardigheden van deze lobby. Bij de start komen er meer
+        vragen over de zwakste vaardigheden, op een niveau dat bij jullie past.
+      </p>
+      <SkillBars skills={roundAverages(skillAverages)} />
+    </section>
+  );
+}
 ```
 
 **Uitleg:**
@@ -1737,7 +1839,6 @@ De server stuurt gemiddelden zoals `2.3333333`. Dat past niet mooi op het scherm
 Ga naar het **einde** van het bestand (`Ctrl+End`). Zet na de allerlaatste `}` een lege regel en dan:
 
 ```jsx
-
 // De server stuurt bijv. 2.3333…; op het scherm is één decimaal genoeg.
 // null (nog niemand heeft deze vaardigheid ingevuld) tonen we als 0.
 function roundAverages(averages = {}) {
@@ -1761,7 +1862,6 @@ Sla op.
 Zet **helemaal onderaan**:
 
 ```css
-
 /* Willekeurige quiz: aantal vragen kiezen en de vaardigheden van de lobby. */
 .host-game__random {
   display: flex;
@@ -1811,21 +1911,23 @@ Sla op.
 Zoek (**regel 247–250**):
 
 ```jsx
-        <p>
-          {game.lobby.playerCount}{" "}
-          {game.lobby.playerCount === 1 ? "speler" : "spelers"} in de lobby
-        </p>
+<p>
+  {game.lobby.playerCount} {game.lobby.playerCount === 1 ? "speler" : "spelers"}{" "}
+  in de lobby
+</p>
 ```
 
 Zet **direct na die `</p>`**:
 
 ```jsx
-        {game.lobby.questionCount != null && (
-          <p>
-            Willekeurige quiz: <strong>{game.lobby.questionCount} vragen</strong>,
-            gekozen op de vaardigheden van deze lobby.
-          </p>
-        )}
+{
+  game.lobby.questionCount != null && (
+    <p>
+      Willekeurige quiz: <strong>{game.lobby.questionCount} vragen</strong>,
+      gekozen op de vaardigheden van deze lobby.
+    </p>
+  );
+}
 ```
 
 > Heb je de tijdslimiet-handleiding al gedaan? Dan staat daar al een `<p>` met "Tijd per vraag". Zet dit blok eronder.
@@ -1842,7 +1944,7 @@ Afspraak in dit team: verander je een event of endpoint, dan pas je ook dit docu
 
 ### 15a. `POST /api/games`
 
-Zoek in de eerste tabel de regel die begint met `` | `POST /api/games` | ``. Verander de tweede kolom van:
+Zoek in de eerste tabel de regel die begint met ``| `POST /api/games` |``. Verander de tweede kolom van:
 
 ```md
 `{ quizId }`
@@ -1856,7 +1958,7 @@ in:
 
 ### 15b. Het nieuwe event in de tabel "Client → server"
 
-Zoek de regel die begint met `` | `host:lock` | host | ``. Zet **daaronder** een nieuwe regel:
+Zoek de regel die begint met ``| `host:lock` | host |``. Zet **daaronder** een nieuwe regel:
 
 ```md
 | `host:set-question-count` | host | `{ count: 5 \| 10 \| 15 \| 20 }` | `{ ok, questionCount }`; alleen bij een willekeurige quiz (anders `NOT_RANDOM_QUIZ`) en alleen in `LOBBY` (anders `WRONG_PHASE`). Andere waarden: `INVALID_QUESTION_COUNT`. Bij `host:start` kiest de server zoveel vragen uit de vragenbank (`backend/game/questionSelector.js`). Iedereen krijgt `lobby:update` met de nieuwe `questionCount` |
@@ -1923,21 +2025,21 @@ npm run test:smoke
 Je hebt **twee spelers** nodig om te kunnen starten. Gebruik twee andere browservensters, bijvoorbeeld een **incognitovenster** (`Ctrl+Shift+N` in Chrome) en een andere browser (Edge of Firefox). Elk venster is een andere speler.
 
 1. **Host:** ga naar http://localhost:5173/inloggen en log in als docent: `docent@hu.nl` / `Docent123`.
-2. Je komt in het beheerportaal. **Controleer:** rechts naast de titel staan **Willekeurige quiz hosten** en **Nieuwe quiz**. ✅ *criterium 1*
+2. Je komt in het beheerportaal. **Controleer:** rechts naast de titel staan **Willekeurige quiz hosten** en **Nieuwe quiz**. ✅ _criterium 1_
 3. Klik **Willekeurige quiz hosten**. Je ziet de lobby met de code.
 4. **Controleer:** onder de slot-knop staat het blok **Willekeurige quiz**; de knop **10** is oranje en alle balkjes staan op 0.
 5. **Speler 1:** ga in het incognitovenster naar http://localhost:5173/join, vul de code in en de naam `Test1`. Zet de sliders: **GD op 0**, alle andere op **5**. Klik Join.
-6. **Controleer bij de host:** de balkjes veranderen meteen: GD 0/5, de rest 5/5. ✅ *criterium 3*
+6. **Controleer bij de host:** de balkjes veranderen meteen: GD 0/5, de rest 5/5. ✅ _criterium 3_
 7. **Speler 2:** in de andere browser hetzelfde met naam `Test2`, ook **GD op 0** en de rest op **5**.
 8. **Controleer bij de spelers:** "Willekeurige quiz: **10 vragen**, gekozen op de vaardigheden van deze lobby."
 9. **Host:** klik **5**.
-   - De knop **5** wordt oranje. ✅ *criterium 2*
+   - De knop **5** wordt oranje. ✅ _criterium 2_
    - Bij beide spelers staat meteen "**5 vragen**" (zonder verversen).
 10. Druk bij de host op **F5** (verversen). De knop **5** moet nog oranje zijn en de balkjes moeten blijven staan. (Werkt dit niet? Dan mist stap 10b.)
 11. **Host:** klik **Quiz starten** en speel de vragen.
     - Er komen precies **5** vragen.
-    - De meeste gaan over **game development**, en dan de **makkelijke** (FPS, sprite), want GD is 0 in deze lobby. Vragen over andere vaardigheden zijn juist **moeilijk** (bijv. "0xFF", "ReLU", "GROUP BY"), want daar is de lobby 5. ✅ *criterium 4*
-    - Geen vraag komt twee keer. ✅ *criterium 5*
+    - De meeste gaan over **game development**, en dan de **makkelijke** (FPS, sprite), want GD is 0 in deze lobby. Vragen over andere vaardigheden zijn juist **moeilijk** (bijv. "0xFF", "ReLU", "GROUP BY"), want daar is de lobby 5. ✅ _criterium 4_
+    - Geen vraag komt twee keer. ✅ _criterium 5_
 12. Klik op het podium op **Nog een ronde** en start opnieuw: je krijgt (meestal) andere vragen.
 13. **Gewone quiz:** ga terug naar `/admin` en host een quiz uit de lijst. Het blok "Willekeurige quiz" mag daar **niet** staan, en de quiz speelt zijn eigen vragen zoals altijd.
 
@@ -1951,8 +2053,8 @@ De knoppen sturen alleen goede waarden, maar iemand kan ook zelf berichten sture
 2. Plak dit en druk Enter:
 
    ```js
-   const { socket } = await import('/src/socket/socket.js');
-   socket.emit('host:set-question-count', { count: 7 }, console.log);
+   const { socket } = await import("/src/socket/socket.js");
+   socket.emit("host:set-question-count", { count: 7 }, console.log);
    ```
 
 3. Je moet zien: `{ ok: false, error: 'INVALID_QUESTION_COUNT', message: 'Kies een geldig aantal vragen.' }`.
@@ -1989,24 +2091,24 @@ Open daarna GitHub. Je ziet een gele balk met **Compare & pull request**. Klik e
 
 ## 19. Problemen oplossen
 
-| Wat zie je? | Waarschijnlijke oorzaak | Oplossing |
-|---|---|---|
-| `npm test`: `Failed to resolve import "../game/questionSelector.js"` | Bestandsnaam anders gespeld of in de verkeerde map | Het moet precies `backend/game/questionSelector.js` zijn (hoofdletters tellen mee) |
-| Test "de vragenbank": `SD, moeilijkheid 2: expected 1 to be greater than or equal to 2` | Een vraag weggehaald of een verkeerde moeilijkheid gegeven | Zorg voor minstens 2 vragen per vaardigheid per moeilijkheid |
-| Test "de vragenbank": `expected [...] to include 'Sd'` | Een code anders gespeld | Gebruik precies de codes uit `src/utils/skills.js`, in hoofdletters |
-| `npm test`: `SKILL_CODES is not defined` of `selectQuestions is not defined` | Stap 5a vergeten | Voeg de imports bovenaan `Game.js` toe |
-| `npm test`: `game.setQuestionCount is not a function` | Stap 5d staat niet in de klasse `Game`, of is niet opgeslagen | Controleer dat de functie tussen `setLocked` en `setConnected` staat; `Ctrl+S` |
-| Gemiddelde is `NaN` | Er wordt gedeeld door 0, of een waarde is geen getal | Vergelijk stap 5e: de regel `if (values.length === 0) return [code, null];` moet erin staan |
-| De quiz start, maar zonder vragen (meteen het podium of een fout) | Stap 5f vergeten | `start()` moet `selectQuestions(...)` aanroepen als er een vragenbank is |
-| Knop "Willekeurige quiz hosten" werkt, maar je krijgt "Kies eerst een quiz in het beheerportaal." | Stap 13b niet (helemaal) gedaan | Controleer `const random = ...` en `if (!quizId && !random)` |
-| Fout "Kies eerst een quiz om te hosten." (`QUIZ_REQUIRED`) | Stap 7b vergeten of staat ná `const quizId` | Het `if (request.body?.random === true)`-blok moet als eerste in de route staan |
-| Het blok "Willekeurige quiz" verschijnt niet | Stap 10a of 13d/13e vergeten | Controleer `broadcast.js` en `HostGamePage.jsx`. Kijk in de console (`F12`) naar fouten |
-| Je klikt een aantal, maar de knop wordt niet oranje en er komt geen melding | Stap 8b vergeten (de frontend kent het event niet) of stap 9 ontbreekt | Controleer beide `events.js`-bestanden en `hostHandlers.js`. Kijk ook in `docker compose logs backend` |
-| Knop wordt oranje, maar na F5 weer 10 / balkjes leeg | Stap 10b vergeten | Voeg `questionCount` en `skillAverages` toe in `syncState.js` |
-| Witte pagina, console: `roundAverages is not defined` | Stap 13f vergeten | Zet de functie onderaan `HostGamePage.jsx` |
-| Melding "Geen antwoord van de server." | De server draait niet of is gecrasht | `docker compose logs backend` laat de fout zien. Vaak een typfout (vergeten `}` of `,`) |
-| `npm run test:api`: `Failed to load url nodemailer` | De hulpprogramma's op je laptop zijn niet bijgewerkt | Draai `npm install` en probeer opnieuw |
-| `git push` geeft een fout over "upstream" | De branch bestaat nog niet op GitHub | Gebruik precies `git push -u origin feature_WillekeurigeQuiz` |
+| Wat zie je?                                                                                       | Waarschijnlijke oorzaak                                                | Oplossing                                                                                              |
+| ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `npm test`: `Failed to resolve import "../game/questionSelector.js"`                              | Bestandsnaam anders gespeld of in de verkeerde map                     | Het moet precies `backend/game/questionSelector.js` zijn (hoofdletters tellen mee)                     |
+| Test "de vragenbank": `SD, moeilijkheid 2: expected 1 to be greater than or equal to 2`           | Een vraag weggehaald of een verkeerde moeilijkheid gegeven             | Zorg voor minstens 2 vragen per vaardigheid per moeilijkheid                                           |
+| Test "de vragenbank": `expected [...] to include 'Sd'`                                            | Een code anders gespeld                                                | Gebruik precies de codes uit `src/utils/skills.js`, in hoofdletters                                    |
+| `npm test`: `SKILL_CODES is not defined` of `selectQuestions is not defined`                      | Stap 5a vergeten                                                       | Voeg de imports bovenaan `Game.js` toe                                                                 |
+| `npm test`: `game.setQuestionCount is not a function`                                             | Stap 5d staat niet in de klasse `Game`, of is niet opgeslagen          | Controleer dat de functie tussen `setLocked` en `setConnected` staat; `Ctrl+S`                         |
+| Gemiddelde is `NaN`                                                                               | Er wordt gedeeld door 0, of een waarde is geen getal                   | Vergelijk stap 5e: de regel `if (values.length === 0) return [code, null];` moet erin staan            |
+| De quiz start, maar zonder vragen (meteen het podium of een fout)                                 | Stap 5f vergeten                                                       | `start()` moet `selectQuestions(...)` aanroepen als er een vragenbank is                               |
+| Knop "Willekeurige quiz hosten" werkt, maar je krijgt "Kies eerst een quiz in het beheerportaal." | Stap 13b niet (helemaal) gedaan                                        | Controleer `const random = ...` en `if (!quizId && !random)`                                           |
+| Fout "Kies eerst een quiz om te hosten." (`QUIZ_REQUIRED`)                                        | Stap 7b vergeten of staat ná `const quizId`                            | Het `if (request.body?.random === true)`-blok moet als eerste in de route staan                        |
+| Het blok "Willekeurige quiz" verschijnt niet                                                      | Stap 10a of 13d/13e vergeten                                           | Controleer `broadcast.js` en `HostGamePage.jsx`. Kijk in de console (`F12`) naar fouten                |
+| Je klikt een aantal, maar de knop wordt niet oranje en er komt geen melding                       | Stap 8b vergeten (de frontend kent het event niet) of stap 9 ontbreekt | Controleer beide `events.js`-bestanden en `hostHandlers.js`. Kijk ook in `docker compose logs backend` |
+| Knop wordt oranje, maar na F5 weer 10 / balkjes leeg                                              | Stap 10b vergeten                                                      | Voeg `questionCount` en `skillAverages` toe in `syncState.js`                                          |
+| Witte pagina, console: `roundAverages is not defined`                                             | Stap 13f vergeten                                                      | Zet de functie onderaan `HostGamePage.jsx`                                                             |
+| Melding "Geen antwoord van de server."                                                            | De server draait niet of is gecrasht                                   | `docker compose logs backend` laat de fout zien. Vaak een typfout (vergeten `}` of `,`)                |
+| `npm run test:api`: `Failed to load url nodemailer`                                               | De hulpprogramma's op je laptop zijn niet bijgewerkt                   | Draai `npm install` en probeer opnieuw                                                                 |
+| `git push` geeft een fout over "upstream"                                                         | De branch bestaat nog niet op GitHub                                   | Gebruik precies `git push -u origin feature_WillekeurigeQuiz`                                          |
 
 Kom je er niet uit? Kijk met `git diff` naar al je wijzigingen en vergelijk ze regel voor regel met deze handleiding.
 

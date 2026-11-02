@@ -8,14 +8,14 @@ Uitleg over hoe het werkt: [SOCKET-IO-UITLEG.md](SOCKET-IO-UITLEG.md).
 
 ## REST: sessies (zetten en wissen cookies)
 
-| Methode + pad | Body | Antwoord | Cookie |
-|---|---|---|---|
-| `POST /api/games` | `{ quizId }` | `201 { gameCode }` | zet `quiz_host`; vereist `quiz_auth` van een docent of beheerder |
-| `GET /api/games/:code` | – | `{ exists, locked, phase, quizTitle }` | – |
-| `POST /api/games/:code/players` | `{ nickname, skills }` | `201 { playerId, nickname }` | zet `quiz_player`; met `quiz_auth` wordt de accountnaam de `nickname` |
-| `GET /api/games/:code/me` | – | `{ role: 'player', playerId, nickname }` | leest `quiz_player` |
-| `GET /api/games/:code/me?role=host` | – | `{ role: 'host' }` | leest `quiz_host` |
-| `DELETE /api/games/:code/players/me` | – | `{ ok: true }` | wist `quiz_player` |
+| Methode + pad                        | Body                               | Antwoord                                 | Cookie                                                                |
+| ------------------------------------ | ---------------------------------- | ---------------------------------------- | --------------------------------------------------------------------- |
+| `POST /api/games`                    | `{ quizId }` of `{ random: true }` | `201 { gameCode }`                       | zet `quiz_host`; vereist `quiz_auth` van een docent of beheerder      |
+| `GET /api/games/:code`               | –                                  | `{ exists, locked, phase, quizTitle }`   | –                                                                     |
+| `POST /api/games/:code/players`      | `{ nickname, skills }`             | `201 { playerId, nickname }`             | zet `quiz_player`; met `quiz_auth` wordt de accountnaam de `nickname` |
+| `GET /api/games/:code/me`            | –                                  | `{ role: 'player', playerId, nickname }` | leest `quiz_player`                                                   |
+| `GET /api/games/:code/me?role=host`  | –                                  | `{ role: 'host' }`                       | leest `quiz_host`                                                     |
+| `DELETE /api/games/:code/players/me` | –                                  | `{ ok: true }`                           | wist `quiz_player`                                                    |
 
 Fouten: `{ error, message }` met status `404 GAME_NOT_FOUND`, `409 NAME_TAKEN`, `400 NAME_INVALID`, `403 LOBBY_LOCKED`, `403 WRONG_PHASE`, `401 NO_SESSION`.
 Bij `POST /api/games` ook: `401 NOT_LOGGED_IN`, `403 FORBIDDEN` (geen docent), `400 QUIZ_REQUIRED`, `404 QUIZ_NOT_FOUND` (bestaat niet of is van een andere docent), `409 QUIZ_DRAFT`, `409 QUIZ_EMPTY`.
@@ -27,8 +27,8 @@ Alle account-endpoints (`/api/auth`, `/api/me`, `/api/admin`, `/api/quizzes`) st
 ## Verbinden
 
 ```js
-socket.auth = { code: '482913', role: 'player' } // of 'host'
-socket.connect()
+socket.auth = { code: "482913", role: "player" }; // of 'host'
+socket.connect();
 ```
 
 De `sessionMiddleware` leest de bijbehorende cookie uit de handshake. Klopt die niet bij `code` en `role`, dan krijgt de client `connect_error` met `error.message === 'NO_SESSION'`.
@@ -39,16 +39,17 @@ Rooms: `482913` (iedereen), `482913:host` (host), `482913:player:<id>` (één sp
 
 Elke actie heeft een ack: `{ ok: true, ... }` of `{ ok: false, error, message }`.
 
-| Event | Van | Payload | Ack |
-|---|---|---|---|
-| `game:sync` | host/speler | `{}` | `{ ok, state }`, zie hieronder |
-| `host:start` | host | `{}` | `{ ok }`; alleen in `LOBBY`. Minimaal 2 spelers, anders `NOT_ENOUGH_PLAYERS`. Daarna kan niemand meer joinen |
-| `host:next` | host | `{ phase, questionIndex }` (het scherm waarop de host klikte) | `{ ok }`; één stap verder, zie [Fases](#fases). Hoort de klik bij een scherm dat al voorbij is (dubbelklik, timer was eerder), dan `WRONG_PHASE` |
-| `player:answer` | speler | `{ questionIndex, optionId }` | `{ ok }` (zegt **niet** of het goed is). Fouten: `WRONG_PHASE`, `ALREADY_ANSWERED`, `TOO_LATE`, `INVALID_OPTION` |
-| `host:restart` | host | `{}` | `{ ok }`; alleen in fase `PODIUM`, anders `WRONG_PHASE`. Zelfde spelers en namen, scores 0, terug naar `LOBBY` |
-| `host:kick-player` | host | `{ playerId }` | `{ ok }`; alleen in `LOBBY`, anders `WRONG_PHASE`. Speler weg (naam komt vrij), zijn open sockets worden verbroken en iedereen krijgt `lobby:update`. De speler-client gaat dan terug naar `/join/:code` |
-| `host:lock` | host | `{ locked: boolean }` | `{ ok, locked }`; alleen in `LOBBY`, anders `WRONG_PHASE`. Op slot: `POST /api/games/:code/players` geeft `403 LOBBY_LOCKED`; wie al in de lobby zit, blijft erin. Iedereen krijgt `lobby:update` met de nieuwe `locked` |
-| `dev:finish` | host, **alleen development** | `{ bots?: number }` | `{ ok }`; vanuit de lobby: speelt 8 nepvragen en gaat meteen naar `PODIUM` (om het eindscherm met veel spelers te testen) |
+| Event                     | Van                          | Payload                                                       | Ack                                                                                                                                                                                                                                                                                                                                             |
+| ------------------------- | ---------------------------- | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `game:sync`               | host/speler                  | `{}`                                                          | `{ ok, state }`, zie hieronder                                                                                                                                                                                                                                                                                                                  |
+| `host:start`              | host                         | `{}`                                                          | `{ ok }`; alleen in `LOBBY`. Minimaal 2 spelers, anders `NOT_ENOUGH_PLAYERS`. Daarna kan niemand meer joinen                                                                                                                                                                                                                                    |
+| `host:next`               | host                         | `{ phase, questionIndex }` (het scherm waarop de host klikte) | `{ ok }`; één stap verder, zie [Fases](#fases). Hoort de klik bij een scherm dat al voorbij is (dubbelklik, timer was eerder), dan `WRONG_PHASE`                                                                                                                                                                                                |
+| `player:answer`           | speler                       | `{ questionIndex, optionId }`                                 | `{ ok }` (zegt **niet** of het goed is). Fouten: `WRONG_PHASE`, `ALREADY_ANSWERED`, `TOO_LATE`, `INVALID_OPTION`                                                                                                                                                                                                                                |
+| `host:restart`            | host                         | `{}`                                                          | `{ ok }`; alleen in fase `PODIUM`, anders `WRONG_PHASE`. Zelfde spelers en namen, scores 0, terug naar `LOBBY`                                                                                                                                                                                                                                  |
+| `host:kick-player`        | host                         | `{ playerId }`                                                | `{ ok }`; alleen in `LOBBY`, anders `WRONG_PHASE`. Speler weg (naam komt vrij), zijn open sockets worden verbroken en iedereen krijgt `lobby:update`. De speler-client gaat dan terug naar `/join/:code`                                                                                                                                        |
+| `host:lock`               | host                         | `{ locked: boolean }`                                         | `{ ok, locked }`; alleen in `LOBBY`, anders `WRONG_PHASE`. Op slot: `POST /api/games/:code/players` geeft `403 LOBBY_LOCKED`; wie al in de lobby zit, blijft erin. Iedereen krijgt `lobby:update` met de nieuwe `locked`                                                                                                                        |
+| `host:set-question-count` | host                         | `{ count: 5 \| 10 \| 15 \| 20 }`                              | `{ ok, questionCount }`; alleen bij een willekeurige quiz (anders `NOT_RANDOM_QUIZ`) en alleen in `LOBBY` (anders `WRONG_PHASE`). Andere waarden: `INVALID_QUESTION_COUNT`. Bij `host:start` kiest de server zoveel vragen uit de vragenbank (`backend/game/questionSelector.js`). Iedereen krijgt `lobby:update` met de nieuwe `questionCount` |
+| `dev:finish`              | host, **alleen development** | `{ bots?: number }`                                           | `{ ok }`; vanuit de lobby: speelt 8 nepvragen en gaat meteen naar `PODIUM` (om het eindscherm met veel spelers te testen)                                                                                                                                                                                                                       |
 
 ### Fases
 
@@ -73,7 +74,7 @@ LOBBY ─host:start─▶ QUESTION_PREVIEW ─(leestijd voorbij, of host:next)�
 {
   code: '482913',
   phase: 'LOBBY' | 'QUESTION_PREVIEW' | 'QUESTION_ACTIVE' | 'QUESTION_RESULT' | 'PODIUM',
-  lobby: { players: [{ id, nickname, connected, isVerified }], playerCount, locked },
+  lobby: { players: [{ id, nickname, connected, isVerified }], playerCount, locked, questionCount, skillAverages },
   me: { playerId, nickname, score } | null,  // alleen voor spelers
   question: <zelfde als question:show> | null,          // in de vraag-fases
   progress: <zelfde als question:progress> | null,      // alleen host, in QUESTION_ACTIVE
@@ -89,16 +90,16 @@ Zo krijgt een speler na verversen of verbindingsverlies precies hetzelfde scherm
 
 ## Server → client
 
-| Event | Naar | Payload |
-|---|---|---|
-| `lobby:update` | room (iedereen) | `{ players: [{ id, nickname, connected, isVerified }], playerCount, locked }` |
-| `question:show` | room (iedereen) | zie hieronder. Bij een nieuwe vraag én als de leestijd voorbij is (dan met `phase: 'QUESTION_ACTIVE'`) |
-| `question:progress` | host-room | `{ answeredCount, playerCount }`; na elk antwoord |
-| `question:end` | room (iedereen) | `{ questionIndex, correctOptionId, answerCounts: { [optionId]: n }, ranking: [{ id, nickname, score, rank, isVerified, pointsGained }], display: { showCorrectAnswer, showStandings } }`. `display` = instellingen van de quiz (story 8): het grote scherm verbergt dan het goede antwoord of de tussenstand |
-| `question:my-result` | room van één speler | `{ questionIndex, answered, optionId, correct, pointsGained }`; direct na `question:end` |
-| `game:podium` | room (iedereen) | `{ top3, ranking: [{ id, nickname, score, rank, isVerified }], totalQuestions }` |
-| `player:result` | room van één speler | zie hieronder |
-| `game:restarted` | room (iedereen) | `{}`; direct daarna volgt `lobby:update`. Clients gaan terug naar het lobby-wachtscherm |
+| Event                | Naar                | Payload                                                                                                                                                                                                                                                                                                      |
+| -------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `lobby:update`       | room (iedereen)     | `{ players: [{ id, nickname, connected, isVerified }], playerCount, locked, questionCount, skillAverages }`; `questionCount` is `null` bij een quiz uit de database, `skillAverages` is `{ SD: 3.5, AI: null, ... }` (gemiddelde per vaardigheid zonder bots, `null` = niemand vulde hem in)                 |
+| `question:show`      | room (iedereen)     | zie hieronder. Bij een nieuwe vraag én als de leestijd voorbij is (dan met `phase: 'QUESTION_ACTIVE'`)                                                                                                                                                                                                       |
+| `question:progress`  | host-room           | `{ answeredCount, playerCount }`; na elk antwoord                                                                                                                                                                                                                                                            |
+| `question:end`       | room (iedereen)     | `{ questionIndex, correctOptionId, answerCounts: { [optionId]: n }, ranking: [{ id, nickname, score, rank, isVerified, pointsGained }], display: { showCorrectAnswer, showStandings } }`. `display` = instellingen van de quiz (story 8): het grote scherm verbergt dan het goede antwoord of de tussenstand |
+| `question:my-result` | room van één speler | `{ questionIndex, answered, optionId, correct, pointsGained }`; direct na `question:end`                                                                                                                                                                                                                     |
+| `game:podium`        | room (iedereen)     | `{ top3, ranking: [{ id, nickname, score, rank, isVerified }], totalQuestions }`                                                                                                                                                                                                                             |
+| `player:result`      | room van één speler | zie hieronder                                                                                                                                                                                                                                                                                                |
+| `game:restarted`     | room (iedereen)     | `{}`; direct daarna volgt `lobby:update`. Clients gaan terug naar het lobby-wachtscherm                                                                                                                                                                                                                      |
 
 ### `question:show`
 

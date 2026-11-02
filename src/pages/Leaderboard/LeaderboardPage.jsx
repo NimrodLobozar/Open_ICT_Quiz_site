@@ -3,43 +3,41 @@ import PageRings from "../../components/PageRings.jsx";
 import Podium from "../../components/Podium.jsx";
 import QuizHeader from "../../components/QuizHeader.jsx";
 import Scoreboard from "../../components/Scoreboard.jsx";
+import { useAuth } from '../../auth/AuthContext.jsx'
 import { api } from "../../api/http.js";
+import { SKILLS } from '../../utils/skills.js'
 import "./LeaderboardPage.css";
 
 /**
- * @param {{ ranking: Array<{ id: number, name: string, totalScore: number, totalWins: number, gamesPlayed: number, averageScore: number, totalCorrect: number }> }} props
+ * @param {{ ranking: Array<{ id: number, name: string, skills: Record<string, number>, totalScore: number, totalWins: number, gamesPlayed: number, averageScore: number, totalCorrect: number }> }} props
  */
 export function Leaderboard({ ranking }) {
+  const { user } = useAuth()
+  const [leaderboard, setLeaderboard] = useState(ranking)
+  const [activeOption, setActiveOption] = useState('Total Score')
+  const [activeRole, setActiveRole] = useState(null)
 
-    const [leaderboard, setLeaderboard] = useState(ranking);
-    const [activeOption, setActiveOption] = useState('Total Score');
+  const handleOptionClick = (option) => {
+    setActiveOption(option)
+    setActiveRole(null)
+    setLeaderboard(sortUsers(ranking, option))
+  }
 
-    const handleOptionClick = (option) => {
+  const handleRoleClick = (role) => {
+    setActiveRole(role)
+    setLeaderboard(sortUsers(ranking.filter((entry) => getSkillValue(entry, role) > 0), activeOption))
+  }
 
-        setActiveOption(option);
+  const me = user ? leaderboard.find((entry) => entry.id === user.id) : null
+  const podium = me ? [{
+    id: me.id,
+    nickname: me.name,
+    skillCode: activeRole,
+    skillValue: getSkillValue(me, activeRole),
+    score: getMetricValue(me, activeOption),
+    rank: getRank(leaderboard, me.id, activeOption),
+  }] : []
 
-        let sortedUsers;
-        switch (option) {
-            case 'Total Score':
-                sortedUsers = [...leaderboard].sort((a, b) => b.totalScore - a.totalScore || a.name.localeCompare(b.name));
-                break;
-            case 'Total Wins':
-                sortedUsers = [...leaderboard].sort((a, b) => b.totalWins - a.totalWins || a.name.localeCompare(b.name));
-                break;
-            case 'Games Played':
-                sortedUsers = [...leaderboard].sort((a, b) => b.gamesPlayed - a.gamesPlayed || a.name.localeCompare(b.name));
-                break;
-            case 'Average Score':
-                sortedUsers = [...leaderboard].sort((a, b) => b.averageScore - a.averageScore || a.name.localeCompare(b.name));
-                break;
-            case 'Total Correct':
-                sortedUsers = [...leaderboard].sort((a, b) => b.totalCorrect - a.totalCorrect || a.name.localeCompare(b.name));
-                break;
-            default:
-                sortedUsers = [...leaderboard].sort((a, b) => b.totalScore - a.totalScore || a.name.localeCompare(b.name));
-        }
-              setLeaderboard(sortedUsers);
-    };
   return (
     <div className="page end-screen">
       <PageRings />
@@ -49,28 +47,74 @@ export function Leaderboard({ ranking }) {
         <h1 className="end-screen__title">LEADERBOARD</h1>
 
         <div className="leaderboard-options">
-            <button className={`leaderboard-options-btn ${activeOption === 'Total Score' ? 'leaderboard-options-btn-active' : ''}`} onClick={() => handleOptionClick('Total Score')}>Total Score</button>
-            <button className={`leaderboard-options-btn ${activeOption === 'Total Wins' ? 'leaderboard-options-btn-active' : ''}`} onClick={() => handleOptionClick('Total Wins')}>Total Wins</button>
-            <button className={`leaderboard-options-btn ${activeOption === 'Games Played' ? 'leaderboard-options-btn-active' : ''}`} onClick={() => handleOptionClick('Games Played')}>Games Played</button>
-            <button className={`leaderboard-options-btn ${activeOption === 'Average Score' ? 'leaderboard-options-btn-active' : ''}`} onClick={() => handleOptionClick('Average Score')}>Average Score</button>
-            <button className={`leaderboard-options-btn ${activeOption === 'Total Correct' ? 'leaderboard-options-btn-active' : ''}`} onClick={() => handleOptionClick('Total Correct')}>Total Correct</button>
+            {['Total Score', 'Total Wins', 'Games Played', 'Average Score', 'Total Correct'].map((option) => (
+              <button
+                key={option}
+                type="button"
+                className={`leaderboard-options-btn ${!activeRole && activeOption === option ? 'leaderboard-options-btn-active' : ''}`}
+                onClick={() => handleOptionClick(option)}
+              >
+                {option}
+              </button>
+            ))}
         </div>
+
+        <div className="leaderboard-roles" aria-label="Kies een beroepsrol">
+            {SKILLS.map(({ code }) => (
+              <button
+                key={code}
+                type="button"
+                className={`leaderboard-options-btn leaderboard-role-btn ${activeRole === code ? 'leaderboard-options-btn-active' : ''}`}
+                onClick={() => handleRoleClick(code)}
+              >
+                {code}
+              </button>
+            ))}
+        </div>
+
+        <Podium ranking={podium} />
         <Scoreboard
-          rows={leaderboard.map((user, index) => ({
+          rows={leaderboard.map((user) => ({
             id: user.id,
             nickname: user.name,
-            score: activeOption === 'Total Score' ? user.totalScore :
-                   activeOption === 'Total Wins' ? user.totalWins :
-                   activeOption === 'Games Played' ? user.gamesPlayed :
-                   activeOption === 'Average Score' ? user.averageScore :
-                   activeOption === 'Total Correct' ? user.totalCorrect : 0,
-            rank: index + 1,
+            skillCode: activeRole,
+            skillValue: getSkillValue(user, activeRole),
+            score: getMetricValue(user, activeOption),
+            rank: getRank(leaderboard, user.id, activeOption),
           }))}
+          myPlayerId={user?.id}
           columns={1}
         />
       </main>
     </div>
   );
+}
+
+function getMetricValue(user, option) {
+  const values = {
+    'Total Score': user.totalScore,
+    'Total Wins': user.totalWins,
+    'Games Played': user.gamesPlayed,
+    'Average Score': user.averageScore,
+    'Total Correct': user.totalCorrect,
+  }
+  return values[option] ?? user.totalScore
+}
+
+function getSkillValue(user, role) {
+  return role ? user.skills?.[role] ?? 0 : null
+}
+
+function sortUsers(users, option) {
+  return [...users].sort((first, second) =>
+        getMetricValue(second, option) - getMetricValue(first, option) || first.name.localeCompare(second.name),
+  )
+}
+
+function getRank(users, userId, option) {
+  const current = users.find((user) => user.id === userId)
+  if (!current) return 0
+  return users.filter((user) => getMetricValue(user, option) > getMetricValue(current, option)).length + 1
 }
 
 export default function LeaderboardPage() {

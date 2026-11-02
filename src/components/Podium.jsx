@@ -4,7 +4,7 @@ import './Podium.css'
 
 /**
  * Top 3 van de quiz als grote "quizshow"-balken.
- * @param {{ ranking: Array<{ id: number, nickname: string, score: number, rank: number }> }} props
+ * @param {{ ranking: Array<{ id: number, nickname: string, score: number, rank: number, skillCode?: string | null, skillValue?: number | null }> }} props
  *   ranking = uitkomst van getRanking(), dus al gesorteerd en met rank.
  */
 export default function Podium({ ranking }) {
@@ -26,6 +26,7 @@ export default function Podium({ ranking }) {
               {winner.nickname}
               <AccountBadge show={winner.isVerified} />
             </span>
+            {winner.skillCode && <span className="podium__skill">{winner.skillCode} {winner.skillValue}/5</span>}
             <span className="podium__score">{formatScore(winner.score)}</span>
           </div>
         </li>

@@ -111,6 +111,18 @@
   font-variant-numeric: tabular-nums;
 }
 
+.scoreboard__skill {
+  flex: 0 0 auto;
+  color: var(--quiz-primary);
+  font-size: 0.8em;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.scoreboard__row--me .scoreboard__skill {
+  color: var(--quiz-text);
+}
+
 /* Op een smal scherm is er geen ruimte voor twee kolommen. */
 @media (max-width: 640px) {
   .scoreboard--columns {

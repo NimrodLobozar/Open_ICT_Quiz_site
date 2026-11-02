@@ -1,8 +1,10 @@
 import { Alert, Button, Card, Form, Input, Slider, Typography } from 'antd'
 import { useEffect, useState } from 'react'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../api/http.js'
+import { useAuth } from '../../auth/AuthContext.jsx'
 import QuizHeader from '../../components/QuizHeader.jsx'
+import { LoginForm as AccountLoginForm } from '../Auth/AuthPage.jsx'
 import './JoinPage.css'
 
 const skillDefinitions = [
@@ -14,8 +16,8 @@ const skillDefinitions = [
   { label: 'BI', color: '#3b82f6' },
 ]
 
-// TODO(team): quiztitel van de server halen zodra games aan een echte quiz hangen.
-const QUIZ_TITLE = 'Open ICT Quiz'
+// Als de game geen quiz uit de database heeft (oude games), tonen we deze titel.
+const DEFAULT_QUIZ_TITLE = 'Open ICT Quiz'
 
 export default function JoinPage() {
   const { code } = useParams()
@@ -110,7 +112,7 @@ export default function JoinPage() {
         />
       )}
       {code && !isInvalidCode && codeStatus === 'valid' && game ? (
-        <NicknameStep key={code} code={code} locked={game.locked} />
+        <NicknameStep key={code} code={code} locked={game.locked} quizTitle={game.quizTitle ?? DEFAULT_QUIZ_TITLE} />
       ) : <CodeStep />}
     </div>
   )
@@ -152,11 +154,18 @@ function CodeStep() {
   )
 }
 
+// Tab "Login": hetzelfde inlogformulier als /inloggen. Na het inloggen blijf je hier en vul je de code in.
 function LoginForm() {
-  return (
-    <>
-    </>
-  )
+  const { user } = useAuth()
+  if (user) {
+    return (
+      <p className="join-logged-in">
+        Je bent ingelogd als <strong>{user.username}</strong>. Vul bij &quot;Meedoen met code&quot; de code in; je uitslag
+        komt dan op <Link to="/account">Mijn account</Link>.
+      </p>
+    )
+  }
+  return <AccountLoginForm compact onSuccess={() => {}} />
 }
 
 function CodeForm() {
@@ -217,13 +226,16 @@ function SkillSlider({ label, color, value, onChange }) {
   )
 }
 
-function NicknameStep({ code, locked }) {
+function NicknameStep({ code, locked, quizTitle }) {
   const [form] = Form.useForm()
   const navigate = useNavigate()
+  // Ingelogd? Dan speel je onder je accountnaam (de server gebruikt die ook) en komt je uitslag op Mijn account.
+  const { user } = useAuth()
   const [error, setError] = useState(null)
   const [sending, setSending] = useState(false)
   const [skillValues, setSkillValues] = useState(
-    () => Object.fromEntries(skillDefinitions.map(({ label }) => [label, 5])),
+    // Met een account beginnen de sliders bij je opgeslagen vaardigheden.
+    () => Object.fromEntries(skillDefinitions.map(({ label }) => [label, user?.skills?.[label] ?? 5])),
   )
 
   // Rejoin: heeft deze browser al een speler-cookie voor deze game, dan meteen door naar het spel.
@@ -252,7 +264,7 @@ function NicknameStep({ code, locked }) {
       <Card className="join-card">
         <header className="join-header">
           <Typography.Text type="secondary" className="join-header-text">
-            {QUIZ_TITLE}
+            {quizTitle}
           </Typography.Text>
           <Typography.Text type="secondary" className="join-header-text">
             {code}
@@ -271,14 +283,20 @@ function NicknameStep({ code, locked }) {
         )}
         {error && <Alert type="error" showIcon message={error} style={{ marginBottom: 16 }} />}
         <Form form={form} layout="vertical" onFinish={join}>
-          <Form.Item
-            label="Gebruikersnaam:"
-            name="nickname"
-            rules={[{ required: true, min: 2, max: 20, whitespace: true, message: '2 tot 20 tekens.' }]}
-            style={{ marginBottom: '2vh' }}
-          >
-            <Input placeholder="Vul hier in..." size="large" maxLength={20} autoComplete="off" autoFocus />
-          </Form.Item>
+          {user ? (
+            <p className="join-logged-in">
+              Je doet mee als <strong>{user.username}</strong>. Je uitslag wordt bewaard op je account.
+            </p>
+          ) : (
+            <Form.Item
+              label="Gebruikersnaam:"
+              name="nickname"
+              rules={[{ required: true, min: 2, max: 20, whitespace: true, message: '2 tot 20 tekens.' }]}
+              style={{ marginBottom: '2vh' }}
+            >
+              <Input placeholder="Vul hier in..." size="large" maxLength={20} autoComplete="off" autoFocus />
+            </Form.Item>
+          )}
           <Form.Item label="Vul hier jouw vaardigheden in: (0-5)" required style={{ marginBottom: '2.5vh' }}>
             <div className="skills-list">
               {skillDefinitions.map((skill) => (
@@ -294,9 +312,11 @@ function NicknameStep({ code, locked }) {
           <Button type="primary" htmlType="submit" size="large" block loading={sending}>
             Join
           </Button>
-          <a href="/login" className="login-link">
-            Gegevens bewaren? Log in om je voortgang te bewaren.
-          </a>
+          {!user && (
+            <Link to={`/inloggen?terug=${encodeURIComponent(`/join/${code}`)}`} className="login-link">
+              Gegevens bewaren? Log in om je voortgang te bewaren.
+            </Link>
+          )}
         </Form>
       </Card>
     </>

@@ -1,0 +1,622 @@
+/* Bouwstenen voor de account- en beheerpagina's (AccountUi.jsx), volgens .claude/designs/accounts/.
+   Alleen klassen met ui-ervoor, zodat ze niet botsen met de CSS van andere pagina's.
+   Kleuren komen uit src/index.css (var(--quiz-...)). */
+
+.ui-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---------- Kaarten en koppen ---------- */
+
+.ui-card {
+  background: var(--quiz-surface);
+  border: 2px solid var(--quiz-border);
+  border-radius: 24px;
+  padding: 28px;
+}
+
+.ui-kicker {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--quiz-muted);
+}
+
+/* Kleinere kop van een blok, zoals "VAARDIGHEDEN" of "LAATST GESPEELD". */
+.ui-section-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--quiz-muted);
+}
+
+.ui-title {
+  margin: 0;
+  font-family: 'Anton', sans-serif;
+  font-weight: 400;
+  font-size: 60px;
+  line-height: 1.05;
+  letter-spacing: 0.04em;
+  color: var(--quiz-primary);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 640px) {
+  .ui-title {
+    font-size: 44px;
+  }
+  .ui-card {
+    padding: 20px;
+  }
+}
+
+/* ---------- Knoppen ---------- */
+
+.ui-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 24px;
+  border-radius: 999px;
+  border: 2px solid var(--quiz-muted);
+  background: transparent;
+  color: var(--quiz-text);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 17px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.ui-btn:hover {
+  color: var(--quiz-text);
+}
+
+.ui-btn--primary {
+  border-color: var(--quiz-accent);
+  background: var(--quiz-accent);
+  font-weight: 800;
+}
+
+.ui-btn--danger {
+  border-color: var(--quiz-error-border);
+  background: var(--quiz-white);
+  color: var(--quiz-error);
+}
+
+.ui-btn--danger:hover {
+  color: var(--quiz-error);
+}
+
+.ui-btn--block {
+  width: 100%;
+  min-height: 58px;
+  font-size: 20px;
+}
+
+.ui-btn--small {
+  min-height: 44px;
+  padding: 0 18px;
+  font-size: 16px;
+}
+
+/* Rond knopje met alleen een icoon (bewerken, verwijderen). Altijd met aria-label. */
+.ui-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  border-radius: 999px;
+  border: 2px solid var(--quiz-muted);
+  background: transparent;
+  color: var(--quiz-text);
+  cursor: pointer;
+}
+
+.ui-icon-btn--danger {
+  border-color: var(--quiz-error-border);
+  background: var(--quiz-white);
+  color: var(--quiz-error);
+}
+
+.ui-btn:disabled,
+.ui-icon-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ui-btn:focus-visible,
+.ui-icon-btn:focus-visible,
+.ui-input:focus-visible,
+.ui-toggle:focus-visible,
+.ui-checkbox input:focus-visible,
+.ui-password__toggle:focus-visible,
+.ui-link:focus-visible {
+  outline: 3px solid var(--quiz-primary);
+  outline-offset: 3px;
+}
+
+.ui-link {
+  color: var(--quiz-primary);
+  font-weight: 700;
+}
+
+/* ---------- Formulieren ---------- */
+
+.ui-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ui-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ui-field__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.ui-label {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--quiz-muted);
+}
+
+.ui-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 58px;
+  padding: 0 18px;
+  border: 2px solid var(--quiz-border);
+  border-radius: 14px;
+  background: var(--quiz-white);
+  color: var(--quiz-text);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 20px;
+}
+
+.ui-input:focus {
+  border: 3px solid var(--quiz-primary);
+  outline: none;
+}
+
+.ui-input.is-invalid {
+  border-color: var(--quiz-error-border);
+}
+
+/* Kleinere invoervelden in tabellen en de quiz-editor. */
+.ui-input--compact {
+  min-height: 48px;
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.ui-hint {
+  font-size: 15px;
+  color: var(--quiz-muted);
+}
+
+.ui-field-error {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--quiz-error);
+}
+
+.ui-input-wrap {
+  position: relative;
+}
+
+.ui-password .ui-input {
+  padding-right: 64px;
+}
+
+/* Het oogje staat over het veld heen, ter hoogte van de input (onder het label). */
+.ui-password__toggle {
+  position: absolute;
+  right: 7px;
+  top: 7px;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 10px;
+  background: var(--quiz-bg);
+  color: var(--quiz-text);
+  cursor: pointer;
+}
+
+.ui-checklist {
+  list-style: none;
+  margin: -4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--quiz-muted);
+}
+
+.ui-checklist li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ui-checklist li.is-ok {
+  color: var(--quiz-success);
+}
+
+.ui-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.ui-checkbox input {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  flex: none;
+  accent-color: var(--quiz-primary);
+}
+
+.ui-notice {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.ui-notice svg {
+  flex: none;
+}
+
+.ui-notice--error {
+  background: var(--quiz-error-bg);
+  border: 2px solid var(--quiz-error-border);
+  color: var(--quiz-error);
+}
+
+.ui-notice--success {
+  background: var(--quiz-success-bg);
+  border: 2px solid var(--quiz-success);
+  color: var(--quiz-success);
+}
+
+.ui-select {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 2px solid var(--quiz-border);
+  border-radius: 14px;
+  background: var(--quiz-white);
+  color: var(--quiz-text);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+/* Zoekveld met vergrootglas, rond. */
+.ui-search {
+  position: relative;
+  display: block;
+  flex: 0 1 320px;
+}
+
+.ui-search input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 52px;
+  padding: 0 16px 0 44px;
+  border: 2px solid var(--quiz-border);
+  border-radius: 999px;
+  background: var(--quiz-white);
+  color: var(--quiz-text);
+  font-family: inherit;
+  font-size: 16px;
+}
+
+.ui-search input:focus-visible {
+  outline: 3px solid var(--quiz-primary);
+  outline-offset: 2px;
+}
+
+.ui-search svg {
+  position: absolute;
+  left: 16px;
+  top: 17px;
+}
+
+/* ---------- Schakelaar ---------- */
+
+.ui-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  min-height: 52px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--quiz-text);
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.ui-toggle__track {
+  position: relative;
+  flex: none;
+  width: 56px;
+  height: 32px;
+  border-radius: 999px;
+  border: 2px solid var(--quiz-muted);
+  background: var(--quiz-white);
+}
+
+.ui-toggle__knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--quiz-muted);
+  transition: left 0.15s;
+}
+
+.ui-toggle[aria-checked='true'] .ui-toggle__track {
+  border-color: var(--quiz-primary);
+  background: var(--quiz-primary);
+}
+
+.ui-toggle[aria-checked='true'] .ui-toggle__knob {
+  left: 27px;
+  background: var(--quiz-white);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-toggle__knob {
+    transition: none;
+  }
+}
+
+/* ---------- Avatar, cijfertegels, vaardigheden ---------- */
+
+.ui-avatar {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--quiz-accent);
+  color: var(--quiz-text);
+  font-family: 'Anton', sans-serif;
+  letter-spacing: 0.04em;
+}
+
+.ui-avatar--large {
+  width: 112px;
+  height: 112px;
+  font-size: 48px;
+}
+
+.ui-avatar--small {
+  width: 40px;
+  height: 40px;
+  font-family: 'Rubik', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  background: var(--quiz-bg);
+  border: 2px solid var(--quiz-border);
+}
+
+.ui-stats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.ui-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 22px 24px;
+  background: var(--quiz-surface);
+  border: 2px solid var(--quiz-border);
+  border-radius: 24px;
+}
+
+.ui-stat__value {
+  font-family: 'Anton', sans-serif;
+  font-size: 52px;
+  line-height: 1.05;
+  color: var(--quiz-primary);
+}
+
+.ui-stat__label {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .ui-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .ui-stat {
+    padding: 16px;
+  }
+  .ui-stat__value {
+    font-size: 40px;
+  }
+}
+
+.ui-skills {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ui-skill {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 36px;
+  align-items: center;
+  gap: 12px;
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.ui-skill__bar {
+  height: 14px;
+  border-radius: 999px;
+  background: var(--quiz-bg);
+  border: 2px solid var(--quiz-border);
+  overflow: hidden;
+}
+
+.ui-skill__bar span {
+  display: block;
+  height: 100%;
+  background: var(--quiz-primary);
+  border-radius: 999px;
+}
+
+.ui-skill__value {
+  text-align: right;
+}
+
+.ui-sliders {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.ui-slider {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr) 24px;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  font-weight: 700;
+}
+
+.ui-slider__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ui-slider__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+}
+
+.ui-slider input {
+  width: 100%;
+  accent-color: var(--quiz-primary);
+}
+
+/* ---------- Statuslabels ---------- */
+
+.ui-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 2px solid var(--quiz-border);
+  background: var(--quiz-bg);
+  color: var(--quiz-text);
+  font-weight: 800;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.ui-pill--ready {
+  background: var(--quiz-success-bg);
+  border-color: var(--quiz-success);
+  color: var(--quiz-success);
+}
+
+.ui-pill--draft {
+  background: var(--quiz-surface);
+  border-color: var(--quiz-muted);
+}
+
+.ui-pill--admin {
+  background: var(--quiz-primary);
+  border-color: var(--quiz-primary);
+  color: var(--quiz-white);
+}
+
+.ui-pill--teacher {
+  background: var(--quiz-accent);
+  border-color: var(--quiz-accent);
+}
+
+/* ---------- Formulier-opmaak die overal terugkomt ---------- */
+
+.ui-fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Opslaan-knop links onder een formulier, niet over de hele breedte. */
+.ui-submit {
+  align-self: flex-start;
+}
+
+/* Knoppenrij onderaan een venster: Annuleren en de hoofdactie rechts. */
+.ui-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+}

@@ -1,6 +1,6 @@
 # Database
 
-> Stand van zaken op 13 oktober 2026 (branch `feature_Eindscherm`).
+> Stand van zaken op 26 oktober 2026 (sprint 2, branch `feature_account_design`). Accounts, sessies en quizzen: zie ook [ACCOUNTS.md](ACCOUNTS.md).
 
 ## In het kort
 
@@ -16,6 +16,8 @@
 |---|---|---|
 | Lopende game (lobby, spelers, scores tijdens het spel) | geheugen van de server ([`backend/game/`](../backend/game/)) | snel: een antwoord kost geen databasequery (projectplan 6) |
 | Uitslag van een gespeelde ronde | database (`GameSession` + `GameResult`) | blijft bewaard, ook als de server herstart |
+| Accounts, ingelogde apparaten, eenmalige links | database (`User`, `Session`, `OneTimeToken`) | inloggen moet een herstart overleven |
+| Quizzen met vragen en antwoorden | database (`Quiz`, `Question`, `AnswerOption`) | docenten maken ze zelf in het admin-portaal; bij het hosten kopieert de server ze naar de `Game` |
 
 De server schrijft **één keer per ronde**, op het moment van het podium:
 
@@ -25,7 +27,7 @@ De server schrijft **één keer per ronde**, op het moment van het podium:
 
 Stap 3 komt ná het podium en wacht niemand op: ligt de database eruit, dan zien spelers gewoon hun eindstand en staat de fout in `docker compose logs backend`.
 
-Nu gebeurt dit alleen in `dev:finish` ([`backend/socket/hostHandlers.js`](../backend/socket/hostHandlers.js)). **Bouw je `host:next` na de laatste vraag, roep daar dan ook `saveGameResultsInBackground(game)` aan.**
+Dit gebeurt in `afterPhaseChange` bij `PODIUM` ([`backend/socket/gameLoop.js`](../backend/socket/gameLoop.js)) en in `dev:finish`.
 
 ## Tabellen
 
@@ -38,6 +40,9 @@ Nu gebeurt dit alleen in `dev:finish` ([`backend/socket/hostHandlers.js`](../bac
 | `round` | `integer` | 1, en +1 bij elke `host:restart` |
 | `startedAt` | `timestamp` | moment dat de lobby (opnieuw) openging |
 | `endedAt` | `timestamp` | moment van het podium |
+| `quizId` | `integer?` | foreign key → `Quiz.id` (`SET NULL`: quiz weg = uitslag blijft) |
+| `quizTitle` | `text?` | kopie van de titel, zodat de uitslag leesbaar blijft als de quiz verwijderd is |
+| `questionCount` | `integer` | aantal vragen, voor "% goed" op Mijn account |
 
 ### `GameResult`: eindstand van één speler in één ronde
 
@@ -45,7 +50,8 @@ Nu gebeurt dit alleen in `dev:finish` ([`backend/socket/hostHandlers.js`](../bac
 |---|---|---|
 | `id` | `integer` | primary key |
 | `sessionId` | `integer` | foreign key → `GameSession.id` (`ON DELETE CASCADE`: sessie weg = resultaten weg) |
-| `nickname` | `text` | |
+| `nickname` | `text` | wordt `Verwijderde speler` als het account verwijderd is |
+| `userId` | `integer?` | foreign key → `User.id`; `null` = gast. Ingelogd meedoen vult dit (story 4) |
 | `score` | `integer` | totaal aantal punten |
 | `rank` | `integer` | plek uit `getRanking()` (gelijke score = gedeelde plek) |
 | `correctCount` | `integer` | aantal goede antwoorden |
@@ -62,10 +68,11 @@ Dit volgt hoofdstuk 12 van het projectplan, maar nog niet alles:
 
 | Projectplan | Nu |
 |---|---|
-| `GameSession`, `GameResult` | ✅ gebouwd. `GameSession.quizId` ontbreekt nog, want er is nog geen vragenset |
-| `Quiz` (= de vragenset), `Question`, `AnswerOption` | ontbreekt; komt met de game loop |
-| `Role`, `User`, `UserRole`, `PlayerAnswer` (later) | ontbreekt |
-| (niet in plan) | `GameResult.skills`, `GameResult.isBot` |
+| `GameSession`, `GameResult` | ✅ gebouwd, met `quizId` en `userId` (`quizId` optioneel, voor oude rondes) |
+| `Quiz` (= de vragenset), `Question`, `AnswerOption` | ✅ gebouwd (sprint 2). `Quiz` heeft `status` (DRAFT/READY) en instellingen i.p.v. `isPublished` |
+| `User` | ✅ gebouwd, met `role` als enum (STUDENT/TEACHER/ADMIN) i.p.v. `Role` + `UserRole`; vaardigheden als `skills` (jsonb) |
+| (niet in plan) | `Session`, `OneTimeToken` (zie ACCOUNTS.md), `GameResult.skills`, `GameResult.isBot` |
+| `PlayerAnswer` (later) | ontbreekt |
 
 De oude tabellen `Quiz` (eigenlijk een lobby) en `Player` en de route `/api/code` zijn weg: de app gebruikte ze niet, de lobby draait helemaal op het geheugen.
 

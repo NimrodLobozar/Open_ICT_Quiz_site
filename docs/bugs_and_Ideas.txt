@@ -1,0 +1,18 @@
+naam joint = account cant join
+wachtwoord veranderen naar nieuw = zelfde is true op dit moment
+Wachtwoord vergeten kan andere email invoeren dan hu en local
+opniew sturen bij vergeten
+Skils auto op 5
+
+meer antwoorden mogelijk bij quiz
+
+Tussenstand: 
+- Vraag laten zien
+- Beroepsrol laten zien
+- moeilijkeid(niveau 1-5)
+- meer punten voor moeilijkere vragen
+
+!! Tijd stoppen werkt niet bij vraag, je woord meteen doorgestuurd naar tussenstand
+!! Langste antwoorden zijn altijd de goede antwoorden, probeeren gelijk te maken
+!! Link werkt niet nog een keer verstuuren werkt niet
+!! Account make en score bewaren werkt niet als score bewaren na je de account hebt aangemaakt.

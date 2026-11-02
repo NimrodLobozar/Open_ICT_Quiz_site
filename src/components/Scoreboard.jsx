@@ -8,7 +8,7 @@ import './Scoreboard.css'
  * - Speler: de hele eindstand, scrollbaar, met de eigen rij gemarkeerd (`myPlayerId`).
  *
  * @param {{
- *   rows: Array<{ id: number, nickname: string, score: number, rank: number }>,
+ *   rows: Array<{ id: number, nickname: string, score: number, rank: number, skillCode?: string | null, skillValue?: number | null }>,
  *   myPlayerId?: number | null,
  *   columns?: 1 | 2,
  *   label?: string,
@@ -54,6 +54,9 @@ export default function Scoreboard({ rows, myPlayerId = null, columns = 1, label
                 {/* Niet alleen kleur: ook tekst, zodat kleurenblinde spelers hun rij vinden. */}
                 {isMe && <span className="scoreboard__me"> (jij)</span>}
               </span>
+              {player.skillCode && (
+                <span className="scoreboard__skill">{player.skillCode} {player.skillValue}/5</span>
+              )}
               <span className="scoreboard__score">{formatScore(player.score)}</span>
             </div>
           </li>

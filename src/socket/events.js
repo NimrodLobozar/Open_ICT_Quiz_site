@@ -9,6 +9,7 @@ export const EVENTS = {
   PLAYER_ANSWER: "player:answer",
   HOST_KICK_PLAYER: "host:kick-player", // alleen in de lobby
   HOST_LOCK: "host:lock", // alleen in de lobby
+  HOST_SET_QUESTION_COUNT: "host:set-question-count",
   DEV_FINISH: "dev:finish", // alleen in development
 
   // Server → client

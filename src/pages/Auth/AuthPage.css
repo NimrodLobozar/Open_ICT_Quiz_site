@@ -1,0 +1,116 @@
+/* Inloggen, account maken, wachtwoord vergeten en nieuw wachtwoord: één smalle kaart in het midden. */
+
+.auth-page__main {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  padding: 56px 32px;
+}
+
+.auth-page__card {
+  width: 100%;
+  max-width: 520px;
+  padding: 40px;
+}
+
+/* Wisselknop Inloggen / Account maken. */
+.auth-page__tabs {
+  width: 100%;
+  max-width: 520px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+  padding: 6px;
+  border-radius: 999px;
+  background: var(--quiz-surface);
+  border: 2px solid var(--quiz-border);
+}
+
+.auth-page__tabs a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  border-radius: 999px;
+  color: var(--quiz-text);
+  font-weight: 700;
+  font-size: 16px;
+  text-decoration: none;
+}
+
+.auth-page__tabs a.is-active {
+  background: var(--quiz-accent);
+  font-weight: 800;
+}
+
+.auth-page__tabs a:focus-visible {
+  outline: 3px solid var(--quiz-primary);
+  outline-offset: 2px;
+}
+
+.auth-page__welcome {
+  margin: 0 0 4px;
+  font-size: 16px;
+  color: var(--quiz-muted);
+}
+
+.auth-page__card .ui-title {
+  font-size: 52px;
+}
+
+.auth-page__forgot {
+  font-size: 15px;
+}
+
+.auth-page__switch,
+.auth-page__note {
+  margin: 0;
+  text-align: center;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--quiz-muted);
+}
+
+.auth-page__note {
+  max-width: 520px;
+}
+
+/* Telefoon (design "3 · Inloggen — telefoon"): kaart over de volle breedte. */
+@media (max-width: 640px) {
+  .auth-page__main {
+    justify-content: flex-start;
+    gap: 20px;
+    padding: 24px 16px;
+  }
+  .auth-page__card {
+    padding: 24px 20px;
+  }
+  .auth-page__card .ui-title {
+    font-size: 40px;
+  }
+}
+
+/* /privacy: gewone leestekst in een kaart. */
+.privacy-page__main {
+  max-width: 760px;
+}
+
+.privacy-page {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  line-height: 1.6;
+  font-size: 17px;
+}
+
+.privacy-page p,
+.privacy-page ul {
+  margin: 0;
+}
+
+.privacy-page .ui-section-title {
+  margin-top: 12px;
+}

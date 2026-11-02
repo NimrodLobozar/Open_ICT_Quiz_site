@@ -37,11 +37,11 @@ async function startSession(request, response, user, remember) {
  * Gaat er iets mis, dan nooit het registreren of inloggen laten mislukken: de score is een extraatje.
  * @returns {Promise<number>} aantal gekoppelde uitslagen
  */
-async function claimFromGameCookie(request, userId) {
+async function claimFromGameCookie(request, user) {
   try {
     const session = gameManager.getSession(readCookies(request.headers.cookie)[PLAYER_COOKIE])
     const game = session?.role === 'player' ? gameManager.getGame(session.code) : null
-    return game ? await claimGuestResults(game, session.playerId, userId) : 0
+    return game ? await claimGuestResults(game, session.playerId, user) : 0
   } catch (error) {
     console.error('Gast-score niet gekoppeld:', error.message)
     return 0
@@ -72,7 +72,7 @@ router.post('/register', registerLimiter, async (request, response) => {
   // Niet wachten op de mail: een trage maildienst mag het registreren niet ophouden.
   // Komt de mail niet aan, dan vraagt de speler hem opnieuw aan (resend-verification).
   sendVerifyMail(user).catch((error) => console.error('Bevestigingsmail niet verstuurd:', error.message))
-  const claimedResults = await claimFromGameCookie(request, user.id)
+  const claimedResults = await claimFromGameCookie(request, user)
   response.status(201).json({ user: publicUser(user), verificationSent: true, claimedResults })
 })
 
@@ -124,7 +124,7 @@ router.post('/login', loginLimiter, async (request, response) => {
   }
 
   await startSession(request, response, user, body.remember)
-  const claimedResults = await claimFromGameCookie(request, user.id)
+  const claimedResults = await claimFromGameCookie(request, user)
   response.json({ user: publicUser(user), claimedResults })
 })
 

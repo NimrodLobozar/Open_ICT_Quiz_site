@@ -1,7 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest'
+import { createOneTimeToken } from '../../auth/oneTimeTokens.js'
 import { saveGameResults } from '../../db/gameResults.js'
 import { gameManager } from '../../game/GameManager.js'
-import { browser, loggedIn, PASSWORD, prisma, quizInput, resetDatabase } from './helpers.js'
+import { browser, loggedIn, makeUser, PASSWORD, prisma, quizInput, resetDatabase } from './helpers.js'
 
 // Tests voor de punten uit docs/bugs_and_Ideas.txt. Per regel uit dat bestand één describe.
 beforeEach(resetDatabase)
@@ -193,5 +194,56 @@ describe('regel 18: account maken na de quiz en de score bewaren', () => {
     const second = await guest.post('/api/auth/login').send({ email: 'tweede@student.hu.nl', password: PASSWORD })
     expect(first.body.claimedResults).toBe(1)
     expect(second.body.claimedResults).toBe(0)
+  })
+})
+
+describe('review PR #25 (Copilot)', () => {
+  it('hoog: een gast claimt alleen zijn eigen rij, niet die van een verwijderd account met dezelfde naam', async () => {
+    const { code, game } = await hostGame()
+    const guest = browser()
+    const asGuest = await guest.post(`/api/games/${code}/players`).send({ nickname: 'John' })
+    const { user: john, agent: johnAgent } = await loggedIn({ username: 'John' })
+    const asAccount = await johnAgent.post(`/api/games/${code}/players`).send({})
+    game.recordAnswer(asGuest.body.playerId, { questionIndex: 0, correct: false, points: 0 })
+    game.recordAnswer(asAccount.body.playerId, { questionIndex: 0, correct: true, points: 950 })
+    game.finish()
+    // Het John-account verdwijnt vóór het opslaan: zijn rij krijgt dan ook userId null, met naam John.
+    await prisma.user.delete({ where: { id: john.id } })
+    await saveGameResults(game)
+
+    const response = await guest.post('/api/auth/register').send({
+      username: 'Gast John',
+      email: 'gastjohn@student.hu.nl',
+      password: 'Welkom123',
+      acceptPrivacy: true,
+    })
+    expect(response.body.claimedResults).toBe(1)
+    const mine = await prisma.gameResult.findMany({ where: { userId: response.body.user.id } })
+    expect(mine.map((row) => row.score)).toEqual([0]) // alleen zijn eigen 0, niet de 950 van het account
+  })
+
+  it('midden: twee links tegelijk gebruiken geeft geen serverfout, en maar één werkt', async () => {
+    const user = await makeUser()
+    const first = await createOneTimeToken(user.id, 'RESET')
+    const second = await createOneTimeToken(user.id, 'RESET')
+    const responses = await Promise.all([
+      browser().post('/api/auth/password').send({ token: first, password: 'EersteWacht1' }),
+      browser().post('/api/auth/password').send({ token: second, password: 'TweedeWacht2' }),
+    ])
+    expect(responses.map((r) => r.status).sort()).toEqual([200, 400])
+  })
+
+  it('midden: na koppelen kan hetzelfde account niet nog een keer joinen vanuit een andere browser', async () => {
+    const { code } = await hostGame()
+    const guest = browser()
+    await guest.post(`/api/games/${code}/players`).send({ nickname: 'Gastspeler' })
+    await loggedIn({ username: 'Emma', email: 'emma2@student.hu.nl' })
+    await guest.post('/api/auth/login').send({ email: 'emma2@student.hu.nl', password: PASSWORD })
+
+    const other = browser()
+    await other.post('/api/auth/login').send({ email: 'emma2@student.hu.nl', password: PASSWORD })
+    const again = await other.post(`/api/games/${code}/players`).send({})
+    expect(again.status).toBe(409)
+    expect(again.body.error).toBe('ALREADY_JOINED')
   })
 })

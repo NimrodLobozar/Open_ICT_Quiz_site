@@ -55,6 +55,10 @@ export async function findUsableToken(token, purposes) {
  * @param {string[]} purposes de doelen die samen één soort link zijn (bijv. RESET en INVITE)
  */
 async function markUsed(tx, record, purposes) {
+  // Eerst de gebruiker op slot (FOR UPDATE). Gebruikt iemand twee verschillende links tegelijk, dan wacht
+  // de tweede hier tot de eerste klaar is, in plaats van dat ze elkaars links proberen te wissen en vastlopen
+  // (deadlock = serverfout). Daarna vindt de tweede zijn link al gewist en krijgt hij "link werkt niet".
+  await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${record.userId} FOR UPDATE`
   // "usedAt: null" in de where: klikt iemand twee keer tegelijk, dan lukt het maar één keer.
   const { count } = await tx.oneTimeToken.updateMany({
     where: { id: record.id, usedAt: null },

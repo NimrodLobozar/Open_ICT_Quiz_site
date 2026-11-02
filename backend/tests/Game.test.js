@@ -34,10 +34,22 @@ describe("Game", () => {
     );
   });
 
-  it("laat hetzelfde account niet twee keer meedoen", () => {
+  it("laat hetzelfde account niet twee keer meedoen, ook niet onder een andere naam", () => {
     game.addPlayer("John", { userId: 7 });
-    expect(() => game.addPlayer("John", { userId: 7 })).toThrow(
-      expect.objectContaining({ code: "NAME_TAKEN" }),
+    expect(() => game.addPlayer("Johnny", { userId: 7 })).toThrow(
+      expect.objectContaining({ code: "ALREADY_JOINED" }),
+    );
+  });
+
+  it("een gekoppelde gast krijgt de accountnaam en blokkeert de echte eigenaar van zijn gastnaam niet", () => {
+    const guest = game.addPlayer("John");
+    game.linkAccount(guest.id, { id: 5, username: "Emma" });
+    expect(guest).toMatchObject({ nickname: "Emma", userId: 5, isVerified: true });
+    // Het echte John-account kan nu gewoon meedoen.
+    expect(() => game.addPlayer("John", { userId: 9 })).not.toThrow();
+    // En Emma kan niet nog een keer meedoen vanuit een andere browser.
+    expect(() => game.addPlayer("Emma", { userId: 5 })).toThrow(
+      expect.objectContaining({ code: "ALREADY_JOINED" }),
     );
   });
 

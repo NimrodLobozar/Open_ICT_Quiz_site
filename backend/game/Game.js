@@ -60,9 +60,9 @@ export class Game {
     // Voor de database: welke ronde dit is (+1 bij herstart) en wanneer de lobby openging.
     this.round = 1;
     this.startedAt = new Date();
-    // Per opgeslagen ronde: het id van de GameSession (een Promise, want opslaan gebeurt op de achtergrond)
-    // en welke spelers erin stonden. Nodig om de score van een gast later aan zijn nieuwe account te koppelen.
-    /** @type {Map<number, { sessionId: Promise<number | null>, playerIds: Set<number> }>} */
+    // Per opgeslagen ronde: welke GameResult-rij bij welke speler hoort (een Promise, want opslaan
+    // gebeurt op de achtergrond). Nodig om de score van een gast later aan zijn nieuwe account te koppelen.
+    /** @type {Map<number, { resultIds: Promise<Map<number, number>> }>} ronde → (playerId → GameResult.id) */
     this.savedRounds = new Map();
   }
 
@@ -86,15 +86,22 @@ export class Game {
         400,
       );
 
-    // Dubbele namen. Een account mag altijd mee, ook als een gast al dezelfde naam heeft:
+    // Dubbele spelers. Een account controleren we op userId: hetzelfde account mag er maar één keer in
+    // (ook niet via een tweede browser). Een account mag wél mee als een gast al dezelfde naam heeft:
     // de accountnaam is van hem, en het account-icoontje (isVerified) laat zien wie wie is.
     // Een gast mag geen naam nemen die al in de lobby zit, ook niet die van een account.
+    const players = [...this.players.values()];
+    if (userId !== null && players.some((player) => player.userId === userId)) {
+      throw new GameError(
+        "ALREADY_JOINED",
+        "Je doet met dit account al mee aan deze quiz.",
+        409,
+      );
+    }
     const key = nameKey(nickname);
-    const isAccount = userId !== null;
-    const clash = [...this.players.values()].some(
-      (player) =>
-        nameKey(player.nickname) === key && (!isAccount || player.isVerified),
-    );
+    const clash =
+      userId === null &&
+      players.some((player) => nameKey(player.nickname) === key);
     if (clash) {
       throw new GameError(
         "NAME_TAKEN",
@@ -126,15 +133,21 @@ export class Game {
 
   /**
    * Een gast heeft tijdens of na de game een account gemaakt of is ingelogd (zie claimGuestResults).
-   * Vanaf nu hoort deze speler bij dat account, ook in de vastgezette eindstand.
+   * Vanaf nu hoort deze speler bij dat account, met de accountnaam, ook in de vastgezette eindstand.
+   * Zo kan een gast "John" die als Emma inlogt de echte John niet blokkeren.
+   * (Al opgeslagen uitslagen houden de naam waaronder hij toen speelde.)
+   * @param {{ id: number, username: string }} user
    */
-  linkAccount(playerId, userId) {
+  linkAccount(playerId, user) {
     const player = this.getPlayer(playerId);
     if (!player || player.userId !== null) return;
-    player.userId = userId;
+    // Zit dit account al in de game (bijv. vanuit een andere browser)? Dan niet nog een keer.
+    if ([...this.players.values()].some((other) => other.userId === user.id)) return;
+    player.userId = user.id;
     player.isVerified = true;
+    player.nickname = user.username;
     const row = this.finalRanking?.find((entry) => entry.id === playerId);
-    if (row) row.isVerified = true;
+    if (row) Object.assign(row, { isVerified: true, nickname: user.username });
   }
 
   /** Speler vertrekt zelf. Mag altijd, ook op het podium ("Terug naar start"). */

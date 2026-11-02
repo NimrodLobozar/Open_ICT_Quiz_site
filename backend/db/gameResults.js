@@ -7,13 +7,17 @@ import { prisma } from './prisma.js'
 export async function saveGameResults(game) {
   const record = game.toSessionRecord()
   if (!record) return null
+  // toSessionRecord zet de rijen in dezelfde volgorde als finalRanking: rij i hoort bij speler finalRanking[i].
+  const playerIds = game.finalRanking.map((row) => row.id)
   const saving = insertSession(record)
-  // Onthouden welke ronde in welke GameSession staat (zie claimGuestResults).
+  // Onthouden welke speler in welke GameResult-rij staat (zie claimGuestResults).
+  // Op id en niet op naam: een gast en een account kunnen dezelfde naam hebben.
   game.savedRounds.set(game.round, {
-    sessionId: saving.then((session) => session.id).catch(() => null),
-    playerIds: new Set(game.finalRanking.map((row) => row.id)),
+    resultIds: saving
+      .then(({ resultIds }) => new Map(playerIds.map((playerId, i) => [playerId, resultIds[i]])))
+      .catch(() => new Map()),
   })
-  return saving
+  return (await saving).session
 }
 
 async function insertSession(record) {
@@ -26,10 +30,16 @@ async function insertSession(record) {
     : new Set()
   const rows = results.map((result) => ({ ...result, userId: existing.has(result.userId) ? result.userId : null }))
 
-  // Geneste create: Prisma zet de sessie en alle resultaten in één transactie.
-  // Of alles staat erin, of niets; nooit een half scoreboard.
-  return prisma.gameSession.create({
-    data: { ...session, results: { create: rows } },
+  // Eén transactie: of alles staat erin, of niets; nooit een half scoreboard.
+  // De rijen één voor één, zodat we per rij het id weten (createMany geeft geen gegarandeerde volgorde terug).
+  return prisma.$transaction(async (tx) => {
+    const created = await tx.gameSession.create({ data: session })
+    const resultIds = []
+    for (const row of rows) {
+      const result = await tx.gameResult.create({ data: { ...row, sessionId: created.id }, select: { id: true } })
+      resultIds.push(result.id)
+    }
+    return { session: created, resultIds }
   })
 }
 
@@ -38,27 +48,28 @@ async function insertSession(record) {
  * en dan moet de score van die quiz op zijn account komen.
  * Hoe weten we dat het dezelfde persoon is? Zijn browser heeft nog de speler-cookie van deze game.
  * Alleen die browser kan dus deze score claimen, en maar één keer (userId moet nog leeg zijn).
+ * We pakken precies de rij van deze speler (op id), nooit "een rij met dezelfde naam":
+ * anders kon een gast de score claimen van een account met dezelfde naam dat intussen verwijderd is.
+ * @param {{ id: number, username: string }} user
  * @returns {Promise<number>} hoeveel uitslagen (rondes) er gekoppeld zijn
  */
-export async function claimGuestResults(game, playerId, userId) {
+export async function claimGuestResults(game, playerId, user) {
   const player = game.getPlayer(playerId)
   // Speelde hij al met een account, dan staat de score al goed.
   if (!player || player.userId !== null || player.isBot) return 0
   let claimed = 0
-  for (const { sessionId, playerIds } of game.savedRounds.values()) {
-    if (!playerIds.has(playerId)) continue
-    const id = await sessionId
-    if (!id) continue
-    // Gastnamen zijn uniek binnen een ronde (Game.addPlayer), dus naam + "nog geen account" wijst één rij aan.
+  for (const { resultIds } of game.savedRounds.values()) {
+    const resultId = (await resultIds).get(playerId)
+    if (!resultId) continue // in deze ronde speelde hij niet mee
     const { count } = await prisma.gameResult.updateMany({
-      where: { sessionId: id, nickname: player.nickname, userId: null, isBot: false },
-      data: { userId },
+      where: { id: resultId, userId: null },
+      data: { userId: user.id },
     })
     claimed += count
   }
   // Vanaf nu speelt hij in deze game met zijn account: een volgende ronde komt dan vanzelf op zijn account,
   // en het eindscherm noemt hem geen gast meer (ook na verversen, via game:sync).
-  game.linkAccount(playerId, userId)
+  game.linkAccount(playerId, user)
   return claimed
 }
 

@@ -16,6 +16,8 @@ import HostQuestionLayout from "./HostQuestionLayout.jsx";
  * @param {{ code: string, question: import("./QuestionPreviewPage.jsx").QuestionShow,
  *   answeredCount: number, playerCount: number, onStopTime?: () => void, onNext?: () => void }} props
  *   question = de payload van question:show, answeredCount/playerCount komen uit question:progress.
+ *   onStopTime = "Tijd stoppen" (host:pause): de klok staat stil, de vraag blijft staan om te bespreken.
+ *   onNext = "Naar de tussenstand" (host:next): verschijnt zodra de tijd stilstaat.
  */
 export function HostQuestionAnswers({
   code,
@@ -26,8 +28,11 @@ export function HostQuestionAnswers({
   onNext,
 }) {
   const limitMs = question.timeLimitSec * 1000;
-  const msLeft = useCountdown(question.startsAt + limitMs);
-  const timeUp = msLeft === 0;
+  const paused = Boolean(question.paused);
+  // Tijd gestopt: niet meer aftellen, maar de klok laten staan op wat er nog over was.
+  const countdown = useCountdown(paused ? null : question.startsAt + limitMs);
+  const msLeft = paused ? question.pausedMsLeft : countdown;
+  const timeUp = !paused && msLeft === 0;
 
   return (
     <HostQuestionLayout
@@ -47,23 +52,31 @@ export function HostQuestionAnswers({
           <TimerRing
             msLeft={msLeft}
             limitMs={limitMs}
-            className="host-question__timer"
+            className={`host-question__timer ${paused ? "is-paused" : ""}`}
           />
         </div>
       }
       actions={
         <>
-          {onStopTime && (
+          {paused && (
+            <p className="host-question__paused" role="status">
+              Tijd gestopt. Bespreek de vraag; spelers kunnen nog antwoorden.
+            </p>
+          )}
+          {onStopTime && !paused && (
             <button
               type="button"
               className="host-question__button"
               onClick={onStopTime}
               disabled={timeUp}
             >
+              <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24">
+                <path d="M8 5v14M16 5v14" />
+              </svg>
               Tijd stoppen
             </button>
           )}
-          {onNext && (
+          {onNext && (paused || timeUp) && (
             <button
               type="button"
               className="host-question__button host-question__button--primary"
@@ -72,13 +85,16 @@ export function HostQuestionAnswers({
               <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24">
                 <path d="M5 12h14M13 6l6 6-6 6" />
               </svg>
-              Volgende
+              Naar de tussenstand
             </button>
           )}
         </>
       }
     >
       <h1 className="host-question__text">{question.text}</h1>
+      {question.multiple && (
+        <p className="host-question__multiple">Meerdere antwoorden zijn goed: kies ze allemaal.</p>
+      )}
       <ol className="host-question__options" aria-label="Antwoorden">
         {question.options.map((option, i) => (
           <li
@@ -102,16 +118,20 @@ export default function QuestionAnswersPage() {
   const [searchParams] = useSearchParams();
   const index = demoIndexFromSearch(searchParams);
   const [startsAt] = useState(() => Date.now());
-  // null = de tijd loopt nog. Anders: na zoveel seconden is de vraag gestopt.
+  // null = de tijd loopt nog. Anders: na zoveel seconden is de tijd gestopt.
   const [stoppedAfterSec, setStoppedAfterSec] = useState(null);
   const [answeredCount, setAnsweredCount] = useState(0);
 
   const question = getDemoQuestion(index, { startsAt, previewSeconds: 0 });
-  // Tijd stoppen = de tijdslimiet inkorten tot nu. In het echt doet de server dit en stuurt question:end.
+  // Tijd stoppen = de klok staat stil (paused). In het echt doet de server dit (host:pause).
   const shownQuestion =
     stoppedAfterSec == null
       ? question
-      : { ...question, timeLimitSec: stoppedAfterSec };
+      : {
+          ...question,
+          paused: true,
+          pausedMsLeft: Math.max(0, (question.timeLimitSec - stoppedAfterSec) * 1000),
+        };
 
   function stopTime() {
     setStoppedAfterSec((current) => current ?? (Date.now() - startsAt) / 1000);

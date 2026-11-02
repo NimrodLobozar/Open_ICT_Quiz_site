@@ -115,6 +115,10 @@ model Question {
   text         String
   order        Int
   timeLimitSec Int            @default(20)
+  // Optioneel: bij welke vaardigheid (beroepsrol) de vraag hoort, bijv. "SD" (zie src/utils/skills.js),
+  // en het niveau van 1 (makkelijk) t/m 5 (moeilijk). Te zien in de tussenstand; een hoger niveau geeft meer punten.
+  skill        String?
+  difficulty   Int?
   options      AnswerOption[]
 
   @@index([quizId])

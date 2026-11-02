@@ -622,7 +622,7 @@
   background: var(--quiz-success-bg);
 }
 
-.quiz-editor__option input[type="radio"] {
+.quiz-editor__option input[type="checkbox"] {
   flex: none;
   width: 24px;
   height: 24px;
@@ -657,4 +657,11 @@
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
+}
+
+/* Vaardigheid en niveau van een vraag, naast elkaar (en onder elkaar op een smal scherm). */
+.quiz-editor__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
 }

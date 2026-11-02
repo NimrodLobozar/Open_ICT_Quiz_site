@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { formatScore } from '../utils/formatScore.js'
+import AccountBadge from './AccountBadge.jsx'
 import './Scoreboard.css'
 
 /**
@@ -51,6 +52,7 @@ export default function Scoreboard({ rows, myPlayerId = null, columns = 1, label
               <span className="scoreboard__rank">{player.rank}</span>
               <span className="scoreboard__name">
                 {player.nickname}
+                <AccountBadge show={player.isVerified} />
                 {/* Niet alleen kleur: ook tekst, zodat kleurenblinde spelers hun rij vinden. */}
                 {isMe && <span className="scoreboard__me"> (jij)</span>}
               </span>

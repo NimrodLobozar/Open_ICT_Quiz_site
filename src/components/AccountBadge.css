@@ -1,0 +1,28 @@
+/* Icoontje "speelt met account". De kleur erft van de naam ervoor, zodat het op elke achtergrond leesbaar is. */
+.account-badge {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  margin-left: 0.35em;
+  flex-shrink: 0;
+}
+
+.account-badge svg {
+  width: 0.9em;
+  height: 0.9em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Alleen voor schermlezers. */
+.account-badge__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

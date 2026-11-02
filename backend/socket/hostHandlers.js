@@ -60,6 +60,20 @@ export function registerHostHandlers(io, socket, game) {
     }
   });
 
+  // "Tijd stoppen": de klok staat stil, maar de vraag blijft op het scherm (om te bespreken).
+  // Daarna gaat host:next naar de tussenstand. Zelfde check als hierboven tegen een klik op een oud scherm.
+  socket.on(EVENTS.HOST_PAUSE, ({ questionIndex } = {}, ack) => {
+    try {
+      if (questionIndex !== game.questionIndex)
+        throw new GameError("WRONG_PHASE", "Dit scherm is al voorbij.");
+      game.pauseTimer();
+      afterPhaseChange(io, game);
+      ack?.({ ok: true });
+    } catch (error) {
+      ack?.(toErrorResponse(error));
+    }
+  });
+
   socket.on(EVENTS.HOST_RESTART, (_payload, ack) => {
     try {
       // 1. Mag het? Alleen na het podium.

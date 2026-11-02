@@ -1,4 +1,5 @@
 import { formatScore } from '../utils/formatScore.js'
+import AccountBadge from './AccountBadge.jsx'
 import './Podium.css'
 
 /**
@@ -21,7 +22,10 @@ export default function Podium({ ranking }) {
         <li key={winner.id} className={`podium__place ${winner.rank === 1 ? 'podium__place--first' : ''}`}>
           <div className="podium__bar">
             <span className="podium__rank">{winner.rank}</span>
-            <span className="podium__name">{winner.nickname}</span>
+            <span className="podium__name">
+              {winner.nickname}
+              <AccountBadge show={winner.isVerified} />
+            </span>
             {winner.skillCode && <span className="podium__skill">{winner.skillCode} {winner.skillValue}/5</span>}
             <span className="podium__score">{formatScore(winner.score)}</span>
           </div>

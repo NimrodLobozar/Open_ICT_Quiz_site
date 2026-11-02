@@ -10,11 +10,14 @@ import {
 import { DUMMY_HASH, hashPassword, verifyPassword } from '../auth/password.js'
 import { forgotLimiter, loginLimiter, registerLimiter, resendVerificationLimiter } from '../auth/rateLimits.js'
 import { createUserSession, deleteSession } from '../auth/sessions.js'
-import { parseHuEmail, parsePassword, parseUsername } from '../auth/validate.js'
+import { parseEmail, parseHuEmail, parsePassword, parseUsername } from '../auth/validate.js'
+import { claimGuestResults } from '../db/gameResults.js'
 import { createUser, deleteExpiredUnverified, findUserByEmail, publicUser } from '../db/users.js'
+import { gameManager } from '../game/GameManager.js'
 import { appUrl, passwordResetMail, verifyEmailMail } from '../mail/sendMail.js'
+import { HU_EMAIL_MESSAGE, isResetEmailAllowed } from '../../src/utils/schoolEmail.js'
 import { ApiError } from '../utils/ApiError.js'
-import { AUTH_COOKIE, clearSessionCookie, setSessionCookie } from '../utils/cookies.js'
+import { AUTH_COOKIE, clearSessionCookie, PLAYER_COOKIE, readCookies, setSessionCookie } from '../utils/cookies.js'
 
 // Inloggen, registreren, uitloggen, wachtwoord vergeten en e-mail bevestigen (story 1, 2, 3 en 14).
 // Allemaal REST: alleen een HTTP-antwoord kan de httpOnly-cookie zetten of wissen.
@@ -27,6 +30,22 @@ async function startSession(request, response, user, remember) {
     userAgent: request.headers['user-agent'],
   })
   setSessionCookie(response, AUTH_COOKIE, token, maxAge)
+}
+
+/**
+ * Speelde deze browser net als gast een quiz? Dan de score daarvan aan dit account koppelen.
+ * Gaat er iets mis, dan nooit het registreren of inloggen laten mislukken: de score is een extraatje.
+ * @returns {Promise<number>} aantal gekoppelde uitslagen
+ */
+async function claimFromGameCookie(request, user) {
+  try {
+    const session = gameManager.getSession(readCookies(request.headers.cookie)[PLAYER_COOKIE])
+    const game = session?.role === 'player' ? gameManager.getGame(session.code) : null
+    return game ? await claimGuestResults(game, session.playerId, user) : 0
+  } catch (error) {
+    console.error('Gast-score niet gekoppeld:', error.message)
+    return 0
+  }
 }
 
 // Story 1 + 14: account aanmaken, alleen met een HU-adres. Je bent daarna nog níet ingelogd:
@@ -53,7 +72,8 @@ router.post('/register', registerLimiter, async (request, response) => {
   // Niet wachten op de mail: een trage maildienst mag het registreren niet ophouden.
   // Komt de mail niet aan, dan vraagt de speler hem opnieuw aan (resend-verification).
   sendVerifyMail(user).catch((error) => console.error('Bevestigingsmail niet verstuurd:', error.message))
-  response.status(201).json({ user: publicUser(user), verificationSent: true })
+  const claimedResults = await claimFromGameCookie(request, user)
+  response.status(201).json({ user: publicUser(user), verificationSent: true, claimedResults })
 })
 
 async function sendVerifyMail(user) {
@@ -104,7 +124,8 @@ router.post('/login', loginLimiter, async (request, response) => {
   }
 
   await startSession(request, response, user, body.remember)
-  response.json({ user: publicUser(user) })
+  const claimedResults = await claimFromGameCookie(request, user)
+  response.json({ user: publicUser(user), claimedResults })
 })
 
 router.post('/logout', async (request, response) => {
@@ -121,7 +142,10 @@ router.get('/me', (request, response) => {
 
 // Story 3: wachtwoord vergeten. Altijd hetzelfde antwoord, of het adres nu bestaat of niet.
 router.post('/forgot', forgotLimiter, (request, response) => {
-  const email = typeof request.body?.email === 'string' ? request.body.email.trim().toLowerCase() : ''
+  // Alleen HU-adressen (en .local voor development): met een ander adres kan nooit een account bestaan.
+  // Dit verraadt niets over wie er een account heeft, want het hangt alleen af van het domein.
+  const email = parseEmail(request.body?.email)
+  if (!isResetEmailAllowed(email)) throw new ApiError('EMAIL_NOT_HU', HU_EMAIL_MESSAGE, 400)
   // Niet wachten op de database en de mail: dan duurt het antwoord altijd even lang,
   // en verraadt de tijd ook niet of het adres bestaat.
   sendResetMail(email).catch((error) => console.error('Resetmail niet verstuurd:', error.message))

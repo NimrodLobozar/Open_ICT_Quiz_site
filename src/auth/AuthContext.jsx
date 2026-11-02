@@ -32,16 +32,17 @@ export function AuthProvider({ children }) {
     return () => window.removeEventListener('pageshow', onPageShow)
   }, [refresh])
 
+  // claimedResults: hoeveel gast-uitslagen van deze browser nu op het account staan (zie routes/auth.js).
   const login = useCallback(async ({ email, password, remember }) => {
     const data = await api('/auth/login', { method: 'POST', body: { email, password, remember } })
     setUser(data.user)
-    return data.user
+    return { ...data.user, claimedResults: data.claimedResults ?? 0 }
   }, [])
 
   // Na registreren ben je nog níet ingelogd: eerst je e-mailadres bevestigen (story 14).
   const register = useCallback(async (fields) => {
     const data = await api('/auth/register', { method: 'POST', body: fields })
-    return data.user
+    return { ...data.user, claimedResults: data.claimedResults ?? 0 }
   }, [])
 
   const logout = useCallback(async () => {

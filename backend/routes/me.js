@@ -52,6 +52,11 @@ router.post('/password', passwordCheckLimiter, async (request, response) => {
   if (!ok) throw new ApiError('WRONG_PASSWORD', 'Je huidige wachtwoord klopt niet.', 400)
 
   const password = parsePassword(newPassword)
+  // Hetzelfde wachtwoord opnieuw "kiezen" is geen wijziging: was het oude gelekt, dan ben je nog steeds niet veilig.
+  // currentPassword is hierboven al gecontroleerd, dus een gewone vergelijking is genoeg.
+  if (password === currentPassword) {
+    throw new ApiError('PASSWORD_SAME', 'Je nieuwe wachtwoord mag niet hetzelfde zijn als je huidige wachtwoord.', 400)
+  }
   await updateUser(request.user.id, { passwordHash: await hashPassword(password) })
   // Andere apparaten uitloggen: was je wachtwoord gelekt, dan is de indringer er nu uit. Dit apparaat blijft ingelogd.
   await deleteOtherSessions(request.user.id, request.authSession.id)

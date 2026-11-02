@@ -6,9 +6,10 @@ import { toErrorResponse } from './hostHandlers.js'
 export function registerPlayerHandlers(io, socket, game) {
   // De speler stuurt alleen "ik kies optie X". Goed of fout hoort hij pas bij question:end,
   // anders kan hij in DevTools het antwoord van de ack aflezen en de rest voorzeggen.
-  socket.on(EVENTS.PLAYER_ANSWER, ({ questionIndex, optionId } = {}, ack) => {
+  // Bij een vraag met meerdere goede antwoorden stuurt de speler optionIds (een lijst) in plaats van optionId.
+  socket.on(EVENTS.PLAYER_ANSWER, ({ questionIndex, optionId, optionIds } = {}, ack) => {
     try {
-      game.submitAnswer(socket.data.playerId, { questionIndex, optionId })
+      game.submitAnswer(socket.data.playerId, { questionIndex, optionId, optionIds })
       ack?.({ ok: true })
       afterAnswer(io, game)
     } catch (error) {

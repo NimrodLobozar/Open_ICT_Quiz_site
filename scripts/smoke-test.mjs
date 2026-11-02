@@ -181,12 +181,23 @@ async function main() {
     await sleep(150)
     await emit(host, 'host:next', { phase, questionIndex }) // leestijd overslaan
     await sleep(150)
+    if (i === 0) {
+      // Bug "tijd stoppen": de klok moet stilstaan, maar de vraag moet blijven staan.
+      const paused = await emit(host, 'host:pause', { questionIndex })
+      check(paused.ok, 'tijd stoppen lukt', JSON.stringify(paused))
+    }
     // Student antwoordt goed (id 2 bij vraag 1, id 1 bij vraag 2), gast fout.
     const correctId = i === 0 ? 2 : 1
     const ack = await emit(players[0], 'player:answer', { questionIndex: i, optionId: correctId })
     await emit(players[1], 'player:answer', { questionIndex: i, optionId: correctId === 1 ? 2 : 1 })
     check(ack.ok, `vraag ${i + 1} beantwoord`, JSON.stringify(ack))
-    await sleep(200) // iedereen heeft geantwoord: de server stopt de vraag zelf
+    await sleep(200) // iedereen heeft geantwoord: de server stopt de vraag zelf (behalve als de tijd stilstaat)
+    if (i === 0) {
+      check(phase === 'QUESTION_ACTIVE', 'na tijd stoppen blijft de vraag staan, ook als iedereen heeft geantwoord')
+      await emit(host, 'host:next', { phase, questionIndex }) // "Naar de tussenstand"
+      await sleep(150)
+      check(phase === 'QUESTION_RESULT', 'daarna gaat host:next naar de tussenstand')
+    }
     await emit(host, 'host:next', { phase, questionIndex }) // volgende vraag of podium
   }
   const result = await Promise.race([podium, sleep(5000).then(() => null)])

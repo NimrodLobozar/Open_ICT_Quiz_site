@@ -226,7 +226,7 @@ describe('e-mailadres bevestigen (story 14)', () => {
     expect((await browser().post('/api/auth/password').send({ token, password: 'Overname123' })).status).toBe(400)
   })
 
-  it('stuurt de mail opnieuw; alleen de nieuwste link werkt', async () => {
+  it('stuurt de mail opnieuw; de oude link werkt ook nog, maar na bevestigen vervallen de andere', async () => {
     await browser().post('/api/auth/register').send(signup())
     const first = await tokenFromMail('emma@student.hu.nl', '/email-bevestigen')
     outbox.length = 0
@@ -236,8 +236,9 @@ describe('e-mailadres bevestigen (story 14)', () => {
     const second = await tokenFromMail('emma@student.hu.nl', '/email-bevestigen')
     expect(second).toBeTruthy()
     expect(second).not.toBe(first)
-    expect((await browser().post('/api/auth/verify-email').send({ token: first })).status).toBe(400)
-    expect((await browser().post('/api/auth/verify-email').send({ token: second })).status).toBe(200)
+    // Bug "opnieuw sturen werkt niet": de eerste mail kwam later binnen, en die link werkte dan niet meer.
+    expect((await browser().post('/api/auth/verify-email').send({ token: first })).status).toBe(200)
+    expect((await browser().post('/api/auth/verify-email').send({ token: second })).status).toBe(400)
   })
 
   it('opnieuw sturen geeft altijd hetzelfde antwoord, en mailt niet bij een bevestigd of onbekend adres', async () => {

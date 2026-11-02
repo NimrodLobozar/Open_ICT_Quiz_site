@@ -40,12 +40,22 @@ export function PlayerEndScreen({ code, ranking, result, onLeave, leaving = fals
         </section>
 
         <div className="player-end__actions">
-          {/* Accounts komen bij L1. Tot die tijd is iedereen gast; de knop wijst naar een placeholder. */}
+          {/* Gast? Maak je in deze browser een account (of log je in), dan koppelt de server deze score
+              aan je account: hij herkent je aan de speler-cookie van deze game (zie routes/auth.js). */}
           {result?.isGuest && (
             <>
-              <p className="player-end__guest-note">Als gast wordt je score na de quiz gewist.</p>
-              <Link to="/account/nieuw" className="player-end__button player-end__button--primary">
+              <p className="player-end__guest-note">
+                Je speelt als gast. Maak in deze browser een account of log in, dan bewaren we de score van deze quiz
+                op je account. Klik niet eerst op &quot;Terug naar start&quot;: dan is de koppeling weg.
+              </p>
+              <Link to="/registreren" className="player-end__button player-end__button--primary">
                 Account maken en score bewaren
+              </Link>
+              <Link
+                to={`/inloggen?terug=${encodeURIComponent(`/play/${code}`)}`}
+                className="player-end__button"
+              >
+                Inloggen en score bewaren
               </Link>
             </>
           )}

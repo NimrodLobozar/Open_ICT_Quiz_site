@@ -57,6 +57,8 @@ function toQuizData(input, settings) {
         text: question.text,
         order: index,
         timeLimitSec: question.timeLimitSec ?? settings.timePerQuestion,
+        skill: question.skill ?? null,
+        difficulty: question.difficulty ?? null,
         options: {
           create: question.options.map((option, optionIndex) => ({ ...option, order: optionIndex })),
         },
@@ -105,6 +107,8 @@ export function toGameQuestions(quiz) {
   return quiz.questions.map((question) => ({
     text: question.text,
     timeLimitSec: question.timeLimitSec,
+    skill: question.skill,
+    difficulty: question.difficulty,
     options: question.options.map((option, index) => ({ id: index + 1, text: option.text, isCorrect: option.isCorrect })),
   }))
 }
@@ -121,6 +125,8 @@ export function quizForEditor(quiz) {
     questions: quiz.questions.map((question) => ({
       text: question.text,
       timeLimitSec: question.timeLimitSec,
+      skill: question.skill,
+      difficulty: question.difficulty,
       options: question.options.map((option) => ({ text: option.text, isCorrect: option.isCorrect })),
     })),
   }

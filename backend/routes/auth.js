@@ -14,6 +14,8 @@ import { parseEmail, parseHuEmail, parsePassword, parseUsername } from '../auth/
 import { claimGuestResults } from '../db/gameResults.js'
 import { createUser, deleteExpiredUnverified, findUserByEmail, publicUser } from '../db/users.js'
 import { gameManager } from '../game/GameManager.js'
+import { PHASES } from '../game/phases.js'
+import { sendLobbyUpdate, sendPodium } from '../socket/broadcast.js'
 import { appUrl, passwordResetMail, verifyEmailMail } from '../mail/sendMail.js'
 import { HU_EMAIL_MESSAGE, isResetEmailAllowed } from '../../src/utils/schoolEmail.js'
 import { ApiError } from '../utils/ApiError.js'
@@ -41,7 +43,16 @@ async function claimFromGameCookie(request, user) {
   try {
     const session = gameManager.getSession(readCookies(request.headers.cookie)[PLAYER_COOKIE])
     const game = session?.role === 'player' ? gameManager.getGame(session.code) : null
-    return game ? await claimGuestResults(game, session.playerId, user) : 0
+    if (!game) return 0
+    const { linked, claimed } = await claimGuestResults(game, session.playerId, user)
+    if (linked) {
+      // Naam en account-icoontje zijn veranderd: ook de host en de andere spelers moeten dat zien,
+      // niet alleen deze speler na verversen. Op het podium dus de eindstand opnieuw sturen.
+      const io = request.app.get('io')
+      sendLobbyUpdate(io, game)
+      if (game.phase === PHASES.PODIUM) sendPodium(io, game)
+    }
+    return claimed
   } catch (error) {
     console.error('Gast-score niet gekoppeld:', error.message)
     return 0

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { createOneTimeToken } from '../../auth/oneTimeTokens.js'
 import { saveGameResults } from '../../db/gameResults.js'
 import { gameManager } from '../../game/GameManager.js'
-import { browser, loggedIn, makeUser, PASSWORD, prisma, quizInput, resetDatabase } from './helpers.js'
+import { app, browser, loggedIn, makeUser, PASSWORD, prisma, quizInput, resetDatabase } from './helpers.js'
 
 // Tests voor de punten uit docs/bugs_and_Ideas.txt. Per regel uit dat bestand één describe.
 beforeEach(resetDatabase)
@@ -245,5 +245,59 @@ describe('review PR #25 (Copilot)', () => {
     const again = await other.post(`/api/games/${code}/players`).send({})
     expect(again.status).toBe(409)
     expect(again.body.error).toBe('ALREADY_JOINED')
+  })
+})
+
+describe('review PR #25 (Copilot), ronde 2', () => {
+  /** Ronde met een gast en (optioneel) een ingelogd account, tot en met opslaan. */
+  async function round({ withAccount } = {}) {
+    const { code, game } = await hostGame()
+    const guest = browser()
+    const asGuest = await guest.post(`/api/games/${code}/players`).send({ nickname: 'Gastspeler' })
+    const account = withAccount ? await loggedIn(withAccount) : null
+    if (account) await account.agent.post(`/api/games/${code}/players`).send({})
+    else await browser().post(`/api/games/${code}/players`).send({ nickname: 'Ander' })
+    game.recordAnswer(asGuest.body.playerId, { questionIndex: 0, correct: true, points: 900 })
+    game.finish()
+    await saveGameResults(game)
+    return { code, game, guest, guestId: asGuest.body.playerId, account }
+  }
+
+  it('geen tweede uitslag als het account zelf al meespeelde', async () => {
+    const { guest, account } = await round({ withAccount: { email: 'zelf@student.hu.nl' } })
+    const login = await guest.post('/api/auth/login').send({ email: 'zelf@student.hu.nl', password: PASSWORD })
+    expect(login.body.claimedResults).toBe(0)
+    expect(await prisma.gameResult.count({ where: { userId: account.user.id } })).toBe(1)
+  })
+
+  it('twee logins tegelijk met dezelfde speler-cookie: opgeslagen en live uitslag bij hetzelfde account', async () => {
+    const { game, guest, guestId } = await round()
+    const a = await makeUser({ email: 'a@student.hu.nl' })
+    const b = await makeUser({ email: 'b@student.hu.nl' })
+    const [ra, rb] = await Promise.all([
+      guest.post('/api/auth/login').send({ email: 'a@student.hu.nl', password: PASSWORD }),
+      guest.post('/api/auth/login').send({ email: 'b@student.hu.nl', password: PASSWORD }),
+    ])
+    expect(ra.body.claimedResults + rb.body.claimedResults).toBe(1)
+    const stored = await prisma.gameResult.findFirst({ where: { nickname: 'Gastspeler' } })
+    expect([a.id, b.id]).toContain(stored.userId)
+    expect(game.getPlayer(guestId).userId).toBe(stored.userId)
+  })
+
+  it('na koppelen op het podium krijgt iedereen de nieuwe eindstand (naam + icoontje)', async () => {
+    const { guest, guestId } = await round()
+    await makeUser({ username: 'Nieuw', email: 'nieuw@student.hu.nl' })
+    const sent = []
+    const recorder = { to: () => ({ emit: (event, data) => sent.push({ event, data }) }) }
+    const previous = app.get('io')
+    app.set('io', recorder)
+    try {
+      await guest.post('/api/auth/login').send({ email: 'nieuw@student.hu.nl', password: PASSWORD })
+    } finally {
+      app.set('io', previous)
+    }
+    const podium = sent.find((message) => message.event === 'game:podium')
+    expect(podium).toBeDefined()
+    expect(podium.data.ranking.find((row) => row.id === guestId)).toMatchObject({ nickname: 'Nieuw', isVerified: true })
   })
 })

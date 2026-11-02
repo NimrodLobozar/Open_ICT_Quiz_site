@@ -51,12 +51,15 @@ async function insertSession(record) {
  * We pakken precies de rij van deze speler (op id), nooit "een rij met dezelfde naam":
  * anders kon een gast de score claimen van een account met dezelfde naam dat intussen verwijderd is.
  * @param {{ id: number, username: string }} user
- * @returns {Promise<number>} hoeveel uitslagen (rondes) er gekoppeld zijn
+ * @returns {Promise<{ linked: boolean, claimed: number }>} linked = de live speler hoort nu bij dit account;
+ *   claimed = hoeveel opgeslagen uitslagen (rondes) er gekoppeld zijn
  */
 export async function claimGuestResults(game, playerId, user) {
-  const player = game.getPlayer(playerId)
-  // Speelde hij al met een account, dan staat de score al goed.
-  if (!player || player.userId !== null || player.isBot) return 0
+  // Eerst de live speler aan het account koppelen, zónder await ervoor. Node voert dit stuk in één keer uit,
+  // dus twee inlogverzoeken tegelijk (met dezelfde speler-cookie) kunnen niet allebei door deze controle:
+  // de tweede ziet dat de speler al bij een account hoort. Zo horen opgeslagen en live uitslagen altijd bij hetzelfde account.
+  // linkAccount weigert ook als dit account al zelf meespeelt: dan zou het account twee uitslagen per ronde krijgen.
+  if (!game.linkAccount(playerId, user)) return { linked: false, claimed: 0 }
   let claimed = 0
   for (const { resultIds } of game.savedRounds.values()) {
     const resultId = (await resultIds).get(playerId)
@@ -67,10 +70,7 @@ export async function claimGuestResults(game, playerId, user) {
     })
     claimed += count
   }
-  // Vanaf nu speelt hij in deze game met zijn account: een volgende ronde komt dan vanzelf op zijn account,
-  // en het eindscherm noemt hem geen gast meer (ook na verversen, via game:sync).
-  game.linkAccount(playerId, user)
-  return claimed
+  return { linked: true, claimed }
 }
 
 /**

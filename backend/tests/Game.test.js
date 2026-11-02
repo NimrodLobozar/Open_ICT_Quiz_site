@@ -43,7 +43,9 @@ describe("Game", () => {
 
   it("een gekoppelde gast krijgt de accountnaam en blokkeert de echte eigenaar van zijn gastnaam niet", () => {
     const guest = game.addPlayer("John");
-    game.linkAccount(guest.id, { id: 5, username: "Emma" });
+    expect(game.linkAccount(guest.id, { id: 5, username: "Emma" })).toBe(true);
+    // Nog een keer koppelen (bijv. een tweede inlogverzoek tegelijk) lukt niet.
+    expect(game.linkAccount(guest.id, { id: 6, username: "Sam" })).toBe(false);
     expect(guest).toMatchObject({ nickname: "Emma", userId: 5, isVerified: true });
     // Het echte John-account kan nu gewoon meedoen.
     expect(() => game.addPlayer("John", { userId: 9 })).not.toThrow();

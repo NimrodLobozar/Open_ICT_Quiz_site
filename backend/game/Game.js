@@ -137,17 +137,21 @@ export class Game {
    * Zo kan een gast "John" die als Emma inlogt de echte John niet blokkeren.
    * (Al opgeslagen uitslagen houden de naam waaronder hij toen speelde.)
    * @param {{ id: number, username: string }} user
+   * @returns {boolean} true als de speler nu bij dit account hoort
    */
   linkAccount(playerId, user) {
     const player = this.getPlayer(playerId);
-    if (!player || player.userId !== null) return;
+    // Geen gast (meer), of een testspeler: niets te koppelen.
+    if (!player || player.userId !== null || player.isBot) return false;
     // Zit dit account al in de game (bijv. vanuit een andere browser)? Dan niet nog een keer.
-    if ([...this.players.values()].some((other) => other.userId === user.id)) return;
+    if ([...this.players.values()].some((other) => other.userId === user.id))
+      return false;
     player.userId = user.id;
     player.isVerified = true;
     player.nickname = user.username;
     const row = this.finalRanking?.find((entry) => entry.id === playerId);
     if (row) Object.assign(row, { isVerified: true, nickname: user.username });
+    return true;
   }
 
   /** Speler vertrekt zelf. Mag altijd, ook op het podium ("Terug naar start"). */

@@ -91,13 +91,12 @@ export default function App() {
           }
         />
         <Route path="/host/:code" element={<HostGamePage />} />
-        <Route path="/leaderboard" element={<LeaderboardPage />} />
+        <Route path="/leaderboard" element={<RequireAuth><LeaderboardPage /></RequireAuth>} />
         {/* Demo's met nepdata, om de designs te bekijken. */}
         <Route path="/end" element={<EndScreenPageHost />} />
         <Route path="/end-player" element={<EndScreenPagePlayer />} />
         <Route path="/question" element={<QuestionPreviewPage />} />
         <Route path="/question-answers" element={<QuestionAnswersPage />} />
-        <Route path="/leaderboard" element={<RequireAuth><LeaderboardPage /></RequireAuth>} />
         <Route path="/player-question" element={<PlayerQuestionPage />} />
         <Route path="/player-result" element={<PlayerResultPage />} />
         {/* Sjabloon om te kopiëren voor een nieuwe pagina. */}

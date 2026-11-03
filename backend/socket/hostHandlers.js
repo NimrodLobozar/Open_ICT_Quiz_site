@@ -121,6 +121,18 @@ export function registerHostHandlers(io, socket, game) {
     }
   });
 
+  // Tijd per vraag kiezen in de lobby. Game.setTimeLimit controleert of het mag;
+  // lobby:update vertelt daarna iedereen (host én spelers) de nieuwe tijd.
+  socket.on(EVENTS.HOST_SET_TIME_LIMIT, ({ seconds = null } = {}, ack) => {
+    try {
+      game.setTimeLimit(seconds);
+      sendLobbyUpdate(io, game);
+      ack?.({ ok: true, timeLimitSec: game.timeLimitSec });
+    } catch (error) {
+      ack?.(toErrorResponse(error));
+    }
+  });
+
   socket.on(EVENTS.HOST_SET_QUESTION_COUNT, ({ count } = {}, ack) => {
     try {
       game.setQuestionCount(count);

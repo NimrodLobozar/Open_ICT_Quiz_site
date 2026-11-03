@@ -252,6 +252,15 @@ function PhaseScreen({
           {game.lobby.playerCount}{" "}
           {game.lobby.playerCount === 1 ? "speler" : "spelers"} in de lobby
         </p>
+
+        <p>
+          Tijd per vraag:{" "}
+          <strong>
+            {game.lobby.timeLimitSec
+              ? `${game.lobby.timeLimitSec} seconden`
+              : "zoals in de quiz"}
+          </strong>
+        </p>
         {game.lobby.questionCount != null && (
           <p>
             Willekeurige quiz:{" "}

@@ -11,6 +11,7 @@ export function sendLobbyUpdate(io, game) {
     players,
     playerCount: players.length,
     locked: game.locked,
+    timeLimitSec: game.timeLimitSec,
     questionCount: game.questionCount,
     skillAverages: game.getSkillAverage(),
   });

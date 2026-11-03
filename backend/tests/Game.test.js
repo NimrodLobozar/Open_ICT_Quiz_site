@@ -218,6 +218,48 @@ describe("Game: de vraag-lus", () => {
     expect(game.phase).toBe(PHASES.QUESTION_ACTIVE);
   });
 
+  it("gebruikt zonder keuze van de host de tijd uit de quiz", () => {
+    game.start(T0);
+    expect(game.getQuestionPayload(T0).timeLimitSec).toBe(
+      QUIZ_QUESTIONS[0].timeLimitSec,
+    );
+  });
+
+  it("gebruikt de tijd per vraag die de host in de lobby koos", () => {
+    game.setTimeLimit(10);
+    game.start(T0);
+    game.openAnswers(T0 + 5000);
+
+    // Iedereen krijgt de nieuwe tijd mee, en de server stopt de vraag na 10 seconden.
+    expect(game.getQuestionPayload(T0 + 5000).timeLimitSec).toBe(10);
+    expect(game.endsAt).toBe(T0 + 5000 + 10_000);
+    expect(() =>
+      game.submitAnswer(
+        emma.id,
+        { questionIndex: 0, optionId: CORRECT },
+        T0 + 5000 + 11_000,
+      ),
+    ).toThrow(expect.objectContaining({ code: "TOO_LATE" }));
+  });
+
+  it("weigert een ongeldige tijd, en een nieuwe tijd na de start", () => {
+    expect(() => game.setTimeLimit(7)).toThrow(
+      expect.objectContaining({ code: "INVALID_TIME_LIMIT" }),
+    );
+    expect(() => game.setTimeLimit("30")).toThrow(
+      expect.objectContaining({ code: "INVALID_TIME_LIMIT" }),
+    );
+
+    game.setTimeLimit(30);
+    game.setTimeLimit(null); // terug naar de tijden uit de quiz
+    expect(game.timeLimitSec).toBeNull();
+
+    game.start(T0);
+    expect(() => game.setTimeLimit(30)).toThrow(
+      expect.objectContaining({ code: "WRONG_PHASE" }),
+    );
+  });
+
   it("laat de tijd nu beginnen als de host de leestijd overslaat", () => {
     game.start(T0);
     game.next(T0 + 2000);

@@ -5,6 +5,7 @@ import { PHASES } from "./phases.js";
 import { buildPlayerResult } from "../../src/utils/playerResult.js";
 import { calculatePoints } from "../../src/utils/scoring.js";
 import { QUIZ_QUESTIONS } from "./quizQuestions.js";
+import { TIME_OPTIONS } from "../quiz/quizRules.js";
 import { selectQuestions } from "./questionSelector.js";
 import { SKILL_CODES } from "../../src/utils/skills.js";
 import {
@@ -50,6 +51,9 @@ export class Game {
     this.questionCount = questionBank ? DEFAULT_QUESTION_COUNT : null;
     this.questions = questionBank ? [] : questions;
     this.previewSeconds = previewSeconds;
+    // Tijd per vraag die de host in de lobby kiest (in seconden).
+    // null = de host koos niets: dan geldt de tijd die bij elke vraag in de quiz staat.
+    this.timeLimitSec = null;
     this.#resetQuestions();
     /** @type {Map<number, Player>} */
     this.players = new Map();
@@ -181,6 +185,29 @@ export class Game {
     }
     this.locked = Boolean(locked);
   }
+  /**
+   * De host kiest in de lobby de tijd per vraag (bijv. 10 seconden voor snelle vragen).
+   * null = terug naar de tijden uit de quiz. Na de start mag het niet meer:
+   * dan zouden spelers midden in de quiz ineens minder tijd krijgen.
+   */
+  setTimeLimit(seconds) {
+    if (this.phase !== PHASES.LOBBY) {
+      throw new GameError(
+        "WRONG_PHASE",
+        "De tijd per vraag kan alleen in de lobby worden gekozen.",
+        409,
+      );
+    }
+    // Nooit blind overnemen wat een browser stuurt: alleen de vaste keuzes (of null) zijn goed.
+    if (seconds !== null && !TIME_OPTIONS.includes(seconds)) {
+      throw new GameError(
+        "INVALID_TIME_LIMIT",
+        "Kies een geldige tijd per vraag.",
+        400,
+      );
+    }
+    this.timeLimitSec = seconds;
+  }
 
   setQuestionCount(count) {
     if (!this.questionBank) {
@@ -236,9 +263,14 @@ export class Game {
     return this.questions[this.questionIndex] ?? null;
   }
 
+  /** Hoeveel seconden de huidige vraag duurt: de keuze van de host, anders de tijd uit de quiz. */
+  get currentTimeLimitSec() {
+    return this.timeLimitSec ?? this.currentQuestion.timeLimitSec;
+  }
+
   /** Moment (ms) waarop de tijd voor de huidige vraag op is. */
   get endsAt() {
-    return this.startsAt + this.currentQuestion.timeLimitSec * 1000;
+    return this.startsAt + this.currentTimeLimitSec * 1000;
   }
 
   isLastQuestion() {
@@ -391,7 +423,7 @@ export class Game {
       const points = calculatePoints({
         correct,
         responseMs: answer?.responseMs ?? 0,
-        timeLimitSec: question.timeLimitSec,
+        timeLimitSec: this.currentTimeLimitSec,
         difficulty: question.difficulty,
       });
       // Geen antwoord telt als fout: 0 punten, maar wel een regel in answers (zo klopt "x van 8 goed").
@@ -460,7 +492,7 @@ export class Game {
       options: question.options.map(({ id, text }) => ({ id, text })),
       // Meerdere goede antwoorden? Dan vinkt de speler aan en verstuurt hij zelf. Hoeveel er goed zijn, zeggen we niet.
       multiple: isMultiple(question),
-      timeLimitSec: question.timeLimitSec,
+      timeLimitSec: this.currentTimeLimitSec,
       previewSeconds: this.previewSeconds,
       startsAt: this.startsAt,
       // Tijd gestopt? Dan tonen de schermen een stilstaande klok met zoveel ms over.

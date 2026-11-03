@@ -8,17 +8,17 @@ beforeEach(resetDatabase)
 
 describe('POST /api/auth/forgot', () => {
   it('geeft precies hetzelfde antwoord voor een bestaand en een onbekend e-mailadres', async () => {
-    await makeUser({ email: 'sam@test.nl' })
-    const known = await browser().post('/api/auth/forgot').send({ email: 'sam@test.nl' })
-    const unknown = await browser().post('/api/auth/forgot').send({ email: 'niemand@test.nl' })
+    await makeUser({ email: 'sam@student.hu.nl' })
+    const known = await browser().post('/api/auth/forgot').send({ email: 'sam@student.hu.nl' })
+    const unknown = await browser().post('/api/auth/forgot').send({ email: 'niemand@student.hu.nl' })
     expect(known.status).toBe(200)
     expect(unknown.status).toBe(200)
     expect(known.body).toEqual(unknown.body)
   })
 
   it('maakt voor een bestaand account een link aan, en bewaart alleen de hash', async () => {
-    const user = await makeUser({ email: 'sam@test.nl' })
-    await browser().post('/api/auth/forgot').send({ email: 'sam@test.nl' })
+    const user = await makeUser({ email: 'sam@student.hu.nl' })
+    await browser().post('/api/auth/forgot').send({ email: 'sam@student.hu.nl' })
     // De route wacht expres niet op de database (gelijke tijd), dus even wachten tot de rij er is.
     await vi.waitFor(async () => expect(await prisma.oneTimeToken.count({ where: { userId: user.id } })).toBe(1))
     const row = await prisma.oneTimeToken.findFirst()
@@ -27,15 +27,31 @@ describe('POST /api/auth/forgot', () => {
     expect(row.expiresAt.getTime() - Date.now()).toBeLessThanOrEqual(60 * 60 * 1000)
   })
 
-  it('stuurt na 3 aanvragen per uur geen nieuwe links meer, maar zegt nog steeds hetzelfde', async () => {
-    const user = await makeUser({ email: 'spam@test.nl' })
+  it('stuurt na 5 aanvragen per kwartier geen links meer, en zegt dat eerlijk (429)', async () => {
+    const user = await makeUser({ email: 'spam@student.hu.nl' })
     for (let i = 0; i < 5; i += 1) {
-      const response = await browser().post('/api/auth/forgot').send({ email: 'spam@test.nl' })
+      const response = await browser().post('/api/auth/forgot').send({ email: 'spam@student.hu.nl' })
       expect(response.body).toEqual({ ok: true })
     }
-    await new Promise((resolve) => setTimeout(resolve, 300))
-    // Nieuwe aanvraag maakt oude ongeldig, dus er staat er altijd maar één; het punt is dat er geen 5 mails gingen.
-    expect(await prisma.oneTimeToken.count({ where: { userId: user.id } })).toBe(1)
+    const sixth = await browser().post('/api/auth/forgot').send({ email: 'spam@student.hu.nl' })
+    expect(sixth.status).toBe(429)
+    expect(sixth.body.message).toMatch(/kwartier/)
+    await vi.waitFor(async () => expect(await prisma.oneTimeToken.count({ where: { userId: user.id } })).toBe(5))
+  })
+
+  it('de 429 verraadt niet of een adres een account heeft: een onbekend adres krijgt hem ook', async () => {
+    for (let i = 0; i < 5; i += 1) await browser().post('/api/auth/forgot').send({ email: 'niemand@student.hu.nl' })
+    expect((await browser().post('/api/auth/forgot').send({ email: 'niemand@student.hu.nl' })).status).toBe(429)
+  })
+
+  it('weigert een adres dat geen HU-adres is (bug: Gmail werkte ook), maar .local mag voorlopig', async () => {
+    const gmail = await browser().post('/api/auth/forgot').send({ email: 'iemand@gmail.com' })
+    expect(gmail.status).toBe(400)
+    expect(gmail.body.error).toBe('EMAIL_NOT_HU')
+    const local = await browser().post('/api/auth/forgot').send({ email: 'beheerder@quiz.local' })
+    expect(local.status).toBe(200)
+    const hu = await browser().post('/api/auth/forgot').send({ email: 'docent@hu.nl' })
+    expect(hu.status).toBe(200)
   })
 })
 
@@ -76,11 +92,12 @@ describe('nieuw wachtwoord via een link', () => {
     expect(response.status).toBe(400)
   })
 
-  it('een nieuwe aanvraag maakt de oude link ongeldig', async () => {
+  it('een oudere link werkt nog na een nieuwe aanvraag (de mail kan laat binnenkomen); na gebruik vervallen de andere', async () => {
     const user = await makeUser()
     const first = await createOneTimeToken(user.id, 'RESET')
-    await createOneTimeToken(user.id, 'RESET')
-    expect((await browser().post('/api/auth/password').send({ token: first, password: 'NieuwWacht8' })).status).toBe(400)
+    const second = await createOneTimeToken(user.id, 'RESET')
+    expect((await browser().post('/api/auth/password').send({ token: first, password: 'NieuwWacht8' })).status).toBe(200)
+    expect((await browser().post('/api/auth/password').send({ token: second, password: 'Nogmaals99' })).status).toBe(400)
   })
 
   it('weigert een zwak nieuw wachtwoord, en de link blijft dan bruikbaar', async () => {

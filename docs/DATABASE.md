@@ -69,7 +69,7 @@ Dit volgt hoofdstuk 12 van het projectplan, maar nog niet alles:
 | Projectplan | Nu |
 |---|---|
 | `GameSession`, `GameResult` | ✅ gebouwd, met `quizId` en `userId` (`quizId` optioneel, voor oude rondes) |
-| `Quiz` (= de vragenset), `Question`, `AnswerOption` | ✅ gebouwd (sprint 2). `Quiz` heeft `status` (DRAFT/READY) en instellingen i.p.v. `isPublished` |
+| `Quiz` (= de vragenset), `Question`, `AnswerOption` | ✅ gebouwd (sprint 2). `Quiz` heeft `status` (DRAFT/READY) en instellingen i.p.v. `isPublished`. `Question` heeft optioneel `skill` (bijv. `SD`) en `difficulty` (niveau 1–5, hoger = meer punten); meer dan één `AnswerOption.isCorrect` = speler kiest alle goede antwoorden |
 | `User` | ✅ gebouwd, met `role` als enum (STUDENT/TEACHER/ADMIN) i.p.v. `Role` + `UserRole`; vaardigheden als `skills` (jsonb) |
 | (niet in plan) | `Session`, `OneTimeToken` (zie ACCOUNTS.md), `GameResult.skills`, `GameResult.isBot` |
 | `PlayerAnswer` (later) | ontbreekt |

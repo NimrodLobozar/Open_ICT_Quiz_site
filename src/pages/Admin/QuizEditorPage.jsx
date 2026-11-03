@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../api/http.js'
 import { Notice, Toggle } from '../../components/AccountUi.jsx'
+import { DIFFICULTY_LEVELS, difficultyMultiplier } from '../../utils/scoring.js'
+import { SKILLS } from '../../utils/skills.js'
 import AdminLayout from './AdminLayout.jsx'
 
 // Zelfde grenzen als de server (backend/quiz/quizRules.js). De server controleert het echt;
@@ -15,6 +17,8 @@ const TIME_OPTIONS = [10, 20, 30, 60]
 const emptyQuestion = (timeLimitSec) => ({
   text: '',
   timeLimitSec,
+  skill: null,
+  difficulty: null,
   options: [
     { text: '', isCorrect: true },
     { text: '', isCorrect: false },
@@ -78,9 +82,10 @@ export default function QuizEditorPage() {
     updateQuestion(qIndex, {
       options: quiz.questions[qIndex].options.map((option, i) => (i === oIndex ? { ...option, ...changes } : option)),
     })
-  const setCorrect = (qIndex, oIndex) =>
+  // Aanvinken = goed. Meer dan één goed antwoord mag: dan kiest de speler alle goede antwoorden.
+  const toggleCorrect = (qIndex, oIndex) =>
     updateQuestion(qIndex, {
-      options: quiz.questions[qIndex].options.map((option, i) => ({ ...option, isCorrect: i === oIndex })),
+      options: quiz.questions[qIndex].options.map((option, i) => (i === oIndex ? { ...option, isCorrect: !option.isCorrect } : option)),
     })
   function removeOption(qIndex, oIndex) {
     const options = quiz.questions[qIndex].options.filter((_, i) => i !== oIndex)
@@ -190,16 +195,46 @@ export default function QuizEditorPage() {
                   ))}
                 </select>
               </label>
+              <div className="quiz-editor__meta">
+                <label className="quiz-editor__time">
+                  <span className="ui-label">Vaardigheid</span>
+                  <select className="ui-select" value={question.skill ?? ''} onChange={(e) => updateQuestion(qIndex, { skill: e.target.value || null })}>
+                    <option value="">Geen</option>
+                    {SKILLS.map((skill) => (
+                      <option key={skill.code} value={skill.code}>
+                        {skill.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="quiz-editor__time">
+                  <span className="ui-label">Niveau</span>
+                  <select
+                    className="ui-select"
+                    value={question.difficulty ?? ''}
+                    onChange={(e) => updateQuestion(qIndex, { difficulty: e.target.value ? Number(e.target.value) : null })}
+                  >
+                    <option value="">Geen</option>
+                    {DIFFICULTY_LEVELS.map((level) => (
+                      <option key={level} value={level}>
+                        {level} · punten ×{difficultyMultiplier(level)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
               <fieldset className="quiz-editor__options">
-                <legend className="ui-label">Antwoorden (kies het goede)</legend>
+                <legend className="ui-label">Antwoorden (vink de goede aan; meer dan één mag)</legend>
+                {question.options.filter((option) => option.isCorrect).length > 1 && (
+                  <p className="ui-hint">Meerdere goede antwoorden: spelers moeten ze allemaal kiezen om punten te krijgen.</p>
+                )}
                 {question.options.map((option, oIndex) => (
                   <div key={oIndex} className={`quiz-editor__option ${option.isCorrect ? 'is-correct' : ''}`}>
                     <input
-                      type="radio"
-                      name={`correct-${qIndex}`}
+                      type="checkbox"
                       checked={option.isCorrect}
-                      onChange={() => setCorrect(qIndex, oIndex)}
-                      aria-label={`Antwoord ${oIndex + 1} is het goede antwoord`}
+                      onChange={() => toggleCorrect(qIndex, oIndex)}
+                      aria-label={`Antwoord ${oIndex + 1} is goed`}
                     />
                     <input
                       className="ui-input ui-input--compact"

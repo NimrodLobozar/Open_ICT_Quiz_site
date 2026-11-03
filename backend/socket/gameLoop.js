@@ -25,7 +25,8 @@ export function afterPhaseChange(io, game) {
     case PHASES.QUESTION_ACTIVE:
       sendQuestion(io, game)
       sendProgress(io, game)
-      schedule(io, game, game.endsAt, () => game.endQuestion())
+      // Tijd gestopt (host:pause)? Dan geen timer: de host gaat zelf door met host:next.
+      if (!game.paused) schedule(io, game, game.endsAt, () => game.endQuestion())
       break
     case PHASES.QUESTION_RESULT:
       sendQuestionEnd(io, game)
@@ -42,7 +43,8 @@ export function afterPhaseChange(io, game) {
 export function afterAnswer(io, game) {
   if (game.phase !== PHASES.QUESTION_ACTIVE) return
   sendProgress(io, game)
-  if (game.allAnswered()) {
+  // Tijdens een pauze bespreekt de docent de vraag: dan niet vanzelf naar de tussenstand, ook niet als iedereen klaar is.
+  if (!game.paused && game.allAnswered()) {
     game.endQuestion()
     afterPhaseChange(io, game)
   }

@@ -21,6 +21,19 @@ export function isHuEmail(email) {
 }
 
 /**
+ * Mag je met dit adres "wachtwoord vergeten" gebruiken? HU-adressen, plus voorlopig adressen op .local
+ * (zoals de beheerder uit de seed, beheerder@quiz.local). Andere adressen kunnen nooit een account hebben,
+ * dus die weigeren we meteen met een duidelijke melding.
+ * @param {unknown} email
+ */
+export function isResetEmailAllowed(email) {
+  if (isHuEmail(email)) return true
+  if (typeof email !== 'string') return false
+  const parts = email.trim().toLowerCase().split('@')
+  return parts.length === 2 && Boolean(parts[0]) && parts[1].endsWith('.local')
+}
+
+/**
  * Melding tijdens het typen (alleen voor de frontend): null zolang het adres nog een HU-adres kán worden.
  * Bij "emma@stu" zeggen we nog niets; bij "emma@gmail" wel. Zo krijg je snel feedback zonder dat het
  * formulier al rood wordt terwijl je nog typt.

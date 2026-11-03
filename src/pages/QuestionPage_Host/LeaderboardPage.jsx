@@ -1,4 +1,5 @@
 import { useNavigate, useSearchParams } from "react-router-dom";
+import AccountBadge from "../../components/AccountBadge.jsx";
 import AnswerShape, { answerColorClass } from "../../components/AnswerShape.jsx";
 import {
   DEMO_CODE,
@@ -6,6 +7,7 @@ import {
   getDemoQuestion,
   getDemoRound,
 } from "../../data/demoGame.js";
+import QuestionMeta from "../../components/QuestionMeta.jsx";
 import { formatScore } from "../../utils/formatScore.js";
 import HostQuestionLayout from "./HostQuestionLayout.jsx";
 
@@ -17,8 +19,12 @@ const TOP_COUNT = 5;
  * @param {{ code: string, question: import("./QuestionPreviewPage.jsx").QuestionShow,
  *   correctOptionId: number, answerCounts: Record<number, number>, playerCount: number,
  *   ranking: Array<{ id: number, nickname: string, score: number, rank: number, pointsGained: number }>,
- *   onNext?: () => void, showCorrectAnswer?: boolean, showStandings?: boolean }} props
+ *   onNext?: () => void, showCorrectAnswer?: boolean, showStandings?: boolean,
+ *   correctOptionIds?: number[], correctPlayerCount?: number, skill?: string | null, difficulty?: number | null }} props
  *   correctOptionId en answerCounts komen uit question:end, ranking uit leaderboard:show (via getRanking).
+ *   correctOptionIds: bij een vraag met meerdere goede antwoorden allemaal; zonder deze lijst alleen correctOptionId.
+ *   correctPlayerCount: hoeveel spelers het goed hadden (de server rekent dat uit, ook bij meerdere goede antwoorden).
+ *   skill/difficulty: vaardigheid en niveau van de vraag (optioneel).
  *   showCorrectAnswer/showStandings: instellingen van de quiz (story 8); uit = dat deel niet tonen.
  */
 export function HostLeaderboard({
@@ -31,8 +37,13 @@ export function HostLeaderboard({
   onNext,
   showCorrectAnswer = true,
   showStandings = true,
+  correctOptionIds,
+  correctPlayerCount,
+  skill = null,
+  difficulty = null,
 }) {
-  const correctCount = answerCounts[correctOptionId] ?? 0;
+  const correctIds = correctOptionIds ?? [correctOptionId];
+  const correctCount = correctPlayerCount ?? answerCounts[correctOptionId] ?? 0;
   const isLast = question.index + 1 >= question.total;
 
   return (
@@ -61,8 +72,15 @@ export function HostLeaderboard({
         >
           <h2 id="host-outcome-title" className="host-question__outcome-title">
             Vraag {question.index + 1}
-            {showCorrectAnswer ? " · het goede antwoord" : " · zo werd er gestemd"}
+            {showCorrectAnswer
+              ? correctIds.length > 1
+                ? " · de goede antwoorden"
+                : " · het goede antwoord"
+              : " · zo werd er gestemd"}
           </h2>
+          {/* De vraag zelf nog eens, zodat iedereen hem samen met het antwoord kan teruglezen. */}
+          <p className="host-question__outcome-question">{question.text}</p>
+          <QuestionMeta skill={skill} difficulty={difficulty} size="large" />
           {showCorrectAnswer && (
             <p className="host-question__outcome-summary">
               <strong>
@@ -73,7 +91,7 @@ export function HostLeaderboard({
           )}
           <ol className="host-question__counts">
             {question.options.map((option, i) => {
-              const isCorrect = showCorrectAnswer && option.id === correctOptionId;
+              const isCorrect = showCorrectAnswer && correctIds.includes(option.id);
               const count = answerCounts[option.id] ?? 0;
               return (
                 <li
@@ -135,6 +153,7 @@ export function HostLeaderboard({
                   <span className="host-question__rank">{player.rank}</span>
                   <span className="host-question__rank-name">
                     {player.nickname}
+                    <AccountBadge show={player.isVerified} />
                   </span>
                   {/* Alleen tonen als er punten bij kwamen: "+0" zegt niets. */}
                   <span className="host-question__rank-gain">

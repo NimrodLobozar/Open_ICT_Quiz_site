@@ -22,25 +22,31 @@ export const loginLimiter = rateLimit({
   handler: tooMany('Te veel pogingen. Probeer het over een kwartier opnieuw.'),
 })
 
-// 3 resetmails per e-mailadres per uur.
+// Mails opnieuw aanvragen: 5 per e-mailadres per kwartier.
+// Bij te veel een eerlijke 429 met uitleg. Vroeger zei de server dan gewoon "verstuurd" zonder iets te sturen,
+// en dacht de gebruiker dat "opnieuw sturen" kapot was.
+// Verraadt een 429 welke adressen een account hebben? Nee: de teller loopt voor élk adres, ook een onbekend adres.
+const MAIL_WINDOW_MS = 15 * 60 * 1000
+const MAIL_LIMIT = 5
+const tooManyMails = tooMany('Je hebt al een paar mails aangevraagd. Kijk in je inbox (en spam), of probeer het over een kwartier opnieuw.')
+
 export const forgotLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  limit: 3,
+  windowMs: MAIL_WINDOW_MS,
+  limit: MAIL_LIMIT,
   keyGenerator: emailKey('forgot'),
   standardHeaders: 'draft-8',
   legacyHeaders: false,
-  // Zelfde antwoord als normaal: anders verraadt de 429 alsnog dat we dit adres kennen.
-  handler: (_request, response) => response.json({ ok: true }),
+  handler: tooManyMails,
 })
 
-// 3 bevestigingsmails per e-mailadres per uur (story 14). Zelfde antwoord als normaal, om dezelfde reden.
+// Bevestigingsmail opnieuw sturen (story 14): dezelfde grens.
 export const resendVerificationLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000,
-  limit: 3,
+  windowMs: MAIL_WINDOW_MS,
+  limit: MAIL_LIMIT,
   keyGenerator: emailKey('verify'),
   standardHeaders: 'draft-8',
   legacyHeaders: false,
-  handler: (_request, response) => response.json({ ok: true }),
+  handler: tooManyMails,
 })
 
 // Registreren: ruim, want een hele klas maakt tegelijk een account aan. Alleen tegen scripts die duizenden accounts maken.

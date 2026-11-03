@@ -75,6 +75,8 @@ export function PasswordForm({ onSaved }) {
     setError(null)
     if (!current) return setError('Vul je huidige wachtwoord in.')
     if (!isStrongPassword(next)) return setError('Je nieuwe wachtwoord voldoet nog niet aan alle eisen.')
+    // De server controleert dit ook; hier alleen zodat je de melding meteen ziet.
+    if (next === current) return setError('Je nieuwe wachtwoord mag niet hetzelfde zijn als je huidige wachtwoord.')
     setBusy(true)
     try {
       await api('/me/password', { method: 'POST', body: { currentPassword: current, newPassword: next } })

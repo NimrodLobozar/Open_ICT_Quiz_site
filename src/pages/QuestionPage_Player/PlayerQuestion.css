@@ -261,3 +261,48 @@
     font-size: 17px;
   }
 }
+
+/* Vraag met meerdere goede antwoorden: uitleg boven de knoppen en een eigen verstuurknop. */
+.player-question__multiple {
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: var(--quiz-surface);
+  color: var(--quiz-text);
+  font-weight: 700;
+  text-align: center;
+}
+
+.player-question__send {
+  align-self: center;
+  min-width: 200px;
+  padding: 14px 28px;
+  border: none;
+  border-radius: 999px;
+  background: var(--quiz-primary);
+  color: var(--quiz-white);
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.player-question__send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.player-question__send:focus-visible {
+  outline: 4px solid var(--quiz-text);
+  outline-offset: 3px;
+}
+
+/* Uitslag: de vraag nog eens, zodat je hem met het antwoord kunt teruglezen. */
+.player-question__question-was {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.3;
+  text-align: center;
+  color: var(--quiz-text);
+}

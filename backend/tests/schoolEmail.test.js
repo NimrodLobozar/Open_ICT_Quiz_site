@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { huEmailTypingError, isHuEmail } from '../../src/utils/schoolEmail.js'
+import { huEmailTypingError, isHuEmail, isResetEmailAllowed } from '../../src/utils/schoolEmail.js'
 
 // Story 14: alleen @student.hu.nl en @hu.nl.
 describe('isHuEmail', () => {
@@ -35,5 +35,20 @@ describe('huEmailTypingError', () => {
 
   it.each(['emma@gmail', 'emma@nephu.nl', 'emma@hu.nl.voorbeeld.com', 'a@b@hu.nl'])('meldt het bij "%s"', (value) => {
     expect(huEmailTypingError(value)).toMatch(/HU-mailadres/)
+  })
+})
+
+describe('isResetEmailAllowed (wachtwoord vergeten)', () => {
+  it('accepteert HU-adressen en voorlopig .local', () => {
+    expect(isResetEmailAllowed('emma@student.hu.nl')).toBe(true)
+    expect(isResetEmailAllowed('docent@HU.nl')).toBe(true)
+    expect(isResetEmailAllowed('beheerder@quiz.local')).toBe(true)
+  })
+
+  it('weigert andere adressen, zoals Gmail', () => {
+    expect(isResetEmailAllowed('iemand@gmail.com')).toBe(false)
+    expect(isResetEmailAllowed('nep@local')).toBe(false)
+    expect(isResetEmailAllowed('@quiz.local')).toBe(false)
+    expect(isResetEmailAllowed(undefined)).toBe(false)
   })
 })

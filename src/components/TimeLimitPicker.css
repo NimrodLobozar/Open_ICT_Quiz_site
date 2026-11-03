@@ -1,0 +1,55 @@
+/* Keuzeknoppen "Tijd per vraag" in de lobby van de host. Kleuren komen uit src/index.css (--quiz-*). */
+.time-picker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.time-picker__label {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.time-picker__choices {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+
+.time-picker__choice {
+  min-height: 44px; /* groot genoeg om goed op te klikken, ook op een touchscreen */
+  padding: 0 18px;
+  border: 2px solid var(--quiz-border);
+  border-radius: 999px;
+  background: var(--quiz-surface);
+  color: var(--quiz-text);
+  font: inherit;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.time-picker__choice:hover:not(:disabled) {
+  border-color: var(--quiz-primary);
+}
+
+.time-picker__choice:focus-visible {
+  outline: 3px solid var(--quiz-text);
+  outline-offset: 3px;
+}
+
+/* De gekozen tijd: gevuld met de hoofdkleur, zodat je in één oogopslag ziet wat er aan staat. */
+.time-picker__choice--selected {
+  border-color: var(--quiz-primary);
+  background: var(--quiz-primary);
+  color: #ffffff;
+}
+
+.time-picker__choice:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}

@@ -5,6 +5,7 @@ import { PHASES } from "./phases.js";
 import { buildPlayerResult } from "../../src/utils/playerResult.js";
 import { calculatePoints } from "../../src/utils/scoring.js";
 import { QUIZ_QUESTIONS } from "./quizQuestions.js";
+import { TIME_OPTIONS } from "../quiz/quizRules.js";
 
 // Met minder dan 2 spelers is het geen wedstrijd.
 export const MIN_PLAYERS = 2;
@@ -25,7 +26,13 @@ export class Game {
    */
   constructor(
     code,
-    { questions = QUIZ_QUESTIONS, previewSeconds = 5, quizId = null, quizTitle = null, settings = {} } = {},
+    {
+      questions = QUIZ_QUESTIONS,
+      previewSeconds = 5,
+      quizId = null,
+      quizTitle = null,
+      settings = {},
+    } = {},
   ) {
     this.code = code;
     this.quizId = quizId;
@@ -35,6 +42,9 @@ export class Game {
     this.locked = false;
     this.questions = questions;
     this.previewSeconds = previewSeconds;
+    // Tijd per vraag die de host in de lobby kiest (in seconden).
+    // null = de host koos niets: dan geldt de tijd die bij elke vraag in de quiz staat.
+    this.timeLimitSec = null;
     this.#resetQuestions();
     /** @type {Map<number, Player>} */
     this.players = new Map();
@@ -132,6 +142,29 @@ export class Game {
     }
     this.locked = Boolean(locked);
   }
+  /**
+   * De host kiest in de lobby de tijd per vraag (bijv. 10 seconden voor snelle vragen).
+   * null = terug naar de tijden uit de quiz. Na de start mag het niet meer:
+   * dan zouden spelers midden in de quiz ineens minder tijd krijgen.
+   */
+  setTimeLimit(seconds) {
+    if (this.phase !== PHASES.LOBBY) {
+      throw new GameError(
+        "WRONG_PHASE",
+        "De tijd per vraag kan alleen in de lobby worden gekozen.",
+        409,
+      );
+    }
+    // Nooit blind overnemen wat een browser stuurt: alleen de vaste keuzes (of null) zijn goed.
+    if (seconds !== null && !TIME_OPTIONS.includes(seconds)) {
+      throw new GameError(
+        "INVALID_TIME_LIMIT",
+        "Kies een geldige tijd per vraag.",
+        400,
+      );
+    }
+    this.timeLimitSec = seconds;
+  }
 
   setConnected(playerId, connected) {
     const player = this.getPlayer(playerId);
@@ -147,9 +180,14 @@ export class Game {
     return this.questions[this.questionIndex] ?? null;
   }
 
+  /** Hoeveel seconden de huidige vraag duurt: de keuze van de host, anders de tijd uit de quiz. */
+  get currentTimeLimitSec() {
+    return this.timeLimitSec ?? this.currentQuestion.timeLimitSec;
+  }
+
   /** Moment (ms) waarop de tijd voor de huidige vraag op is. */
   get endsAt() {
-    return this.startsAt + this.currentQuestion.timeLimitSec * 1000;
+    return this.startsAt + this.currentTimeLimitSec * 1000;
   }
 
   isLastQuestion() {
@@ -272,7 +310,7 @@ export class Game {
       const points = calculatePoints({
         correct,
         responseMs: answer?.responseMs ?? 0,
-        timeLimitSec: question.timeLimitSec,
+        timeLimitSec: this.currentTimeLimitSec,
       });
       // Geen antwoord telt als fout: 0 punten, maar wel een regel in answers (zo klopt "x van 8 goed").
       this.recordAnswer(player.id, {
@@ -326,7 +364,7 @@ export class Game {
       total: this.totalQuestions,
       text: question.text,
       options: question.options.map(({ id, text }) => ({ id, text })),
-      timeLimitSec: question.timeLimitSec,
+      timeLimitSec: this.currentTimeLimitSec,
       previewSeconds: this.previewSeconds,
       startsAt: this.startsAt,
       serverTime: now,

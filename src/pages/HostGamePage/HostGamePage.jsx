@@ -1,8 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { api } from "../../api/http.js";
 import LockButton from "../../components/LockButton.jsx";
 import QuizHeader from "../../components/QuizHeader.jsx";
+import TimeLimitPicker from "../../components/TimeLimitPicker.jsx";
 import { useQuestionEvents } from "../../hooks/useQuestionEvents.js";
 import { useSocketEvent } from "../../hooks/useSocketEvent.js";
 import { EVENTS } from "../../socket/events.js";
@@ -153,6 +159,19 @@ export default function HostGamePage() {
     setBusy(false);
   }
 
+  // Tijd per vraag kiezen. Net als bij het slot wachten we op lobby:update:
+  // zo laat het scherm altijd de tijd zien die de server echt gebruikt.
+  async function changeTimeLimit(seconds) {
+    setBusy(true);
+    setError(null);
+    const response = await emitWithAck(EVENTS.HOST_SET_TIME_LIMIT, {
+      seconds,
+    }).catch(() => null);
+    if (!response?.ok)
+      setError(response?.message ?? "Geen antwoord van de server.");
+    setBusy(false);
+  }
+
   // Eén actie voor "Antwoorden nu tonen", "Tijd stoppen" en "Volgende vraag" (zie Game.next op de server).
   async function next() {
     setError(null);
@@ -261,7 +280,9 @@ export default function HostGamePage() {
           answerCounts={game.questionEnd.answerCounts}
           playerCount={game.questionEnd.ranking.length}
           ranking={game.questionEnd.ranking}
-          showCorrectAnswer={game.questionEnd.display?.showCorrectAnswer ?? true}
+          showCorrectAnswer={
+            game.questionEnd.display?.showCorrectAnswer ?? true
+          }
           showStandings={game.questionEnd.display?.showStandings ?? true}
           onNext={next}
         />
@@ -269,7 +290,7 @@ export default function HostGamePage() {
     );
   }
 
-  const { players, playerCount, locked } = game.lobby;
+  const { players, playerCount, locked, timeLimitSec } = game.lobby;
   const canStart = playerCount >= MIN_PLAYERS;
   return (
     <div className="page">
@@ -292,6 +313,11 @@ export default function HostGamePage() {
         </p>
         <p className="host-game__code">{code}</p>
         <LockButton locked={locked} onToggle={toggleLock} disabled={busy} />
+        <TimeLimitPicker
+          value={timeLimitSec ?? null}
+          onChange={changeTimeLimit}
+          disabled={busy}
+        />
         <h1 className="host-game__title">
           {playerCount} {playerCount === 1 ? "speler" : "spelers"}
         </h1>

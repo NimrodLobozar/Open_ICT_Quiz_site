@@ -106,6 +106,18 @@ export function registerHostHandlers(io, socket, game) {
       ack?.(toErrorResponse(error));
     }
   });
+
+  // Tijd per vraag kiezen in de lobby. Game.setTimeLimit controleert of het mag;
+  // lobby:update vertelt daarna iedereen (host én spelers) de nieuwe tijd.
+  socket.on(EVENTS.HOST_SET_TIME_LIMIT, ({ seconds = null } = {}, ack) => {
+    try {
+      game.setTimeLimit(seconds);
+      sendLobbyUpdate(io, game);
+      ack?.({ ok: true, timeLimitSec: game.timeLimitSec });
+    } catch (error) {
+      ack?.(toErrorResponse(error));
+    }
+  });
 }
 
 // Elke ack heeft dezelfde vorm: { ok: true, ... } of { ok: false, error, message } (projectplan 8).

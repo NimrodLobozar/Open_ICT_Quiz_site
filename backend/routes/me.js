@@ -1,16 +1,30 @@
 import { Router } from 'express'
 import { noStore, requireAuth, requireRole } from '../auth/middleware.js'
+import { createOneTimeToken, PASSWORD_PURPOSES } from '../auth/oneTimeTokens.js'
 import { hashPassword, verifyPassword } from '../auth/password.js'
+import { takeEmailChangeMail } from '../auth/mailBudget.js'
 import { passwordCheckLimiter } from '../auth/rateLimits.js'
 import { deleteOtherSessions, listSessions } from '../auth/sessions.js'
 import { parseHuEmail, parsePassword, parseUsername } from '../auth/validate.js'
 import { prisma } from '../db/prisma.js'
 import { getMyResults } from '../db/results.js'
-import { deleteUser, publicUser, updateUser } from '../db/users.js'
+import { lockUser } from '../db/locks.js'
+import { deleteUser, publicUser, uniqueError, updateUser } from '../db/users.js'
+import { appUrl, newEmailMail } from '../mail/sendMail.js'
 import { cleanQuizDefaults } from '../quiz/quizRules.js'
 import { cleanAccountSkills } from '../../src/utils/skills.js'
 import { ApiError } from '../utils/ApiError.js'
 import { AUTH_COOKIE, clearSessionCookie } from '../utils/cookies.js'
+
+/**
+ * Na het slot (lockUser): bestaat je sessie nog? Een wachtwoordreset of -wijziging zet dezelfde gebruiker op slot
+ * en logt andere apparaten uit. Wachtte dit verzoek intussen op het slot, dan mag het daarna niets meer doen:
+ * anders kon een indringer met een gekaapte sessie net na de reset alsnog een e-mailadres klaarzetten.
+ */
+async function assertStillLoggedIn(tx, request) {
+  const session = await tx.session.findUnique({ where: { id: request.authSession.id }, select: { id: true } })
+  if (!session) throw new ApiError('NOT_LOGGED_IN', 'Log eerst in.', 401)
+}
 
 // Alles over je eigen account (story 4, 5, 6, 8 en 9).
 // Er staat nergens een gebruikers-id in de URL: het account komt altijd uit je sessie.
@@ -30,17 +44,79 @@ router.patch('/', async (request, response) => {
   if (body.username !== undefined) Object.assign(data, parseUsername(body.username))
   // Een nieuw adres moet een HU-adres zijn (story 14). Het huidige adres mag blijven staan,
   // ook als dat geen HU-adres is (bijv. de seed-beheerder), want het formulier stuurt het altijd mee.
-  if (body.email !== undefined && body.email.trim?.().toLowerCase() !== request.user.email) {
-    data.email = parseHuEmail(body.email)
-  }
+  // typeof-check: bij email: null of een getal geeft parseHuEmail een nette 400 in plaats van een crash.
+  const typed = typeof body.email === 'string' ? body.email.trim().toLowerCase() : body.email
   if (body.skills !== undefined) data.skills = cleanAccountSkills(body.skills)
 
-  const user = await updateUser(request.user.id, data)
-  // Nieuw e-mailadres? Dan werken oude "wachtwoord vergeten"-links (naar het oude adres) niet meer.
-  if (data.email && data.email !== request.user.email) {
-    await prisma.oneTimeToken.deleteMany({ where: { userId: user.id, usedAt: null } })
+  // Eén transactie met de gebruiker op slot. Dezelfde slot als bij het gebruiken van de bevestigingslink
+  // (markUsed in oneTimeTokens.js), dus een link kan nooit een adres bevestigen dat er tegelijk ingezet werd.
+  let mail = null
+  const userId = request.user.id
+  const user = await prisma
+    .$transaction(async (tx) => {
+      await lockUser(tx, userId)
+      await assertStillLoggedIn(tx, request)
+      const current = await tx.user.findUnique({ where: { id: userId } })
+      if (body.email !== undefined && typed === current.email) {
+        // Terug naar het huidige adres: een openstaande wijziging vervalt, en de link ervan ook.
+        if (current.pendingEmail) {
+          data.pendingEmail = null
+          await tx.oneTimeToken.deleteMany({ where: { userId, purpose: 'VERIFY', usedAt: null } })
+        }
+      } else if (body.email !== undefined && current.pendingEmail && typed === current.pendingEmail) {
+        // Het adres dat al op bevestiging wacht (Instellingen toont dat in het veld): niets veranderen,
+        // zodat de link die al in de mail zit gewoon blijft werken.
+      } else if (body.email !== undefined) {
+        const newEmail = parseHuEmail(body.email)
+        // Het nieuwe adres wordt pas echt je adres als je het bevestigt via de mail (zie useVerifyToken).
+        // Anders kon je het HU-adres van een ander "bezetten" zonder toegang tot die mailbox.
+        if (await tx.user.findUnique({ where: { email: newEmail } })) {
+          throw new ApiError('EMAIL_TAKEN', 'Dit e-mailadres heeft al een account.', 409)
+        }
+        // Er gaat een mail uit: telt mee voor de grens van 5 per kwartier. Hier, onder het slot en met de
+        // actuele gegevens, zodat verzoeken die tegelijk binnenkomen de grens niet kunnen omzeilen.
+        takeEmailChangeMail(current)
+        data.pendingEmail = newEmail
+        // Alleen de nieuwste bevestigingslink werkt: een oude link mag geen ander (eerder getypt) adres bevestigen.
+        await tx.oneTimeToken.deleteMany({ where: { userId, purpose: 'VERIFY', usedAt: null } })
+        mail = { to: newEmail, token: await createOneTimeToken(userId, 'VERIFY', tx) }
+      }
+      return tx.user.update({ where: { id: userId }, data })
+    })
+    .catch((error) => {
+      throw uniqueError(error) ?? error
+    })
+
+  if (mail) {
+    // Pas ná de transactie, en zonder erop te wachten: een trage maildienst mag het opslaan niet ophouden.
+    // Komt de mail niet aan, dan typ je het adres opnieuw en sla je nog een keer op.
+    newEmailMail(mail.to, user.username, `${appUrl()}/email-bevestigen?token=${mail.token}`).catch((error) =>
+      console.error('Bevestigingsmail voor nieuw adres niet verstuurd:', error.message),
+    )
   }
   response.json({ user: publicUser(user) })
+})
+
+// Bevestigingsmail voor het wachtende nieuwe adres opnieuw sturen: de mail kwam niet aan, of de link is verlopen.
+// Eerdere links naar hetzelfde adres blijven werken tot ze verlopen (zie createOneTimeToken); een link naar een
+// ánder adres bestaat niet meer, want die zijn gewist toen je dit adres koos.
+router.post('/email/resend', async (request, response) => {
+  const userId = request.user.id
+  const mail = await prisma.$transaction(async (tx) => {
+    // Zelfde slot als PATCH /api/me: zo hoort de nieuwe link altijd bij het adres dat nu wacht.
+    await lockUser(tx, userId)
+    await assertStillLoggedIn(tx, request)
+    const current = await tx.user.findUnique({ where: { id: userId } })
+    if (!current.pendingEmail) return null
+    takeEmailChangeMail(current)
+    return { to: current.pendingEmail, username: current.username, token: await createOneTimeToken(userId, 'VERIFY', tx) }
+  })
+  if (!mail) throw new ApiError('NO_PENDING_EMAIL', 'Er wacht geen nieuw e-mailadres op bevestiging.', 400)
+  // Hier wél wachten op de mail: de knop zegt "verstuurd", dus dat moet ook kloppen.
+  // false = er is geen maildienst ingesteld (productie zonder SMTP_HOST): dan ook geen "verstuurd".
+  const sent = await newEmailMail(mail.to, mail.username, `${appUrl()}/email-bevestigen?token=${mail.token}`)
+  if (!sent) throw new ApiError('MAIL_UNAVAILABLE', 'De mail kon niet worden verstuurd. Probeer het later opnieuw.', 503)
+  response.json({ ok: true })
 })
 
 // Story 5: wachtwoord wijzigen. Eerst het huidige wachtwoord, zodat iemand die even achter je laptop zit
@@ -57,9 +133,26 @@ router.post('/password', passwordCheckLimiter, async (request, response) => {
   if (password === currentPassword) {
     throw new ApiError('PASSWORD_SAME', 'Je nieuwe wachtwoord mag niet hetzelfde zijn als je huidige wachtwoord.', 400)
   }
-  await updateUser(request.user.id, { passwordHash: await hashPassword(password) })
-  // Andere apparaten uitloggen: was je wachtwoord gelekt, dan is de indringer er nu uit. Dit apparaat blijft ingelogd.
-  await deleteOtherSessions(request.user.id, request.authSession.id)
+  const passwordHash = await hashPassword(password)
+  const userId = request.user.id
+  // Alles in één transactie, zodat het nooit half gebeurt:
+  // - nieuw wachtwoord;
+  // - openstaande "wachtwoord vergeten"-links vervallen. Anders kon iemand met een oude link
+  //   jouw nieuwe wachtwoord meteen weer overschrijven;
+  // - andere apparaten uitloggen: was je wachtwoord gelekt, dan is de indringer er nu uit. Dit apparaat blijft ingelogd.
+  // - een wachtend nieuw e-mailadres (en de link ervan) vervalt ook: had een indringer zijn eigen adres
+  //   klaargezet, dan kan hij daarmee na deze wijziging niet alsnog het account overnemen.
+  // Met de gebruiker op slot, net als PATCH /api/me: een adreswijziging die tegelijk binnenkomt, gebeurt
+  // óf helemaal vóór deze transactie (en wordt hier gewist), óf erna (en vindt dan zijn sessie niet meer).
+  await prisma.$transaction(async (tx) => {
+    await lockUser(tx, userId)
+    // Wachtte dit verzoek op het slot terwijl een wachtwoordreset alle sessies wiste? Dan niet alsnog
+    // het net herstelde wachtwoord overschrijven.
+    await assertStillLoggedIn(tx, request)
+    await tx.user.update({ where: { id: userId }, data: { passwordHash, pendingEmail: null } })
+    await tx.oneTimeToken.deleteMany({ where: { userId, purpose: { in: [...PASSWORD_PURPOSES, 'VERIFY'] }, usedAt: null } })
+    await tx.session.deleteMany({ where: { userId, id: { not: request.authSession.id } } })
+  })
   response.json({ ok: true })
 })
 

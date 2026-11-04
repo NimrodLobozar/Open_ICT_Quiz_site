@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../../api/http.js'
+import { homeFor, useAuth } from '../../auth/AuthContext.jsx'
 import { TextField, Notice } from '../../components/AccountUi.jsx'
 import PageRings from '../../components/PageRings.jsx'
 import QuizHeader from '../../components/QuizHeader.jsx'
@@ -26,15 +27,33 @@ export default function VerifyEmailPage() {
   const [failed, setFailed] = useState(false)
   const [email, setEmail] = useState('')
 
+  const { user, loading, refresh } = useAuth()
+
   useEffect(() => {
+    // Eerst weten of je bent ingelogd; anders stuurt een trage /auth/me je onterecht naar inloggen.
+    if (loading) return
     let cancelled = false
     verifyOnce(token)
-      .then(() => !cancelled && navigate('/inloggen?bevestigd=1', { replace: true }))
+      .then(async () => {
+        if (cancelled) return
+        // Al ingelogd? Dan was dit een nieuw adres van Instellingen: gegevens opnieuw ophalen
+        // (zodat het nieuwe adres meteen zichtbaar is) en terug naar je account in plaats van naar inloggen.
+        if (user) {
+          await refresh()
+          // Intussen naar een andere pagina gegaan? Dan je niet alsnog wegsturen.
+          if (cancelled) return
+          navigate(homeFor(user), { replace: true })
+        } else {
+          navigate('/inloggen?bevestigd=1', { replace: true })
+        }
+      })
       .catch(() => !cancelled && setFailed(true))
     return () => {
       cancelled = true
     }
-  }, [token, navigate])
+    // user bewust niet in de lijst: het verzoek gaat maar één keer, ook als de gebruiker daarna bijgewerkt wordt.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token, navigate, loading])
 
   return (
     <div className="page auth-page">

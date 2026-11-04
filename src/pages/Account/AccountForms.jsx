@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { api } from '../../api/http.js'
 import { useAuth } from '../../auth/AuthContext.jsx'
 import { Notice, PasswordChecklist, PasswordField, SkillSliders, TextField } from '../../components/AccountUi.jsx'
 import { isStrongPassword } from '../../utils/passwordRules.js'
 import { HU_EMAIL_MESSAGE, isHuEmail } from '../../utils/schoolEmail.js'
+import { ResendButton } from '../Auth/ResendVerification.jsx'
 
 // Formulieren die zowel op Instellingen (student) als op Mijn account (admin-portaal) staan (story 5).
 
@@ -15,7 +16,15 @@ import { HU_EMAIL_MESSAGE, isHuEmail } from '../../utils/schoolEmail.js'
 export function ProfileForm({ withSkills = false, onSaved }) {
   const { user, setUser } = useAuth()
   const [username, setUsername] = useState(user.username)
-  const [email, setEmail] = useState(user.email)
+  // Wacht er een nieuw adres op bevestiging, dan staat dát in het veld. Sla je daarna alleen je naam op,
+  // dan blijft de wijziging gewoon staan (de server ziet hetzelfde adres en laat de link in de mail werken).
+  const [email, setEmail] = useState(user.pendingEmail ?? user.email)
+  // Verandert het adres buiten dit formulier (bijv. een wachtwoordwijziging wist het wachtende adres,
+  // of je bevestigde het in een ander tabblad), dan het veld bijwerken. Anders vraagt "Opslaan" met
+  // alleen een nieuwe naam stiekem een al geannuleerde wijziging opnieuw aan.
+  useEffect(() => {
+    setEmail(user.pendingEmail ?? user.email)
+  }, [user.email, user.pendingEmail])
   const [skills, setSkills] = useState(user.skills ?? {})
   const [errors, setErrors] = useState({})
   const [busy, setBusy] = useState(false)
@@ -49,6 +58,13 @@ export function ProfileForm({ withSkills = false, onSaved }) {
     <form className="ui-form" onSubmit={submit} noValidate>
       <TextField label="Gebruikersnaam" autoComplete="username" maxLength={20} value={username} onChange={(e) => setUsername(e.target.value)} error={errors.username} />
       <TextField label="E-mailadres" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} error={errors.email} />
+      {/* Een nieuw adres telt pas na de link in de mail, zodat niemand het adres van een ander kan "bezetten". */}
+      <Notice type="success">
+        {user.pendingEmail &&
+          `We hebben een bevestigingslink gestuurd naar ${user.pendingEmail}. Tot je daarop klikt, blijft ${user.email} je e-mailadres.`}
+      </Notice>
+      {/* Mail niet ontvangen of link verlopen? Dan hier een nieuwe aanvragen. */}
+      {user.pendingEmail && <ResendButton send={() => api('/me/email/resend', { method: 'POST' })} />}
       {withSkills && (
         <fieldset className="ui-fieldset" id="vaardigheden">
           <legend className="ui-label">Jouw vaardigheden (0–5)</legend>
@@ -65,6 +81,7 @@ export function ProfileForm({ withSkills = false, onSaved }) {
 
 /** Wachtwoord wijzigen: eerst het huidige wachtwoord, dan het nieuwe (story 5). */
 export function PasswordForm({ onSaved }) {
+  const { refresh } = useAuth()
   const [current, setCurrent] = useState('')
   const [next, setNext] = useState('')
   const [error, setError] = useState(null)
@@ -82,6 +99,9 @@ export function PasswordForm({ onSaved }) {
       await api('/me/password', { method: 'POST', body: { currentPassword: current, newPassword: next } })
       setCurrent('')
       setNext('')
+      // De server wist bij een nieuw wachtwoord ook een wachtend e-mailadres; opnieuw ophalen,
+      // zodat de melding "check je mail" en het e-mailveld meteen kloppen.
+      await refresh()
       onSaved?.()
     } catch (apiError) {
       setError(apiError.message)

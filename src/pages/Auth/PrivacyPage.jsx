@@ -22,11 +22,19 @@ export default function PrivacyPage() {
             <li>Op welk soort apparaat je bent ingelogd (bijv. &quot;Telefoon · Safari&quot;), niet je IP-adres.</li>
           </ul>
           <h2 className="ui-section-title">Waarvoor</h2>
-          <p>Alleen om je je eigen scores en voortgang te laten zien, en zodat je docent de uitslagen van een ronde kan terugkijken.</p>
+          <p>
+            Om je je eigen scores en voortgang te laten zien, voor de leaderboard met alle accounts, en zodat je docent de
+            uitslagen van een ronde kan terugkijken.
+          </p>
           <h2 className="ui-section-title">Wie het ziet</h2>
           <p>
-            Jij ziet je eigen gegevens. Andere spelers zien alleen je gebruikersnaam en score in de eindstand van een ronde.
+            Jij ziet je eigen gegevens. Andere spelers zien je gebruikersnaam en score in de eindstand van een ronde.
             Docenten zien de uitslagen van hun eigen quizzen; beheerders kunnen accounts beheren.
+          </p>
+          <p>
+            Op de leaderboard ziet iedereen die is ingelogd van elk account: de gebruikersnaam, de vaardigheden die je
+            zelf invult, en je totalen (totale en gemiddelde score, aantal gespeelde en gewonnen quizzen, aantal goede
+            antwoorden). Je e-mailadres staat daar nooit op.
           </p>
           <h2 className="ui-section-title">Verwijderen</h2>
           <p>

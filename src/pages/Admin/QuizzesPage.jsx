@@ -1,5 +1,5 @@
 import { App as AntApp, Modal } from "antd";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../../api/http.js";
 import { useAuth } from "../../auth/AuthContext.jsx";
 import { Notice } from "../../components/AccountUi.jsx";
@@ -19,13 +19,28 @@ export default function QuizzesPage() {
   const [toDelete, setToDelete] = useState(null);
   const query = useDebounced(search);
 
+  // Elk verzoek krijgt een volgnummer. Antwoorden kunnen in een andere volgorde terugkomen dan ze vertrokken:
+  // een traag antwoord op "we" mag de resultaten van "web" niet overschrijven. Alleen het nieuwste telt.
+  const latestRequest = useRef(0);
+
   const load = useCallback(() => {
+    const requestId = ++latestRequest.current;
     api(`/quizzes?q=${encodeURIComponent(query)}`)
-      .then((data) => setQuizzes(data.quizzes))
-      .catch((apiError) => setError(apiError.message));
+      .then((data) => {
+        if (requestId === latestRequest.current) setQuizzes(data.quizzes);
+      })
+      .catch((apiError) => {
+        if (requestId === latestRequest.current) setError(apiError.message);
+      });
   }, [query]);
 
-  useEffect(load, [load]);
+  useEffect(() => {
+    load();
+    // Pagina weg: antwoorden die nog onderweg zijn, negeren.
+    return () => {
+      latestRequest.current += 1;
+    };
+  }, [load]);
 
   async function remove() {
     try {

@@ -1,3 +1,4 @@
+import { lockUser } from '../db/locks.js'
 import { prisma } from '../db/prisma.js'
 import { hashPassword } from './password.js'
 import { isTokenUsable } from './tokenRules.js'
@@ -23,14 +24,15 @@ export const PASSWORD_PURPOSES = ['RESET', 'INVITE']
  *   eerste mail, dan moet die gewoon werken. Zodra één link gebruikt is, vervallen de andere (zie markUsed).
  * - INVITE (de beheerder stuurt een uitnodiging opnieuw, bijv. naar een verbeterd adres): alleen de nieuwste werkt.
  */
-export async function createOneTimeToken(userId, purpose) {
+export async function createOneTimeToken(userId, purpose, db = prisma) {
+  // db: gewoon prisma, of de tx van een lopende transactie (zie PATCH /api/me), zodat de link in dezelfde transactie valt.
   const token = newToken()
-  const created = await prisma.oneTimeToken.create({
+  const created = await db.oneTimeToken.create({
     data: { tokenHash: hashToken(token), userId, purpose, expiresAt: new Date(Date.now() + LIFETIME_MS[purpose]) },
   })
   // Pas ná het maken opruimen, op id: komen twee aanvragen tegelijk binnen, dan blijft de nieuwste altijd staan.
   const old = purpose === 'INVITE' ? {} : { expiresAt: { lte: new Date() } }
-  await prisma.oneTimeToken.deleteMany({ where: { userId, purpose, usedAt: null, id: { lt: created.id }, ...old } })
+  await db.oneTimeToken.deleteMany({ where: { userId, purpose, usedAt: null, id: { lt: created.id }, ...old } })
   return token
 }
 
@@ -58,7 +60,7 @@ async function markUsed(tx, record, purposes) {
   // Eerst de gebruiker op slot (FOR UPDATE). Gebruikt iemand twee verschillende links tegelijk, dan wacht
   // de tweede hier tot de eerste klaar is, in plaats van dat ze elkaars links proberen te wissen en vastlopen
   // (deadlock = serverfout). Daarna vindt de tweede zijn link al gewist en krijgt hij "link werkt niet".
-  await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${record.userId} FOR UPDATE`
+  await lockUser(tx, record.userId)
   // "usedAt: null" in de where: klikt iemand twee keer tegelijk, dan lukt het maar één keer.
   const { count } = await tx.oneTimeToken.updateMany({
     where: { id: record.id, usedAt: null },
@@ -84,10 +86,14 @@ export async function usePasswordToken(token, newPassword) {
     if (!(await markUsed(tx, record, PASSWORD_PURPOSES))) return false
     // De link kwam via de mail binnen, dus het adres is van deze persoon: meteen ook bevestigd (story 14).
     // Zo is een docent die zijn uitnodiging gebruikt ook bevestigd.
+    // Een wachtend nieuw e-mailadres vervalt, met zijn bevestigingslinks: had een indringer zijn eigen adres
+    // klaargezet, dan kan hij het account na deze reset niet alsnog overnemen. (Het adres is via deze link
+    // hierboven al bevestigd, dus een VERIFY-link is ook niet meer nodig.)
     await tx.user.update({
       where: { id: record.userId },
-      data: { passwordHash, emailVerifiedAt: record.user.emailVerifiedAt ?? new Date() },
+      data: { passwordHash, pendingEmail: null, emailVerifiedAt: record.user.emailVerifiedAt ?? new Date() },
     })
+    await tx.oneTimeToken.deleteMany({ where: { userId: record.userId, purpose: 'VERIFY', usedAt: null } })
     // Was het account overgenomen, dan is de indringer er nu ook uit.
     await tx.session.deleteMany({ where: { userId: record.userId } })
     return true
@@ -101,9 +107,32 @@ export async function usePasswordToken(token, newPassword) {
 export async function useVerifyToken(token) {
   const record = await findUsableToken(token, ['VERIFY'])
   if (!record) return false
+  return confirmEmail(record).catch((error) => {
+    // P2002: precies tegelijk registreerde iemand anders met het nieuwe adres. Dan gaat het niet door.
+    if (error?.code === 'P2002') return false
+    throw error
+  })
+}
+
+function confirmEmail(record) {
   return prisma.$transaction(async (tx) => {
     if (!(await markUsed(tx, record, ['VERIFY']))) return false
-    await tx.user.update({ where: { id: record.userId }, data: { emailVerifiedAt: new Date() } })
+    // markUsed zette de gebruiker op slot, dus pendingEmail is hier de actuele waarde.
+    const user = await tx.user.findUnique({ where: { id: record.userId } })
+    const data = { emailVerifiedAt: new Date() }
+    if (user.pendingEmail) {
+      // Een nieuw adres van Instellingen: pas nu wordt het echt het adres van dit account.
+      // Heeft iemand anders het intussen (geregistreerd of eerder bevestigd)? Dan gaat het niet door.
+      const taken = await tx.user.findUnique({ where: { email: user.pendingEmail } })
+      if (taken) {
+        await tx.user.update({ where: { id: user.id }, data: { pendingEmail: null } })
+        return false
+      }
+      Object.assign(data, { email: user.pendingEmail, pendingEmail: null })
+      // De "wachtwoord vergeten"-links gingen naar het oude adres; die horen niet meer bij dit account.
+      await tx.oneTimeToken.deleteMany({ where: { userId: user.id, purpose: 'RESET', usedAt: null } })
+    }
+    await tx.user.update({ where: { id: user.id }, data })
     return true
   })
 }

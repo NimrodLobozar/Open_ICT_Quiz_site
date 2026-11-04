@@ -1,7 +1,12 @@
 import { Router } from 'express'
+import { noStore, requireAuth } from '../auth/middleware.js'
 import { prisma } from '../db/prisma.js'
 
+// De ranglijst van alle accounts: namen, vaardigheden en uitslagen.
+// Alleen voor ingelogde gebruikers (net als de pagina /leaderboard), en niet in de browsercache,
+// zodat je na het uitloggen niet met de terugknop andermans gegevens ziet.
 const router = Router()
+router.use(noStore, requireAuth)
 
 router.get('/', async (_request, response) => {
   const users = await prisma.user.findMany({

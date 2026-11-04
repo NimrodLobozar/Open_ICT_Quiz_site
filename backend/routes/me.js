@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { noStore, requireAuth, requireRole } from '../auth/middleware.js'
 import { createOneTimeToken, PASSWORD_PURPOSES } from '../auth/oneTimeTokens.js'
 import { hashPassword, verifyPassword } from '../auth/password.js'
-import { passwordCheckLimiter } from '../auth/rateLimits.js'
+import { emailChangeLimiter, passwordCheckLimiter } from '../auth/rateLimits.js'
 import { deleteOtherSessions, listSessions } from '../auth/sessions.js'
 import { parseHuEmail, parsePassword, parseUsername } from '../auth/validate.js'
 import { prisma } from '../db/prisma.js'
@@ -27,7 +27,7 @@ router.get('/results', async (request, response) => {
 })
 
 // Story 5: gebruikersnaam, e-mailadres en vaardigheden aanpassen. Wat je niet meestuurt, blijft hetzelfde.
-router.patch('/', async (request, response) => {
+router.patch('/', emailChangeLimiter, async (request, response) => {
   const body = request.body ?? {}
   const data = {}
   if (body.username !== undefined) Object.assign(data, parseUsername(body.username))
@@ -80,6 +80,24 @@ router.patch('/', async (request, response) => {
     )
   }
   response.json({ user: publicUser(user) })
+})
+
+// Bevestigingsmail voor het wachtende nieuwe adres opnieuw sturen: de mail kwam niet aan, of de link is verlopen.
+// Eerdere links naar hetzelfde adres blijven werken tot ze verlopen (zie createOneTimeToken); een link naar een
+// ánder adres bestaat niet meer, want die zijn gewist toen je dit adres koos.
+router.post('/email/resend', emailChangeLimiter, async (request, response) => {
+  const userId = request.user.id
+  const mail = await prisma.$transaction(async (tx) => {
+    // Zelfde slot als PATCH /api/me: zo hoort de nieuwe link altijd bij het adres dat nu wacht.
+    await lockUser(tx, userId)
+    const current = await tx.user.findUnique({ where: { id: userId } })
+    if (!current.pendingEmail) return null
+    return { to: current.pendingEmail, username: current.username, token: await createOneTimeToken(userId, 'VERIFY', tx) }
+  })
+  if (!mail) throw new ApiError('NO_PENDING_EMAIL', 'Er wacht geen nieuw e-mailadres op bevestiging.', 400)
+  // Hier wél wachten op de mail: de knop zegt "verstuurd", dus dat moet ook kloppen.
+  await newEmailMail(mail.to, mail.username, `${appUrl()}/email-bevestigen?token=${mail.token}`)
+  response.json({ ok: true })
 })
 
 // Story 5: wachtwoord wijzigen. Eerst het huidige wachtwoord, zodat iemand die even achter je laptop zit

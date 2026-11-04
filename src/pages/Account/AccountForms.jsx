@@ -4,6 +4,7 @@ import { useAuth } from '../../auth/AuthContext.jsx'
 import { Notice, PasswordChecklist, PasswordField, SkillSliders, TextField } from '../../components/AccountUi.jsx'
 import { isStrongPassword } from '../../utils/passwordRules.js'
 import { HU_EMAIL_MESSAGE, isHuEmail } from '../../utils/schoolEmail.js'
+import { ResendButton } from '../Auth/ResendVerification.jsx'
 
 // Formulieren die zowel op Instellingen (student) als op Mijn account (admin-portaal) staan (story 5).
 
@@ -56,6 +57,8 @@ export function ProfileForm({ withSkills = false, onSaved }) {
         {user.pendingEmail &&
           `We hebben een bevestigingslink gestuurd naar ${user.pendingEmail}. Tot je daarop klikt, blijft ${user.email} je e-mailadres.`}
       </Notice>
+      {/* Mail niet ontvangen of link verlopen? Dan hier een nieuwe aanvragen. */}
+      {user.pendingEmail && <ResendButton send={() => api('/me/email/resend', { method: 'POST' })} />}
       {withSkills && (
         <fieldset className="ui-fieldset" id="vaardigheden">
           <legend className="ui-label">Jouw vaardigheden (0–5)</legend>

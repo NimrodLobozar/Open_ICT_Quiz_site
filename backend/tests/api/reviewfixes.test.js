@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { saveGameResults } from '../../db/gameResults.js'
 import { gameManager } from '../../game/GameManager.js'
-import { browser, loggedIn, PASSWORD, prisma, quizInput, resetDatabase, tokenFromMail } from './helpers.js'
+import { browser, loggedIn, outbox, PASSWORD, prisma, quizInput, resetDatabase, tokenFromMail } from './helpers.js'
 
 // Bevindingen uit de Copilot-review van PR #30. Elke test laat zien dat het lek of de fout dicht is.
 beforeEach(resetDatabase)
@@ -83,6 +83,35 @@ describe('e-mailadres wijzigen', () => {
 
     expect((await agent.post('/api/auth/verify-email').send({ token: oldToken })).status).toBe(400)
     expect((await agent.get('/api/auth/me')).body.user.email).toBe('jan@student.hu.nl')
+  })
+
+  it('de mail voor het wachtende adres kun je opnieuw laten sturen', async () => {
+    const { agent } = await loggedIn({ email: 'jan@student.hu.nl' })
+    expect((await agent.post('/api/me/email/resend')).body.error).toBe('NO_PENDING_EMAIL')
+
+    await agent.patch('/api/me').send({ email: 'nieuw@student.hu.nl' })
+    // De eerste mail gaat op de achtergrond; eerst wachten tot hij er is, anders klopt de telling niet.
+    await tokenFromMail('nieuw@student.hu.nl', 'email-bevestigen')
+    const before = outbox.filter((mail) => mail.to === 'nieuw@student.hu.nl').length
+    expect((await agent.post('/api/me/email/resend')).status).toBe(200)
+    expect(outbox.filter((mail) => mail.to === 'nieuw@student.hu.nl').length).toBe(before + 1)
+
+    const token = await tokenFromMail('nieuw@student.hu.nl', 'email-bevestigen')
+    expect((await agent.post('/api/auth/verify-email').send({ token })).status).toBe(200)
+    expect((await agent.get('/api/auth/me')).body.user.email).toBe('nieuw@student.hu.nl')
+  })
+
+  it('maximaal 5 bevestigingsmails per kwartier; gewoon je naam opslaan telt niet mee', async () => {
+    const { agent } = await loggedIn({ email: 'jan@student.hu.nl' })
+    for (let i = 1; i <= 5; i += 1) {
+      // Om en om een nieuw adres en het huidige: zo zou je anders onbeperkt mails kunnen laten sturen.
+      expect((await agent.patch('/api/me').send({ email: `nieuw${i}@student.hu.nl` })).status).toBe(200)
+      expect((await agent.patch('/api/me').send({ email: 'jan@student.hu.nl' })).status).toBe(200)
+    }
+    expect((await agent.patch('/api/me').send({ email: 'nieuw6@student.hu.nl' })).status).toBe(429)
+    expect((await agent.post('/api/me/email/resend')).status).toBe(429)
+    // Naam wijzigen gaat gewoon door.
+    expect((await agent.patch('/api/me').send({ username: 'Jan B', email: 'jan@student.hu.nl' })).status).toBe(200)
   })
 
   it('terug naar het huidige adres annuleert de openstaande wijziging', async () => {

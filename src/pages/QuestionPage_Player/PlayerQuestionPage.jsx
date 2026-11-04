@@ -77,6 +77,12 @@ export function PlayerQuestion({
 
         <h1 className="player-question__text">{question.text}</h1>
 
+        {question.multiplier != null && (
+          <p className="player-question__multiplier" role="note">
+            Deze vraag telt <strong>x{question.multiplier}</strong> mee.
+          </p>
+        )}
+
         {multiple && !reading && (
           <p className="player-question__multiple" role="note">
             Meerdere antwoorden zijn goed. Kies ze allemaal en druk op Versturen.

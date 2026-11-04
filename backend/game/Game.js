@@ -3,7 +3,10 @@ import { GameError } from "./GameError.js";
 import { nameKey, normalizeName, validateName } from "./nameRules.js";
 import { PHASES } from "./phases.js";
 import { buildPlayerResult } from "../../src/utils/playerResult.js";
-import { calculatePoints } from "../../src/utils/scoring.js";
+import {
+  calculatePoints,
+  difficultyMultiplier,
+} from "../../src/utils/scoring.js";
 import { QUIZ_QUESTIONS } from "./quizQuestions.js";
 import { TIME_OPTIONS } from "../quiz/quizRules.js";
 import { selectQuestions } from "./questionSelector.js";
@@ -412,6 +415,7 @@ export class Game {
       question.options.map((option) => [option.id, 0]),
     );
     let correctPlayerCount = 0;
+    const multiplier = difficultyMultiplier(question.difficulty);
 
     for (const player of this.players.values()) {
       const answer = this.currentAnswers.get(player.id);
@@ -446,6 +450,7 @@ export class Game {
       // Tijdens de vraag sturen we dit niet mee (zie getQuestionPayload).
       skill: question.skill ?? null,
       difficulty: question.difficulty ?? null,
+      multiplier,
     };
     this.phase = PHASES.QUESTION_RESULT;
   }
@@ -492,6 +497,7 @@ export class Game {
       options: question.options.map(({ id, text }) => ({ id, text })),
       // Meerdere goede antwoorden? Dan vinkt de speler aan en verstuurt hij zelf. Hoeveel er goed zijn, zeggen we niet.
       multiple: isMultiple(question),
+      multiplier: difficultyMultiplier(question.difficulty),
       timeLimitSec: this.currentTimeLimitSec,
       previewSeconds: this.previewSeconds,
       startsAt: this.startsAt,
@@ -536,6 +542,7 @@ export class Game {
       optionIds: answer.optionIds,
       correct: answer.correct,
       pointsGained: answer.points,
+      multiplier: this.lastQuestionEnd.multiplier,
     };
   }
 

@@ -1,10 +1,10 @@
 services:
   frontend:
+    # Productie: de gebouwde site via nginx (Dockerfile.frontend), niet de Vite-dev-server.
+    # nginx stuurt /api en /socket.io door naar backend:3000 (nginx/frontend.conf).
     build:
       context: .
-      dockerfile: Dockerfile
-    environment:
-      API_PROXY_TARGET: http://backend:3000
+      dockerfile: Dockerfile.frontend
     depends_on:
       - backend
     networks:

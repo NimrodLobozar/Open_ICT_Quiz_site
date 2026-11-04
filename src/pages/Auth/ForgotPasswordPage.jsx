@@ -57,7 +57,7 @@ export default function ForgotPasswordPage() {
               </Notice>
               <p className="auth-page__switch">
                 De link is een uur geldig. Vraag je een nieuwe aan, dan werkt de vorige ook nog; zodra je er één
-                gebruikt, vervallen de andere. Niets ontvangen? Kijk ook in je spam.
+                gebruikt, vervallen de andere.
               </p>
               {/* Meteen wachten: de eerste mail is net verstuurd. */}
               <ResendButton send={sendLink} startWaiting />

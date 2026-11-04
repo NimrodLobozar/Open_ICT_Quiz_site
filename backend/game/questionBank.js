@@ -915,20 +915,20 @@ export const QUESTION_BANK = [
       ["De licentiekosten van de gecombineerde organisatie berekenen"],
     ],
   ),
-  // ===================== BE =====================
-  bankQuestion("BE", 1, "Waar staat de S in SQL voor?", [
+  // ===================== SD (extra: backend, databases en tools) =====================
+  bankQuestion("SD", 1, "Waar staat de S in SQL voor?", [
     ["Standard"],
     ["Structured", true],
     ["Sequential"],
     ["System"],
   ]),
-  bankQuestion("BE", 1, "Welk decimaal getal is het binaire getal 01101?", [
+  bankQuestion("SD", 1, "Welk decimaal getal is het binaire getal 01101?", [
     ["11"],
     ["9"],
     ["13", true],
     ["15"],
   ]),
-  bankQuestion("BE", 2, "Wat doet het SQL-commando EXPLAIN?", [
+  bankQuestion("SD", 2, "Wat doet het SQL-commando EXPLAIN?", [
     [
       "Het toont hoe de database een query gaat uitvoeren (het uitvoeringsplan)",
       true,
@@ -939,7 +939,7 @@ export const QUESTION_BANK = [
     ],
     ["Het genereert documentatie bij een stored procedure"],
   ]),
-  bankQuestion("BE", 2, "Wat is een container?", [
+  bankQuestion("SD", 2, "Wat is een container?", [
     ["Een virtuele machine met een eigen besturingssysteem en kernel"],
     ["Een map op de server waarin alle bestanden van een applicatie staan"],
     ["Een fysieke server in een datacenter die voor één klant is gereserveerd"],
@@ -949,7 +949,7 @@ export const QUESTION_BANK = [
     ],
   ]),
   bankQuestion(
-    "BE",
+    "SD",
     3,
     "Een gebruiker verstuurt een registratieformulier met een e-mailadres zonder '@'. Welke HTTP-statuscode geeft de API het best terug?",
     [
@@ -959,7 +959,7 @@ export const QUESTION_BANK = [
       ["500 Internal Server Error"],
     ],
   ),
-  bankQuestion("BE", 3, "Wat doet git checkout?", [
+  bankQuestion("SD", 3, "Wat doet git checkout?", [
     ["Wijzigingen van de remote ophalen en samenvoegen met je lokale branch"],
     ["Lokale commits uploaden naar de remote repository"],
     [
@@ -968,7 +968,7 @@ export const QUESTION_BANK = [
     ],
     ["Een overzicht tonen van gewijzigde en nog niet gecommitte bestanden"],
   ]),
-  bankQuestion("BE", 4, "Wat betekent het dat een operatie idempotent is?", [
+  bankQuestion("SD", 4, "Wat betekent het dat een operatie idempotent is?", [
     ["De operatie geeft bij elke aanroep een ander resultaat"],
     ["De operatie kan na uitvoering niet meer ongedaan worden gemaakt"],
     ["De operatie wordt altijd binnen een vaste tijd uitgevoerd"],
@@ -977,7 +977,7 @@ export const QUESTION_BANK = [
       true,
     ],
   ]),
-  bankQuestion("BE", 4, "Wat is het N+1 query-probleem?", [
+  bankQuestion("SD", 4, "Wat is het N+1 query-probleem?", [
     [
       "Voor elk opgehaald record wordt een extra query uitgevoerd om gerelateerde data op te halen",
       true,
@@ -989,12 +989,12 @@ export const QUESTION_BANK = [
     ],
   ]),
   bankQuestion(
-    "BE",
+    "SD",
     5,
     "Wat is de tijdscomplexiteit van binary search op een gesorteerde lijst?",
     [["O(n)"], ["O(n log n)"], ["O(log n)", true], ["O(1)"]],
   ),
-  bankQuestion("BE", 5, "Wat doet een garbage collector?", [
+  bankQuestion("SD", 5, "Wat doet een garbage collector?", [
     [
       "Ongebruikte variabelen uit de broncode verwijderen tijdens het compileren",
     ],

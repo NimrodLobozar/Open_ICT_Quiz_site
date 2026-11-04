@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../../api/http.js'
+import { JunkMailHint } from '../../components/AccountUi.jsx'
 
 // Zo lang moet je wachten voordat je nóg een mail kunt aanvragen. Een mail is vaak pas na een
 // minuutje binnen; zo vraag je niet vijf keer achter elkaar een mail aan (de server telt ook mee).
@@ -42,9 +43,11 @@ export function ResendButton({ send, disabled = false, startWaiting = false }) {
   const waiting = secondsLeft > 0
   return (
     <>
+      {/* Overal waar je een mail opnieuw kunt aanvragen, is er net een mail gestuurd: dus hier de uitleg over Ongewenste e-mail. */}
+      <JunkMailHint />
       {sent && (
         <p className="auth-page__switch" role="status">
-          Verstuurd! Je krijgt binnen een paar minuten een nieuwe mail. Niets ontvangen? Kijk ook in je spam.
+          Verstuurd! Je krijgt binnen een paar minuten een nieuwe mail.
         </p>
       )}
       <button type="button" className="ui-btn ui-btn--block" onClick={resend} disabled={disabled || busy || waiting}>

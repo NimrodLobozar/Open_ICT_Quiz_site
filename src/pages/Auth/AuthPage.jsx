@@ -185,8 +185,7 @@ function RegisterForm() {
           <Notice type="success">Je score van de quiz die je net als gast speelde, staat nu op je account.</Notice>
         )}
         <p className="auth-page__switch">
-          Klik op de link in de mail om je e-mailadres te bevestigen (24 uur geldig). Daarna kun je inloggen. Niets ontvangen?
-          Kijk ook in je spam.
+          Klik op de link in de mail om je e-mailadres te bevestigen (24 uur geldig). Daarna kun je inloggen.
         </p>
         <ResendVerification email={sentTo} startWaiting />
         <Link to="/inloggen" className="ui-btn ui-btn--primary ui-btn--block">

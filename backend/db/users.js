@@ -1,4 +1,5 @@
 import { ApiError } from '../utils/ApiError.js'
+import { lockUser } from './locks.js'
 import { prisma } from './prisma.js'
 import { buildUserWhere } from './userFilters.js'
 
@@ -74,7 +75,7 @@ export async function updateUser(id, data) {
 }
 
 // P2002 = Prisma's code voor "deze waarde bestaat al" (unique constraint).
-function uniqueError(error) {
+export function uniqueError(error) {
   if (error?.code !== 'P2002') return null
   // Welke kolom het was, staat in Prisma 7 in de naam van de index (bijv. "User_email_key").
   const constraint = error.meta?.driverAdapterError?.cause?.constraint ?? {}
@@ -115,9 +116,13 @@ export function findUserById(id) {
  * - Quizzen van een docent blijven bestaan zonder eigenaar (onDelete: SetNull); een beheerder ziet ze nog.
  */
 export async function deleteUser(id) {
-  await prisma.$transaction([
+  await prisma.$transaction(async (tx) => {
+    // Eerst de gebruiker op slot. Wordt er precies nu een eindstand met zijn account opgeslagen, dan wacht dit
+    // tot die klaar is, en wordt die rij hieronder ook anoniem. Komt de eindstand ná het slot, dan wacht die
+    // op ons, faalt hij op de verwijderde gebruiker en slaat hij de rij anoniem op (zie insertSession).
+    await lockUser(tx, id)
     // Naam én vaardigheden weg: die zijn persoonlijk. Score en plaats blijven, zodat de eindstand van de anderen klopt.
-    prisma.gameResult.updateMany({ where: { userId: id }, data: { userId: null, nickname: DELETED_PLAYER_NAME, skills: {} } }),
-    prisma.user.delete({ where: { id } }),
-  ])
+    await tx.gameResult.updateMany({ where: { userId: id }, data: { userId: null, nickname: DELETED_PLAYER_NAME, skills: {} } })
+    await tx.user.delete({ where: { id } })
+  })
 }

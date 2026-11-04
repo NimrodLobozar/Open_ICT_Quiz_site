@@ -1,3 +1,4 @@
+import { lockUser } from '../db/locks.js'
 import { prisma } from '../db/prisma.js'
 import { hashPassword } from './password.js'
 import { isTokenUsable } from './tokenRules.js'
@@ -23,14 +24,15 @@ export const PASSWORD_PURPOSES = ['RESET', 'INVITE']
  *   eerste mail, dan moet die gewoon werken. Zodra één link gebruikt is, vervallen de andere (zie markUsed).
  * - INVITE (de beheerder stuurt een uitnodiging opnieuw, bijv. naar een verbeterd adres): alleen de nieuwste werkt.
  */
-export async function createOneTimeToken(userId, purpose) {
+export async function createOneTimeToken(userId, purpose, db = prisma) {
+  // db: gewoon prisma, of de tx van een lopende transactie (zie PATCH /api/me), zodat de link in dezelfde transactie valt.
   const token = newToken()
-  const created = await prisma.oneTimeToken.create({
+  const created = await db.oneTimeToken.create({
     data: { tokenHash: hashToken(token), userId, purpose, expiresAt: new Date(Date.now() + LIFETIME_MS[purpose]) },
   })
   // Pas ná het maken opruimen, op id: komen twee aanvragen tegelijk binnen, dan blijft de nieuwste altijd staan.
   const old = purpose === 'INVITE' ? {} : { expiresAt: { lte: new Date() } }
-  await prisma.oneTimeToken.deleteMany({ where: { userId, purpose, usedAt: null, id: { lt: created.id }, ...old } })
+  await db.oneTimeToken.deleteMany({ where: { userId, purpose, usedAt: null, id: { lt: created.id }, ...old } })
   return token
 }
 
@@ -58,7 +60,7 @@ async function markUsed(tx, record, purposes) {
   // Eerst de gebruiker op slot (FOR UPDATE). Gebruikt iemand twee verschillende links tegelijk, dan wacht
   // de tweede hier tot de eerste klaar is, in plaats van dat ze elkaars links proberen te wissen en vastlopen
   // (deadlock = serverfout). Daarna vindt de tweede zijn link al gewist en krijgt hij "link werkt niet".
-  await tx.$queryRaw`SELECT id FROM "User" WHERE id = ${record.userId} FOR UPDATE`
+  await lockUser(tx, record.userId)
   // "usedAt: null" in de where: klikt iemand twee keer tegelijk, dan lukt het maar één keer.
   const { count } = await tx.oneTimeToken.updateMany({
     where: { id: record.id, usedAt: null },

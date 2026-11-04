@@ -1,3 +1,4 @@
+import { lockUser } from './locks.js'
 import { prisma } from './prisma.js'
 import { DELETED_PLAYER_NAME } from './users.js'
 
@@ -85,18 +86,33 @@ export async function claimGuestResults(game, playerId, user) {
   // Speelt dit account zelf al mee in deze game (bijv. in een andere browser)? Dan niets koppelen:
   // anders staat hetzelfde account twee keer in dezelfde eindstand. Zelfde regel als game.linkAccount.
   if ([...game.players.values()].some((other) => other.userId === user.id)) return 0
-  let claimed = 0
-  for (const { resultIds } of game.savedRounds.values()) {
-    const resultId = (await resultIds).get(playerId)
-    if (!resultId) continue // in deze ronde speelde hij niet mee
-    const { count } = await prisma.gameResult.updateMany({
-      // Ook in de database: alleen als dit account nog geen uitslag in deze ronde heeft.
-      // Dat vangt ook een account dat in die ronde meedeed en de game intussen verliet.
-      where: { id: resultId, userId: null, session: { results: { none: { userId: user.id } } } },
-      data: { userId: user.id },
-    })
-    claimed += count
+  // Eerst alle rij-ids van deze speler verzamelen (het opslaan kan nog bezig zijn, dus wachten).
+  const resultIds = []
+  for (const round of game.savedRounds.values()) {
+    const resultId = (await round.resultIds).get(playerId)
+    if (resultId) resultIds.push(resultId) // geen id: in deze ronde speelde hij niet mee
   }
+  if (resultIds.length === 0) {
+    game.linkAccount(playerId, user)
+    return 0
+  }
+
+  // Het account op slot: logt hetzelfde account tegelijk in vanuit twee gast-browsers, dan wacht de tweede
+  // tot de eerste klaar is. Daarna ziet hij de net gekoppelde uitslag en koppelt hij niets dubbel.
+  const claimed = await prisma.$transaction(async (tx) => {
+    await lockUser(tx, user.id)
+    let count = 0
+    for (const resultId of resultIds) {
+      const updated = await tx.gameResult.updateMany({
+        // Alleen als dit account nog geen uitslag in die ronde heeft.
+        // Dat vangt ook een account dat in die ronde meedeed en de game intussen verliet.
+        where: { id: resultId, userId: null, session: { results: { none: { userId: user.id } } } },
+        data: { userId: user.id },
+      })
+      count += updated.count
+    }
+    return count
+  })
   // Vanaf nu speelt hij in deze game met zijn account: een volgende ronde komt dan vanzelf op zijn account,
   // en het eindscherm noemt hem geen gast meer (ook na verversen, via game:sync).
   game.linkAccount(playerId, user)

@@ -7,7 +7,8 @@ import { deleteOtherSessions, listSessions } from '../auth/sessions.js'
 import { parseHuEmail, parsePassword, parseUsername } from '../auth/validate.js'
 import { prisma } from '../db/prisma.js'
 import { getMyResults } from '../db/results.js'
-import { deleteUser, findUserByEmail, publicUser, updateUser } from '../db/users.js'
+import { lockUser } from '../db/locks.js'
+import { deleteUser, publicUser, uniqueError, updateUser } from '../db/users.js'
 import { appUrl, newEmailMail } from '../mail/sendMail.js'
 import { cleanQuizDefaults } from '../quiz/quizRules.js'
 import { cleanAccountSkills } from '../../src/utils/skills.js'
@@ -34,29 +35,47 @@ router.patch('/', async (request, response) => {
   // ook als dat geen HU-adres is (bijv. de seed-beheerder), want het formulier stuurt het altijd mee.
   // typeof-check: bij email: null of een getal geeft parseHuEmail een nette 400 in plaats van een crash.
   const typed = typeof body.email === 'string' ? body.email.trim().toLowerCase() : body.email
-  let newEmail = null
-  if (body.email !== undefined && typed === request.user.email) {
-    // Terug naar het huidige adres: een openstaande wijziging vervalt.
-    data.pendingEmail = null
-  } else if (body.email !== undefined) {
-    newEmail = parseHuEmail(body.email)
-    // Het nieuwe adres wordt pas echt je adres als je het bevestigt via de mail (zie useVerifyToken).
-    // Anders kon je het HU-adres van een ander "bezetten" zonder toegang tot die mailbox.
-    if (await findUserByEmail(newEmail)) {
-      throw new ApiError('EMAIL_TAKEN', 'Dit e-mailadres heeft al een account.', 409)
-    }
-    data.pendingEmail = newEmail
-  }
   if (body.skills !== undefined) data.skills = cleanAccountSkills(body.skills)
 
-  const user = await updateUser(request.user.id, data)
-  if (newEmail) {
-    // Alleen de nieuwste bevestigingslink werkt: een oude link mag geen ander (eerder getypt) adres bevestigen.
-    await prisma.oneTimeToken.deleteMany({ where: { userId: user.id, purpose: 'VERIFY', usedAt: null } })
-    const token = await createOneTimeToken(user.id, 'VERIFY')
-    // Niet wachten op de mail: een trage maildienst mag het opslaan niet ophouden.
-    // Komt de mail niet aan, dan sla je het adres gewoon nog een keer op.
-    newEmailMail(newEmail, user.username, `${appUrl()}/email-bevestigen?token=${token}`).catch((error) =>
+  // Eén transactie met de gebruiker op slot. Dezelfde slot als bij het gebruiken van de bevestigingslink
+  // (markUsed in oneTimeTokens.js), dus een link kan nooit een adres bevestigen dat er tegelijk ingezet werd.
+  let mail = null
+  const userId = request.user.id
+  const user = await prisma
+    .$transaction(async (tx) => {
+      await lockUser(tx, userId)
+      const current = await tx.user.findUnique({ where: { id: userId } })
+      if (body.email !== undefined && typed === current.email) {
+        // Terug naar het huidige adres: een openstaande wijziging vervalt, en de link ervan ook.
+        if (current.pendingEmail) {
+          data.pendingEmail = null
+          await tx.oneTimeToken.deleteMany({ where: { userId, purpose: 'VERIFY', usedAt: null } })
+        }
+      } else if (body.email !== undefined && current.pendingEmail && typed === current.pendingEmail) {
+        // Het adres dat al op bevestiging wacht (Instellingen toont dat in het veld): niets veranderen,
+        // zodat de link die al in de mail zit gewoon blijft werken.
+      } else if (body.email !== undefined) {
+        const newEmail = parseHuEmail(body.email)
+        // Het nieuwe adres wordt pas echt je adres als je het bevestigt via de mail (zie useVerifyToken).
+        // Anders kon je het HU-adres van een ander "bezetten" zonder toegang tot die mailbox.
+        if (await tx.user.findUnique({ where: { email: newEmail } })) {
+          throw new ApiError('EMAIL_TAKEN', 'Dit e-mailadres heeft al een account.', 409)
+        }
+        data.pendingEmail = newEmail
+        // Alleen de nieuwste bevestigingslink werkt: een oude link mag geen ander (eerder getypt) adres bevestigen.
+        await tx.oneTimeToken.deleteMany({ where: { userId, purpose: 'VERIFY', usedAt: null } })
+        mail = { to: newEmail, token: await createOneTimeToken(userId, 'VERIFY', tx) }
+      }
+      return tx.user.update({ where: { id: userId }, data })
+    })
+    .catch((error) => {
+      throw uniqueError(error) ?? error
+    })
+
+  if (mail) {
+    // Pas ná de transactie, en zonder erop te wachten: een trage maildienst mag het opslaan niet ophouden.
+    // Komt de mail niet aan, dan typ je het adres opnieuw en sla je nog een keer op.
+    newEmailMail(mail.to, user.username, `${appUrl()}/email-bevestigen?token=${mail.token}`).catch((error) =>
       console.error('Bevestigingsmail voor nieuw adres niet verstuurd:', error.message),
     )
   }

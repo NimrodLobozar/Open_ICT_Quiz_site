@@ -15,7 +15,9 @@ import { HU_EMAIL_MESSAGE, isHuEmail } from '../../utils/schoolEmail.js'
 export function ProfileForm({ withSkills = false, onSaved }) {
   const { user, setUser } = useAuth()
   const [username, setUsername] = useState(user.username)
-  const [email, setEmail] = useState(user.email)
+  // Wacht er een nieuw adres op bevestiging, dan staat dát in het veld. Sla je daarna alleen je naam op,
+  // dan blijft de wijziging gewoon staan (de server ziet hetzelfde adres en laat de link in de mail werken).
+  const [email, setEmail] = useState(user.pendingEmail ?? user.email)
   const [skills, setSkills] = useState(user.skills ?? {})
   const [errors, setErrors] = useState({})
   const [busy, setBusy] = useState(false)

@@ -2,7 +2,8 @@ import { Router } from 'express'
 import { noStore, requireAuth, requireRole } from '../auth/middleware.js'
 import { createOneTimeToken, PASSWORD_PURPOSES } from '../auth/oneTimeTokens.js'
 import { hashPassword, verifyPassword } from '../auth/password.js'
-import { emailChangeLimiter, passwordCheckLimiter } from '../auth/rateLimits.js'
+import { takeEmailChangeMail } from '../auth/mailBudget.js'
+import { passwordCheckLimiter } from '../auth/rateLimits.js'
 import { deleteOtherSessions, listSessions } from '../auth/sessions.js'
 import { parseHuEmail, parsePassword, parseUsername } from '../auth/validate.js'
 import { prisma } from '../db/prisma.js'
@@ -14,6 +15,16 @@ import { cleanQuizDefaults } from '../quiz/quizRules.js'
 import { cleanAccountSkills } from '../../src/utils/skills.js'
 import { ApiError } from '../utils/ApiError.js'
 import { AUTH_COOKIE, clearSessionCookie } from '../utils/cookies.js'
+
+/**
+ * Na het slot (lockUser): bestaat je sessie nog? Een wachtwoordreset of -wijziging zet dezelfde gebruiker op slot
+ * en logt andere apparaten uit. Wachtte dit verzoek intussen op het slot, dan mag het daarna niets meer doen:
+ * anders kon een indringer met een gekaapte sessie net na de reset alsnog een e-mailadres klaarzetten.
+ */
+async function assertStillLoggedIn(tx, request) {
+  const session = await tx.session.findUnique({ where: { id: request.authSession.id }, select: { id: true } })
+  if (!session) throw new ApiError('NOT_LOGGED_IN', 'Log eerst in.', 401)
+}
 
 // Alles over je eigen account (story 4, 5, 6, 8 en 9).
 // Er staat nergens een gebruikers-id in de URL: het account komt altijd uit je sessie.
@@ -27,7 +38,7 @@ router.get('/results', async (request, response) => {
 })
 
 // Story 5: gebruikersnaam, e-mailadres en vaardigheden aanpassen. Wat je niet meestuurt, blijft hetzelfde.
-router.patch('/', emailChangeLimiter, async (request, response) => {
+router.patch('/', async (request, response) => {
   const body = request.body ?? {}
   const data = {}
   if (body.username !== undefined) Object.assign(data, parseUsername(body.username))
@@ -44,6 +55,7 @@ router.patch('/', emailChangeLimiter, async (request, response) => {
   const user = await prisma
     .$transaction(async (tx) => {
       await lockUser(tx, userId)
+      await assertStillLoggedIn(tx, request)
       const current = await tx.user.findUnique({ where: { id: userId } })
       if (body.email !== undefined && typed === current.email) {
         // Terug naar het huidige adres: een openstaande wijziging vervalt, en de link ervan ook.
@@ -61,6 +73,9 @@ router.patch('/', emailChangeLimiter, async (request, response) => {
         if (await tx.user.findUnique({ where: { email: newEmail } })) {
           throw new ApiError('EMAIL_TAKEN', 'Dit e-mailadres heeft al een account.', 409)
         }
+        // Er gaat een mail uit: telt mee voor de grens van 5 per kwartier. Hier, onder het slot en met de
+        // actuele gegevens, zodat verzoeken die tegelijk binnenkomen de grens niet kunnen omzeilen.
+        takeEmailChangeMail(current)
         data.pendingEmail = newEmail
         // Alleen de nieuwste bevestigingslink werkt: een oude link mag geen ander (eerder getypt) adres bevestigen.
         await tx.oneTimeToken.deleteMany({ where: { userId, purpose: 'VERIFY', usedAt: null } })
@@ -85,18 +100,22 @@ router.patch('/', emailChangeLimiter, async (request, response) => {
 // Bevestigingsmail voor het wachtende nieuwe adres opnieuw sturen: de mail kwam niet aan, of de link is verlopen.
 // Eerdere links naar hetzelfde adres blijven werken tot ze verlopen (zie createOneTimeToken); een link naar een
 // ánder adres bestaat niet meer, want die zijn gewist toen je dit adres koos.
-router.post('/email/resend', emailChangeLimiter, async (request, response) => {
+router.post('/email/resend', async (request, response) => {
   const userId = request.user.id
   const mail = await prisma.$transaction(async (tx) => {
     // Zelfde slot als PATCH /api/me: zo hoort de nieuwe link altijd bij het adres dat nu wacht.
     await lockUser(tx, userId)
+    await assertStillLoggedIn(tx, request)
     const current = await tx.user.findUnique({ where: { id: userId } })
     if (!current.pendingEmail) return null
+    takeEmailChangeMail(current)
     return { to: current.pendingEmail, username: current.username, token: await createOneTimeToken(userId, 'VERIFY', tx) }
   })
   if (!mail) throw new ApiError('NO_PENDING_EMAIL', 'Er wacht geen nieuw e-mailadres op bevestiging.', 400)
   // Hier wél wachten op de mail: de knop zegt "verstuurd", dus dat moet ook kloppen.
-  await newEmailMail(mail.to, mail.username, `${appUrl()}/email-bevestigen?token=${mail.token}`)
+  // false = er is geen maildienst ingesteld (productie zonder SMTP_HOST): dan ook geen "verstuurd".
+  const sent = await newEmailMail(mail.to, mail.username, `${appUrl()}/email-bevestigen?token=${mail.token}`)
+  if (!sent) throw new ApiError('MAIL_UNAVAILABLE', 'De mail kon niet worden verstuurd. Probeer het later opnieuw.', 503)
   response.json({ ok: true })
 })
 
@@ -123,11 +142,14 @@ router.post('/password', passwordCheckLimiter, async (request, response) => {
   // - andere apparaten uitloggen: was je wachtwoord gelekt, dan is de indringer er nu uit. Dit apparaat blijft ingelogd.
   // - een wachtend nieuw e-mailadres (en de link ervan) vervalt ook: had een indringer zijn eigen adres
   //   klaargezet, dan kan hij daarmee na deze wijziging niet alsnog het account overnemen.
-  await prisma.$transaction([
-    prisma.user.update({ where: { id: userId }, data: { passwordHash, pendingEmail: null } }),
-    prisma.oneTimeToken.deleteMany({ where: { userId, purpose: { in: [...PASSWORD_PURPOSES, 'VERIFY'] }, usedAt: null } }),
-    prisma.session.deleteMany({ where: { userId, id: { not: request.authSession.id } } }),
-  ])
+  // Met de gebruiker op slot, net als PATCH /api/me: een adreswijziging die tegelijk binnenkomt, gebeurt
+  // óf helemaal vóór deze transactie (en wordt hier gewist), óf erna (en vindt dan zijn sessie niet meer).
+  await prisma.$transaction(async (tx) => {
+    await lockUser(tx, userId)
+    await tx.user.update({ where: { id: userId }, data: { passwordHash, pendingEmail: null } })
+    await tx.oneTimeToken.deleteMany({ where: { userId, purpose: { in: [...PASSWORD_PURPOSES, 'VERIFY'] }, usedAt: null } })
+    await tx.session.deleteMany({ where: { userId, id: { not: request.authSession.id } } })
+  })
   response.json({ ok: true })
 })
 

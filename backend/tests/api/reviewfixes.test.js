@@ -103,11 +103,13 @@ describe('e-mailadres wijzigen', () => {
 
   it('maximaal 5 bevestigingsmails per kwartier; gewoon je naam opslaan telt niet mee', async () => {
     const { agent } = await loggedIn({ email: 'jan@student.hu.nl' })
-    for (let i = 1; i <= 5; i += 1) {
+    for (let i = 1; i <= 4; i += 1) {
       // Om en om een nieuw adres en het huidige: zo zou je anders onbeperkt mails kunnen laten sturen.
       expect((await agent.patch('/api/me').send({ email: `nieuw${i}@student.hu.nl` })).status).toBe(200)
       expect((await agent.patch('/api/me').send({ email: 'jan@student.hu.nl' })).status).toBe(200)
     }
+    // Vijfde mail: dit adres blijft wachten.
+    expect((await agent.patch('/api/me').send({ email: 'nieuw5@student.hu.nl' })).status).toBe(200)
     expect((await agent.patch('/api/me').send({ email: 'nieuw6@student.hu.nl' })).status).toBe(429)
     expect((await agent.post('/api/me/email/resend')).status).toBe(429)
     // Naam wijzigen gaat gewoon door.
@@ -151,6 +153,32 @@ describe('wachtwoord wijzigen', () => {
 
     expect((await browser().post('/api/auth/verify-email').send({ token: intruderToken })).status).toBe(400)
     expect(await prisma.user.findUnique({ where: { id: user.id } })).toMatchObject({ email: 'jan@student.hu.nl', pendingEmail: null })
+  })
+
+  it('adreswijziging precies tegelijk met een wachtwoordreset: er blijft geen adres van de indringer wachten', async () => {
+    const { user, agent: intruder } = await loggedIn({ email: 'jan@student.hu.nl' })
+    await browser().post('/api/auth/forgot').send({ email: 'jan@student.hu.nl' })
+    const resetToken = await tokenFromMail('jan@student.hu.nl', 'wachtwoord-instellen')
+
+    await Promise.all([
+      browser().post('/api/auth/password').send({ token: resetToken, password: 'Nieuw12345' }),
+      intruder.patch('/api/me').send({ email: 'indringer@student.hu.nl' }),
+    ])
+    // Welke ook eerst was: de reset wist het adres, of de wijziging vindt haar sessie niet meer.
+    expect((await prisma.user.findUnique({ where: { id: user.id } })).pendingEmail).toBeNull()
+  })
+
+  it('verzoeken die tegelijk binnenkomen, versturen samen niet meer dan 5 mails', async () => {
+    const { user, agent } = await loggedIn({ email: 'jan@student.hu.nl' })
+    await agent.patch('/api/me').send({ email: 'wacht@student.hu.nl' })
+    // Om en om annuleren en hetzelfde wachtende adres opnieuw kiezen, allemaal tegelijk.
+    const requests = Array.from({ length: 12 }, (_, i) =>
+      agent.patch('/api/me').send({ email: i % 2 ? 'wacht@student.hu.nl' : 'jan@student.hu.nl' }),
+    )
+    await Promise.all(requests)
+    await new Promise((resolve) => setTimeout(resolve, 200)) // mails gaan op de achtergrond
+    expect(outbox.filter((mail) => mail.to === 'wacht@student.hu.nl').length).toBeLessThanOrEqual(5)
+    expect(await prisma.user.findUnique({ where: { id: user.id } })).toBeTruthy()
   })
 
   it('wachtwoord wijzigen (ingelogd) laat een wachtend adres ook vervallen', async () => {

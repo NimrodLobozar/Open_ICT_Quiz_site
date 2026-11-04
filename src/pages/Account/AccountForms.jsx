@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { api } from '../../api/http.js'
 import { useAuth } from '../../auth/AuthContext.jsx'
 import { Notice, PasswordChecklist, PasswordField, SkillSliders, TextField } from '../../components/AccountUi.jsx'
@@ -19,6 +19,12 @@ export function ProfileForm({ withSkills = false, onSaved }) {
   // Wacht er een nieuw adres op bevestiging, dan staat dát in het veld. Sla je daarna alleen je naam op,
   // dan blijft de wijziging gewoon staan (de server ziet hetzelfde adres en laat de link in de mail werken).
   const [email, setEmail] = useState(user.pendingEmail ?? user.email)
+  // Verandert het adres buiten dit formulier (bijv. een wachtwoordwijziging wist het wachtende adres,
+  // of je bevestigde het in een ander tabblad), dan het veld bijwerken. Anders vraagt "Opslaan" met
+  // alleen een nieuwe naam stiekem een al geannuleerde wijziging opnieuw aan.
+  useEffect(() => {
+    setEmail(user.pendingEmail ?? user.email)
+  }, [user.email, user.pendingEmail])
   const [skills, setSkills] = useState(user.skills ?? {})
   const [errors, setErrors] = useState({})
   const [busy, setBusy] = useState(false)
@@ -75,6 +81,7 @@ export function ProfileForm({ withSkills = false, onSaved }) {
 
 /** Wachtwoord wijzigen: eerst het huidige wachtwoord, dan het nieuwe (story 5). */
 export function PasswordForm({ onSaved }) {
+  const { refresh } = useAuth()
   const [current, setCurrent] = useState('')
   const [next, setNext] = useState('')
   const [error, setError] = useState(null)
@@ -92,6 +99,9 @@ export function PasswordForm({ onSaved }) {
       await api('/me/password', { method: 'POST', body: { currentPassword: current, newPassword: next } })
       setCurrent('')
       setNext('')
+      // De server wist bij een nieuw wachtwoord ook een wachtend e-mailadres; opnieuw ophalen,
+      // zodat de melding "check je mail" en het e-mailveld meteen kloppen.
+      await refresh()
       onSaved?.()
     } catch (apiError) {
       setError(apiError.message)

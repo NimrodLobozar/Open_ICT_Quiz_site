@@ -17,7 +17,22 @@ services:
       dockerfile: Dockerfile.backend
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-      NODE_ENV: development
+      # production: login-cookies alleen over HTTPS, geen testaccounts en geen dev:finish (nep-bots).
+      NODE_ENV: production
+      # Adres van de site, voor de links in mails (bevestigen, wachtwoord vergeten, uitnodiging).
+      APP_URL: ${APP_URL:-https://quiz.flobozar.com}
+      # Mail (Brevo, zie docs/MAIL.md). Vul de waarden in bij de environment variables van de stack
+      # in Portainer, niet hier: dan komen de wachtwoorden nooit in git.
+      # Zonder SMTP_HOST gaat er geen mail uit en kunnen nieuwe studenten hun e-mail niet bevestigen.
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      # Eerste beheerder. Alleen nodig als de database nog geen beheerder heeft; leeg laten mag.
+      SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
+      SEED_ADMIN_NAME: ${SEED_ADMIN_NAME:-Beheerder}
     depends_on:
       db:
         condition: service_healthy

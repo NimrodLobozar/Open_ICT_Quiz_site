@@ -46,9 +46,18 @@ function readSession(request, cookieName, code) {
   return session?.code === code ? { token, ...session } : null;
 }
 
-// Nieuwe game met een quiz uit de database (story 7). Alleen docenten en beheerders mogen hosten.
-// De browser die dit doet, wordt de host.
-router.post("/", requireRole("TEACHER", "ADMIN"), async (request, response) => {
+// Eigen quizzen hebben alleen docenten en beheerders, dus alleen zij mogen die hosten.
+const requireStaff = requireRole("TEACHER", "ADMIN");
+
+// Nieuwe game. De browser die dit doet, wordt de host.
+// - { random: true }: willekeurige quiz uit de vragenbank. Mag IEDEREEN, ook een gast zonder account.
+// - { quizId }: een eigen quiz uit de database (story 7). Alleen docenten en beheerders.
+router.post("/", (request, response, next) => {
+  if (request.body?.random === true) return next();
+  requireStaff(request, response, next);
+});
+
+router.post("/", async (request, response) => {
   const quizId = Number(request.body?.quizId);
   if (request.body?.random === true) {
     const game = gameManager.createGame({

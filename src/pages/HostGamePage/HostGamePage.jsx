@@ -35,7 +35,8 @@ const isLocalhost = ["localhost", "127.0.0.1", "[::1]"].includes(
 );
 
 /**
- * /host/new?quiz=<id>: maakt een game aan met die quiz uit de database (story 7).
+ * /host/new?quiz=<id>: maakt een game aan met die quiz uit de database (story 7), alleen docent/beheerder.
+ * /host/new?random=1: willekeurige quiz uit de vragenbank. Mag iedereen, ook zonder account.
  * De server zet de host-cookie; daarna gaan we door naar /host/:code.
  */
 export function HostCreatePage() {
@@ -51,7 +52,7 @@ export function HostCreatePage() {
     if (started.current) return;
     started.current = true;
     if (!quizId && !random) {
-      setError("Kies eerst een quiz in het beheerportaal.");
+      setError("Kies eerst een quiz om te hosten.");
       return;
     }
     const body = random ? { random: true } : { quizId };
@@ -65,7 +66,7 @@ export function HostCreatePage() {
       <QuizHeader large />
       <main className="page__main host-game">
         <p role="status">{error ?? "Lobby wordt aangemaakt…"}</p>
-        {error && <Link to="/admin">Naar mijn quizzen</Link>}
+        {error && <Link to="/">Terug naar de startpagina</Link>}
       </main>
     </div>
   );

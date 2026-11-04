@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { gameManager } from '../../game/GameManager.js'
-import { loggedIn, prisma, quizInput, resetDatabase } from './helpers.js'
+import { browser, loggedIn, prisma, quizInput, resetDatabase } from './helpers.js'
 
 // Story 7 (quizzen beheren en hosten) en story 8 (standaardinstellingen).
 beforeEach(resetDatabase)
@@ -112,11 +112,23 @@ describe('hosten met een quizId (story 7)', () => {
     expect(response.body.error).toBe('QUIZ_DRAFT')
   })
 
-  it('studenten en gasten kunnen niet hosten; zonder quizId ook niet', async () => {
+  it('studenten en gasten kunnen geen eigen quiz hosten; zonder quizId ook niet', async () => {
     const { agent: student } = await loggedIn({ role: 'STUDENT' })
     const { agent: teacher } = await loggedIn({ role: 'TEACHER' })
     expect((await student.post('/api/games').send({ quizId: 1 })).status).toBe(403)
+    expect((await browser().post('/api/games').send({ quizId: 1 })).status).toBe(401)
     expect((await teacher.post('/api/games').send({})).status).toBe(400)
+  })
+
+  it('iedereen kan een willekeurige quiz hosten, ook een gast zonder account', async () => {
+    const { agent: student } = await loggedIn({ role: 'STUDENT' })
+    for (const agent of [browser(), student]) {
+      const response = await agent.post('/api/games').send({ random: true })
+      expect(response.status).toBe(201)
+      // De host-cookie is gezet: deze browser is nu de host.
+      const me = await agent.get(`/api/games/${response.body.gameCode}/me?role=host`)
+      expect(me.body.role).toBe('host')
+    }
   })
 })
 

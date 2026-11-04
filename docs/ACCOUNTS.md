@@ -58,6 +58,8 @@ browser                         server                               database
 
 **Online zetten (productie):** zet `NODE_ENV=production` (dan zijn cookies `Secure`, dus alleen over HTTPS), een eigen `APP_URL`, en een sterk `SEED_ADMIN_PASSWORD`. Draai achter HTTPS.
 
+**Beheerder kan niet inloggen op de server?** De seed maakt de beheerder maar één keer aan en past een bestaand account nooit aan: een ander `SEED_ADMIN_PASSWORD` achteraf verandert dus niets. Open in Portainer de console van de backend-container en draai `node backend/scripts/checkAdmin.js`. Die laat zien of het account bestaat, of het wachtwoord klopt met `SEED_ADMIN_PASSWORD`, en of er aanhalingstekens of spaties in de waarden staan. Met `--reset` zet hij het wachtwoord op `SEED_ADMIN_PASSWORD` (en logt hij oude sessies uit).
+
 ## API
 
 Alle fouten: `{ error: 'CODE', message: 'Nederlandse uitleg' }`. 401 = niet ingelogd, 403 = verkeerde rol, 404 = bestaat niet of is niet van jou.

@@ -1,0 +1,76 @@
+/* Grote keuzeknoppen (ChoiceCard). Kleuren komen uit src/index.css (var(--quiz-...)). */
+
+.choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  width: min(720px, 100%);
+}
+
+.choice-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 32px 24px;
+  border: 2px solid var(--quiz-border);
+  border-radius: 18px;
+  background: var(--quiz-surface);
+  color: var(--quiz-text);
+  text-align: center;
+  text-decoration: none;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.choice-card:not(.choice-card--disabled):hover,
+.choice-card:not(.choice-card--disabled):focus-visible {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgb(0 0 0 / 12%);
+  color: var(--quiz-text);
+}
+
+.choice-card--primary {
+  border-color: var(--quiz-primary);
+  background: var(--quiz-primary);
+  color: var(--quiz-white);
+}
+
+.choice-card--primary:not(.choice-card--disabled):hover,
+.choice-card--primary:not(.choice-card--disabled):focus-visible {
+  color: var(--quiz-white);
+}
+
+/* Uitgezet: lichter, gestippelde rand en geen "klik mij"-cursor. */
+.choice-card--disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  border-style: dashed;
+}
+
+.choice-card__title {
+  font-family: 'Anton', sans-serif;
+  font-size: 2rem;
+  letter-spacing: 0.04em;
+}
+
+.choice-card__text {
+  font-size: 1rem;
+}
+
+.choice-card__badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--quiz-accent);
+  color: var(--quiz-text);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+@media (max-width: 600px) {
+  .choice-grid {
+    grid-template-columns: 1fr;
+  }
+}

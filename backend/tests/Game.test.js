@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { Game } from "../game/Game.js";
+import { Game, shuffle } from "../game/Game.js";
 import { PHASES } from "../game/phases.js";
 import { QUIZ_QUESTIONS } from "../game/quizQuestions.js";
 import { QUESTION_BANK } from "../game/questionBank.js";
@@ -414,7 +414,10 @@ describe("Game: willekeurige quiz", () => {
 
     expect(game.totalQuestions).toBe(5);
     expect(
-      game.questions.every((question) => QUESTION_BANK.includes(question)),
+      // De antwoorden zijn gehusseld (nieuwe objecten), dus vergelijken op de tekst van de vraag.
+      game.questions.every((question) =>
+        QUESTION_BANK.some((bankQuestion) => bankQuestion.text === question.text),
+      ),
     ).toBe(true);
     expect(() => game.setQuestionCount(10)).toThrow(
       expect.objectContaining({ code: "WRONG_PHASE" }),
@@ -587,5 +590,32 @@ describe("Game: tijd stoppen (pauze)", () => {
     game.next(T0); // vraag 2
     expect(game.paused).toBe(false);
     expect(game.getQuestionPayload(T0).paused).toBe(false);
+  });
+});
+
+describe("Game: antwoorden in willekeurige volgorde", () => {
+  it("shuffle houdt dezelfde items en laat het origineel heel", () => {
+    const items = [1, 2, 3, 4];
+    const result = shuffle(items, () => 0);
+    expect(result).not.toBe(items);
+    expect(items).toEqual([1, 2, 3, 4]);
+    expect([...result].sort()).toEqual([1, 2, 3, 4]);
+  });
+
+  it("husselt de antwoorden bij de start, maar nakijken gaat nog op id", () => {
+    const game = new Game("482913", { questions: QUIZ_QUESTIONS.slice(0, 1) });
+    game.addPlayer("Emma");
+    game.addPlayer("Sam");
+    // random() = 0 schuift elk item naar voren: [1, 2, 3, 4] wordt [2, 3, 4, 1].
+    game.start(0, () => 0);
+
+    const ids = game.getQuestionPayload(0).options.map((option) => option.id);
+    expect(ids).toEqual([2, 3, 4, 1]);
+    // De vraag in quizQuestions.js zelf is niet veranderd.
+    expect(QUIZ_QUESTIONS[0].options.map((option) => option.id)).toEqual([1, 2, 3, 4]);
+    // Het goede antwoord heeft nog steeds hetzelfde id.
+    const correct = game.currentQuestion.options.find((option) => option.isCorrect);
+    expect(correct.text).toBe("HyperText Markup Language");
+    expect(correct.id).toBe(1);
   });
 });

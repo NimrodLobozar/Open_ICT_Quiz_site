@@ -16,6 +16,20 @@ import {
   QUESTION_COUNT_OPTIONS,
 } from "../../src/utils/randomQuiz.js";
 
+/**
+ * Nieuwe lijst in willekeurige volgorde (Fisher-Yates). Het origineel blijft heel:
+ * dezelfde vragen worden in de volgende game weer gebruikt.
+ * @param {() => number} random geeft een getal van 0 tot 1; een test geeft hier een vaste functie mee.
+ */
+export function shuffle(items, random = Math.random) {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
 // Met minder dan 2 spelers is het geen wedstrijd.
 export const MIN_PLAYERS = 2;
 // Een antwoord dat net na de tijd binnenkomt (vertraging van wifi of netwerk) telt nog mee.
@@ -306,6 +320,13 @@ export class Game {
         random,
       );
     }
+    // Antwoorden in een willekeurige volgorde, anders staat het goede antwoord altijd op dezelfde plek
+    // en leren spelers dat uit hun hoofd. De ids blijven gelijk, dus nakijken werkt gewoon.
+    // Elke start (ook na "opnieuw spelen") geeft een nieuwe volgorde.
+    this.questions = this.questions.map((question) => ({
+      ...question,
+      options: shuffle(question.options, random),
+    }));
     this.#showQuestion(0, now);
   }
 

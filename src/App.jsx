@@ -14,6 +14,8 @@ import ForgotPasswordPage from "./pages/Auth/ForgotPasswordPage.jsx";
 import PrivacyPage from "./pages/Auth/PrivacyPage.jsx";
 import SetPasswordPage from "./pages/Auth/SetPasswordPage.jsx";
 import VerifyEmailPage from "./pages/Auth/VerifyEmailPage.jsx";
+import HomePage from "./pages/Home/HomePage.jsx";
+import HostChoicePage from "./pages/HostChoice/HostChoicePage.jsx";
 import EndScreenPageHost from "./pages/EndScreenPage_Host/EndScreenPage.jsx";
 import EndScreenPagePlayer from "./pages/EndScreenPage_Player/EndScreenPage.jsx";
 import HostGamePage, {
@@ -30,17 +32,15 @@ import QuestionAnswersPage from "./pages/QuestionPage_Host/QuestionAnswersPage.j
 import QuestionPreviewPage from "./pages/QuestionPage_Host/QuestionPreviewPage.jsx";
 import TemplatePage from "./pages/_Template/TemplatePage.jsx";
 
-// Rollen die quizzen mogen maken en hosten.
+// Rollen die eigen quizzen mogen maken en hosten.
 const STAFF = ["TEACHER", "ADMIN"];
 
 export default function App() {
   return (
     <>
       <Routes>
-        {/* TODO(team, volgende sprint): echte startpagina met keuze tussen hosten en meedoen.
-            Tot die er is, sturen we iedereen op de voorpagina door naar het joinformulier.
-            Werkt voor elk adres (localhost, IP of domein), want het kijkt alleen naar het pad. */}
-        <Route path="/" element={<Navigate to="/join" replace />} />
+        {/* Startpagina: kiezen tussen meedoen en hosten. */}
+        <Route path="/" element={<HomePage />} />
         {/* Linkjes naar alle pagina's, voor het team. Niet gelinkt: je moet de URL kennen. */}
         <Route
           path="/dev"
@@ -49,7 +49,7 @@ export default function App() {
               <QuizHeader />
               <main className="page__main">
                 <h1>Welcome to the Quiz</h1>
-                <Link to="/admin">Quiz hosten (log in als docent)</Link>
+                <Link to="/">Startpagina (meedoen of hosten)</Link>
                 <br />
                 <Link to="/join">Meedoen</Link>
                 <br />
@@ -81,15 +81,11 @@ export default function App() {
         <Route path="/join" element={<JoinPage />} />
         <Route path="/join/:code" element={<JoinPage />} />
         <Route path="/play/:code" element={<PlayerGamePage />} />
-        {/* Hosten mag alleen een docent of beheerder (story 7); de server controleert het ook. */}
-        <Route
-          path="/host/new"
-          element={
-            <RequireAuth roles={STAFF}>
-              <HostCreatePage />
-            </RequireAuth>
-          }
-        />
+        {/* Hosten mag iedereen, ook een gast: die krijgt een willekeurige quiz.
+            Een eigen quiz (?quiz=<id>) mag alleen een docent of beheerder; dat controleert de server. */}
+        <Route path="/host/new" element={<HostCreatePage />} />
+        {/* Daarvoor: kiezen wat je host (willekeurig, of later een bestaande quiz). */}
+        <Route path="/host" element={<HostChoicePage />} />
         <Route path="/host/:code" element={<HostGamePage />} />
         <Route path="/leaderboard" element={<RequireAuth><LeaderboardPage /></RequireAuth>} />
         {/* Demo's met nepdata, om de designs te bekijken. */}

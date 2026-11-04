@@ -106,13 +106,17 @@ describe("questionSelector", () => {
   it("kiest de moeilijkheid die bij het gemiddelde past, en anders de dichtstbijzijnde", () => {
     const sdOnly = QUESTION_BANK.filter((question) => question.skill === "SD");
 
-    // Beginners (0): eerst de 2 vragen van niveau 1, daarna is niveau 2 het dichtstbij.
-    const beginners = selectQuestions(sdOnly, allSkills(0), 3);
-    expect(beginners.map((question) => question.difficulty)).toEqual([1, 1, 2]);
+    // Tel de vragen per niveau in plaats van een vast getal: zo blijft de test kloppen als er vragen bijkomen.
+    const level1 = sdOnly.filter((question) => question.difficulty === 1).length;
+    const level5 = sdOnly.filter((question) => question.difficulty === 5).length;
 
-    // Experts (5): eerst de 2 vragen van niveau 5, daarna niveau 4.
-    const experts = selectQuestions(sdOnly, allSkills(5), 3);
-    expect(experts.map((question) => question.difficulty)).toEqual([5, 5, 4]);
+    // Beginners (0): eerst alle vragen van niveau 1, daarna is niveau 2 het dichtstbij.
+    const beginners = selectQuestions(sdOnly, allSkills(0), level1 + 1);
+    expect(beginners.map((question) => question.difficulty)).toEqual([...Array(level1).fill(1), 2]);
+
+    // Experts (5): eerst alle vragen van niveau 5, daarna niveau 4.
+    const experts = selectQuestions(sdOnly, allSkills(5), level5 + 1);
+    expect(experts.map((question) => question.difficulty)).toEqual([...Array(level5).fill(5), 4]);
   });
 
   it("kiest vaker een vraag over de zwakste vaardigheid (1000 keer geprobeerd)", () => {

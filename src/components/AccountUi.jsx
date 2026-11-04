@@ -29,6 +29,26 @@ export function Notice({ type = 'error', children }) {
 }
 
 /**
+ * "Geen mail? Kijk in Ongewenste e-mail." Studenten hebben Outlook (Microsoft 365) en dat zet mail van
+ * een nieuwe afzender vaak bij de ongewenste e-mail. Klikt de student op "Geen ongewenste e-mail",
+ * dan komen volgende mails van de quiz gewoon in de inbox. Zie docs/MAIL.md.
+ */
+export function JunkMailHint() {
+  return (
+    <p className="ui-notice ui-notice--info">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="5" width="18" height="14" rx="2" />
+        <path d="M3 7l9 6 9-6" />
+      </svg>
+      <span>
+        <strong>Geen mail?</strong> Het kan een paar minuten duren. Kijk ook in je map <strong>Ongewenste e-mail</strong>. Staat
+        hij daar? Klik dan op <strong>Geen ongewenste e-mail</strong>, dan komen volgende mails gewoon in je inbox.
+      </span>
+    </p>
+  )
+}
+
+/**
  * Label + invoerveld + uitleg + foutmelding, goed gekoppeld voor schermlezers (aria-describedby).
  * Alle andere props (type, value, onChange, autoComplete...) gaan door naar de <input>.
  */

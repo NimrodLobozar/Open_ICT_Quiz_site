@@ -181,6 +181,22 @@ describe('wachtwoord wijzigen', () => {
     expect(await prisma.user.findUnique({ where: { id: user.id } })).toBeTruthy()
   })
 
+  it('wachtwoord wijzigen precies tegelijk met een reset: het herstelde wachtwoord wordt niet overschreven', async () => {
+    const { agent: intruder } = await loggedIn({ email: 'jan@student.hu.nl' })
+    await browser().post('/api/auth/forgot').send({ email: 'jan@student.hu.nl' })
+    const resetToken = await tokenFromMail('jan@student.hu.nl', 'wachtwoord-instellen')
+
+    const [reset, change] = await Promise.all([
+      browser().post('/api/auth/password').send({ token: resetToken, password: 'Hersteld123' }),
+      intruder.post('/api/me/password').send({ currentPassword: PASSWORD, newPassword: 'Indringer123' }),
+    ])
+    expect(reset.status).toBe(200)
+    // Was de wijziging eerst, dan wint de reset daarna. Was de reset eerst, dan weigert de wijziging (401).
+    // In beide gevallen werkt alleen het herstelde wachtwoord.
+    expect([200, 401]).toContain(change.status)
+    expect((await browser().post('/api/auth/login').send({ email: 'jan@student.hu.nl', password: 'Hersteld123' })).status).toBe(200)
+  })
+
   it('wachtwoord wijzigen (ingelogd) laat een wachtend adres ook vervallen', async () => {
     const { user, agent } = await loggedIn({ email: 'jan@student.hu.nl' })
     await agent.patch('/api/me').send({ email: 'indringer@student.hu.nl' })

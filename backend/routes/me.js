@@ -146,6 +146,9 @@ router.post('/password', passwordCheckLimiter, async (request, response) => {
   // óf helemaal vóór deze transactie (en wordt hier gewist), óf erna (en vindt dan zijn sessie niet meer).
   await prisma.$transaction(async (tx) => {
     await lockUser(tx, userId)
+    // Wachtte dit verzoek op het slot terwijl een wachtwoordreset alle sessies wiste? Dan niet alsnog
+    // het net herstelde wachtwoord overschrijven.
+    await assertStillLoggedIn(tx, request)
     await tx.user.update({ where: { id: userId }, data: { passwordHash, pendingEmail: null } })
     await tx.oneTimeToken.deleteMany({ where: { userId, purpose: { in: [...PASSWORD_PURPOSES, 'VERIFY'] }, usedAt: null } })
     await tx.session.deleteMany({ where: { userId, id: { not: request.authSession.id } } })

@@ -22,7 +22,8 @@ import { HostLeaderboard } from "../QuestionPage_Host/LeaderboardPage.jsx";
 import { HostQuestionAnswers } from "../QuestionPage_Host/QuestionAnswersPage.jsx";
 import { HostQuestionPreview } from "../QuestionPage_Host/QuestionPreviewPage.jsx";
 import "./HostGamePage.css";
-import { QRCode, Space } from "antd";
+import { QRCode } from "antd";
+import PageRings from "../../components/PageRings.jsx";
 
 // Zelfde grens als MIN_PLAYERS in backend/game/Game.js. De server controleert het ook;
 // hier is het alleen om de knop al uit te zetten.
@@ -99,7 +100,7 @@ export default function HostGamePage() {
     };
   }, [code, navigate]);
 
-  //QR_CODE
+  // De QR-code opent /join/<code>: dan hoeft een speler de code niet meer over te typen.
   const qrCodeValue = `${window.location.protocol}//${window.location.host}/join/${code}`;
 
   useSocketEvent("connect", async () => {
@@ -338,7 +339,8 @@ export default function HostGamePage() {
   } = game.lobby;
   const canStart = playerCount >= MIN_PLAYERS;
   return (
-    <div className="page">
+    <div className="page host-game-page">
+      <PageRings />
       <QuizHeader code={code} large />
       <main className="page__main host-game">
         {isLocalhost && (
@@ -351,12 +353,38 @@ export default function HostGamePage() {
             nieuwe lobby.
           </p>
         )}
-        <p className="host-game__label">
-          {locked
-            ? "De lobby is op slot: nieuwe spelers kunnen niet meer meedoen."
-            : `Ga naar ${window.location.host}/join en vul in:`}
-        </p>
-        <p className="host-game__code">{code}</p>
+        {/* Meedoen: adres en code links, QR-code rechts, samen in één paneel.
+            Op slot? Dan geen QR-code, want meedoen kan toch niet. */}
+        <section
+          className={`host-game__join${locked ? " host-game__join--locked" : ""}`}
+          aria-label="Zo doe je mee"
+        >
+          <div className="host-game__join-text">
+            <p className="host-game__label">
+              {locked ? (
+                "De lobby is op slot: nieuwe spelers kunnen niet meer meedoen."
+              ) : (
+                <>
+                  Ga naar <strong>{window.location.host}/join</strong> en vul
+                  in:
+                </>
+              )}
+            </p>
+            <p className="host-game__code">{code}</p>
+          </div>
+          {!locked && (
+            <figure className="host-game__qr">
+              <QRCode
+                type="canvas"
+                value={qrCodeValue}
+                size={200}
+                bordered={false}
+                bgColor="#ffffff"
+              />
+              <figcaption>Of scan met je telefoon</figcaption>
+            </figure>
+          )}
+        </section>
         <LockButton locked={locked} onToggle={toggleLock} disabled={busy} />
         <TimeLimitPicker
           value={timeLimitSec ?? null}
@@ -390,9 +418,6 @@ export default function HostGamePage() {
         <h1 className="host-game__title">
           {playerCount} {playerCount === 1 ? "speler" : "spelers"}
         </h1>
-        <Space className="QRCode">
-          <QRCode type="canvas" value={qrCodeValue} />
-        </Space>
         <ul className="host-game__players">
           {players.map((player) => (
             <li

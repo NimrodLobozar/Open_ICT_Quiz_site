@@ -26,6 +26,18 @@ export const QUESTION_BANK = [
   ]),
   bankQuestion(
     "SD",
+    1,
+    "Welke HTML-tag gebruik je voor het belangrijkste kopje van een webpagina?",
+    [["<head>"], ["<h1>", true], ["<header>"], ["<heading>"]],
+  ),
+  bankQuestion("SD", 1, "Waar staat de afkorting CSS voor?", [
+    ["Cascading Style Sheets", true],
+    ["Creative Style System"],
+    ["Computer Style Sheets"],
+    ["Colorful Style System"],
+  ]),
+  bankQuestion(
+    "SD",
     2,
     "Wat geeft [1, 2, 3].map((x) => x * 2) in JavaScript?",
     [["[2, 4, 6]", true], ["12"], ["[1, 2, 3, 1, 2, 3]"], ["6"]],
@@ -35,6 +47,18 @@ export const QUESTION_BANK = [
     2,
     "Welke HTTP-methode gebruik je meestal om iets nieuws aan te maken in een REST-API?",
     [["GET"], ["DELETE"], ["HEAD"], ["POST", true]],
+  ),
+  bankQuestion(
+    "SD",
+    2,
+    "Welke CSS-eenheid is altijd relatief aan de font-size van het root-element (html)?",
+    [["em"], ["vh"], ["rem", true], ["%"]],
+  ),
+  bankQuestion(
+    "SD",
+    2,
+    "Welke CSS-property gebruik je om de ruimte tussen de rand en de inhoud van een element te bepalen?",
+    [["margin"], ["padding", true], ["border"], ["spacing"]],
   ),
   bankQuestion(
     "SD",
@@ -48,6 +72,18 @@ export const QUESTION_BANK = [
     ["Single responsibility", true],
     ["Separation of concerns"],
   ]),
+  bankQuestion(
+    "SD",
+    3,
+    "Welke JavaScript-methode voegt één of meer elementen toe aan het einde van een array?",
+    [[".shift()"], [".push()", true], [".unshift()"], [".pop()"]],
+  ),
+  bankQuestion(
+    "SD",
+    3,
+    "Welk trefwoord gebruik je in JavaScript om een variabele te declareren die niet opnieuw toegewezen kan worden?",
+    [["var"], ["let"], ["const", true], ["static"]],
+  ),
   bankQuestion("SD", 4, "Wat is het verschil tussen == en === in JavaScript?", [
     ["== is sneller omdat het minder controleert"],
     ["== werkt alleen bij getallen, === bij alle types"],
@@ -60,6 +96,21 @@ export const QUESTION_BANK = [
     "Welk ontwerppatroon zorgt dat er van een klasse maar één object bestaat?",
     [["Observer"], ["Factory method"], ["Singleton", true], ["Decorator"]],
   ),
+  bankQuestion("SD", 4, "Wat is een closure in JavaScript?", [
+    ["Een methode om een lus direct te beëindigen"],
+    ["Een beveiligingsmechanisme tegen XSS-aanvallen"],
+    [
+      "Een functie die toegang behoudt tot variabelen uit haar outer scope",
+      true,
+    ],
+    ["Een automatische garbage collection actie"],
+  ]),
+  bankQuestion("SD", 4, "Wat is het hoofddoel van ARIA-attributen in HTML?", [
+    ["De animatiesnelheid in CSS optimaliseren"],
+    ["Standaard CSS-styling overschrijven"],
+    ["Hogere vindbaarheid in zoekmachines garanderen"],
+    ["Toegankelijkheid voor screenreaders verbeteren", true],
+  ]),
   bankQuestion("SD", 5, "Wat is een race condition?", [
     ["Een lus die nooit stopt omdat de voorwaarde altijd waar blijft"],
     ["Twee threads die eeuwig op elkaar wachten om een lock vrij te geven"],
@@ -74,6 +125,34 @@ export const QUESTION_BANK = [
     5,
     "Hoe snel groeit het aantal deelverzamelingen van een lijst met n elementen?",
     [["O(2ⁿ)", true], ["O(n²)"], ["O(n log n)"], ["O(n)"]],
+  ),
+  bankQuestion(
+    "SD",
+    5,
+    "Wat gebeurt er tijdens de Layout (reflow)-stap in de rendering pipeline van een browser?",
+    [
+      ["Het omzetten van netwerkbytes naar pixels"],
+      [
+        "Het berekenen van de exacte afmetingen en posities van elementen",
+        true,
+      ],
+      ["Het uitvoeren van JavaScript event listeners"],
+      ["Het comprimeren en cachen van bestanden"],
+    ],
+  ),
+  bankQuestion(
+    "SD",
+    5,
+    "Wat is het belangrijkste verschil tussen sessionStorage und localStorage?",
+    [
+      [
+        "sessionStorage wordt gewist zodra het tabblad of de browser sluit",
+        true,
+      ],
+      ["localStorage is versleuteld en sessionStorage niet"],
+      ["sessionStorage heeft een limiet van 5 MB en localStorage niet"],
+      ["Er is technisch geen verschil behalve de naam"],
+    ],
   ),
 
   // ---------- AI: artificial intelligence ----------

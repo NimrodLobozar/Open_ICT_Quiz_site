@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { saveGameResults } from '../../db/gameResults.js'
 import { gameManager } from '../../game/GameManager.js'
 import { getRanking } from '../../../src/utils/ranking.js'
-import { browser, loggedIn, PASSWORD, prisma, quizInput, resetDatabase } from './helpers.js'
+import { browser, loggedIn, PASSWORD, prisma, quizInput, resetDatabase, tokenFromMail } from './helpers.js'
 
 // Story 4 (eigen resultaten), 5 (profiel), 6 (account verwijderen) en 9 (apparaten).
 beforeEach(resetDatabase)
@@ -102,8 +102,13 @@ describe('profiel en wachtwoord (story 5)', () => {
       .patch('/api/me')
       .send({ username: 'Nieuwe Naam', email: 'NIEUW@student.hu.nl', skills: { SD: 4, AI: 9, Hack: 3, GD: 0 } })
     expect(response.status).toBe(200)
-    expect(response.body.user).toMatchObject({ username: 'Nieuwe Naam', email: 'nieuw@student.hu.nl', skills: { SD: 4, GD: 0 } })
+    // Het nieuwe adres staat klaar, maar telt pas na de link in de mail.
+    expect(response.body.user).toMatchObject({ username: 'Nieuwe Naam', pendingEmail: 'nieuw@student.hu.nl', skills: { SD: 4, GD: 0 } })
     expect((await agent.get('/api/auth/me')).body.user.username).toBe('Nieuwe Naam')
+
+    const token = await tokenFromMail('nieuw@student.hu.nl', 'email-bevestigen')
+    expect((await agent.post('/api/auth/verify-email').send({ token })).status).toBe(200)
+    expect((await agent.get('/api/auth/me')).body.user).toMatchObject({ email: 'nieuw@student.hu.nl', pendingEmail: null })
   })
 
   it('een nieuw e-mailadres moet een HU-adres zijn; het huidige adres mag blijven staan (story 14)', async () => {
@@ -184,6 +189,8 @@ describe('account verwijderen (story 6)', () => {
       ['Bram', 2],
     ])
     expect(results.some((r) => r.nickname === 'Emma')).toBe(false)
+    // Ook de vaardigheden zijn persoonlijk: die gaan mee weg.
+    expect(results[0].skills).toEqual({})
   })
 })
 

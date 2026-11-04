@@ -1,42 +1,39 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PageRings from "../../components/PageRings.jsx";
 import Podium from "../../components/Podium.jsx";
 import QuizHeader from "../../components/QuizHeader.jsx";
 import Scoreboard from "../../components/Scoreboard.jsx";
 import { useAuth } from '../../auth/AuthContext.jsx'
 import { api } from "../../api/http.js";
+import { getRanking } from "../../utils/ranking.js";
 import { SKILLS } from '../../utils/skills.js'
 import "./LeaderboardPage.css";
+
+// Waarop je kunt sorteren. id = het veld uit /api/leaderboard, label = de tekst op de knop (Nederlands).
+const METRICS = [
+  { id: 'totalScore', label: 'Totale score' },
+  { id: 'totalWins', label: 'Gewonnen' },
+  { id: 'gamesPlayed', label: 'Gespeeld' },
+  { id: 'averageScore', label: 'Gemiddelde score' },
+  { id: 'totalCorrect', label: 'Goede antwoorden' },
+]
 
 /**
  * @param {{ ranking: Array<{ id: number, name: string, skills: Record<string, number>, totalScore: number, totalWins: number, gamesPlayed: number, averageScore: number, totalCorrect: number }> }} props
  */
 export function Leaderboard({ ranking }) {
   const { user } = useAuth()
-  const [leaderboard, setLeaderboard] = useState(ranking)
-  const [activeOption, setActiveOption] = useState('Total Score')
+  const [activeMetric, setActiveMetric] = useState('totalScore')
   const [activeRole, setActiveRole] = useState(null)
 
-  const handleOptionClick = (option) => {
-    setActiveOption(option)
+  // Een sorteerknop zet het filter op beroepsrol uit; een rol-knop houdt de gekozen sortering.
+  const handleMetricClick = (metric) => {
+    setActiveMetric(metric)
     setActiveRole(null)
-    setLeaderboard(sortUsers(ranking, option))
   }
 
-  const handleRoleClick = (role) => {
-    setActiveRole(role)
-    setLeaderboard(sortUsers(ranking.filter((entry) => getSkillValue(entry, role) > 0), activeOption))
-  }
-
-  const me = user ? leaderboard.find((entry) => entry.id === user.id) : null
-  const podium = me ? [{
-    id: me.id,
-    nickname: me.name,
-    skillCode: activeRole,
-    skillValue: getSkillValue(me, activeRole),
-    score: getMetricValue(me, activeOption),
-    rank: getRank(leaderboard, me.id, activeOption),
-  }] : []
+  const rows = useMemo(() => rankBy(ranking, activeMetric, activeRole), [ranking, activeMetric, activeRole])
+  const me = user ? rows.find((row) => row.id === user.id) : null
 
   return (
     <div className="page end-screen">
@@ -47,14 +44,14 @@ export function Leaderboard({ ranking }) {
         <h1 className="end-screen__title">LEADERBOARD</h1>
 
         <div className="leaderboard-options">
-            {['Total Score', 'Total Wins', 'Games Played', 'Average Score', 'Total Correct'].map((option) => (
+            {METRICS.map(({ id, label }) => (
               <button
-                key={option}
+                key={id}
                 type="button"
-                className={`leaderboard-options-btn ${!activeRole && activeOption === option ? 'leaderboard-options-btn-active' : ''}`}
-                onClick={() => handleOptionClick(option)}
+                className={`leaderboard-options-btn ${!activeRole && activeMetric === id ? 'leaderboard-options-btn-active' : ''}`}
+                onClick={() => handleMetricClick(id)}
               >
-                {option}
+                {label}
               </button>
             ))}
         </div>
@@ -65,56 +62,41 @@ export function Leaderboard({ ranking }) {
                 key={code}
                 type="button"
                 className={`leaderboard-options-btn leaderboard-role-btn ${activeRole === code ? 'leaderboard-options-btn-active' : ''}`}
-                onClick={() => handleRoleClick(code)}
+                onClick={() => setActiveRole(code)}
               >
                 {code}
               </button>
             ))}
         </div>
 
-        <Podium ranking={podium} />
-        <Scoreboard
-          rows={leaderboard.map((user) => ({
-            id: user.id,
-            nickname: user.name,
-            skillCode: activeRole,
-            skillValue: getSkillValue(user, activeRole),
-            score: getMetricValue(user, activeOption),
-            rank: getRank(leaderboard, user.id, activeOption),
-          }))}
-          myPlayerId={user?.id}
-          columns={1}
-        />
+        <Podium ranking={me ? [me] : []} />
+        <Scoreboard rows={rows} myPlayerId={user?.id} columns={1} />
       </main>
     </div>
   );
 }
 
-function getMetricValue(user, option) {
-  const values = {
-    'Total Score': user.totalScore,
-    'Total Wins': user.totalWins,
-    'Games Played': user.gamesPlayed,
-    'Average Score': user.averageScore,
-    'Total Correct': user.totalCorrect,
-  }
-  return values[option] ?? user.totalScore
+/**
+ * Rijen voor podium en scoreboard, met de plaats uit getRanking (src/utils/ranking.js).
+ * Zo werkt een gedeelde plaats hier precies zoals op het eindscherm: gelijke score = zelfde plaats (1, 2, 2, 4),
+ * en binnen een gelijke stand op naam.
+ * Met een beroepsrol gekozen: alleen spelers die die vaardigheid hebben ingevuld (hoger dan 0).
+ */
+function rankBy(users, metric, role) {
+  const visible = role ? users.filter((entry) => getSkillValue(entry, role) > 0) : users
+  return getRanking(
+    visible.map((entry) => ({
+      id: entry.id,
+      nickname: entry.name,
+      skillCode: role,
+      skillValue: getSkillValue(entry, role),
+      score: entry[metric] ?? 0,
+    })),
+  )
 }
 
 function getSkillValue(user, role) {
   return role ? user.skills?.[role] ?? 0 : null
-}
-
-function sortUsers(users, option) {
-  return [...users].sort((first, second) =>
-        getMetricValue(second, option) - getMetricValue(first, option) || first.name.localeCompare(second.name),
-  )
-}
-
-function getRank(users, userId, option) {
-  const current = users.find((user) => user.id === userId)
-  if (!current) return 0
-  return users.filter((user) => getMetricValue(user, option) > getMetricValue(current, option)).length + 1
 }
 
 export default function LeaderboardPage() {
@@ -123,10 +105,7 @@ export default function LeaderboardPage() {
 
     useEffect(() => {
         api('/leaderboard')
-        .then((users) => {
-            const sortedUsers = [...users].sort((a, b) => b.totalScore - a.totalScore || a.name.localeCompare(b.name));
-            setRanking(sortedUsers);
-        })
+        .then(setRanking)
         .catch((apiError) => setError(apiError.message));
     }, []);
 

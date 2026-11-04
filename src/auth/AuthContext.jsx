@@ -46,8 +46,10 @@ export function AuthProvider({ children }) {
   }, [])
 
   const logout = useCallback(async () => {
-    // Ook als de server niet antwoordt: hier in de browser ben je hoe dan ook uitgelogd.
-    await api('/auth/logout', { method: 'POST' }).catch(() => {})
+    // Alleen als de server het bevestigt. De login-cookie is httpOnly: alleen de server kan hem wissen.
+    // Mislukt het (bijv. geen wifi), dan zou je na verversen gewoon weer ingelogd zijn, en dat is gevaarlijk
+    // op een gedeelde laptop in de klas. Daarom gooit dit dan een fout en toont de knop een melding.
+    await api('/auth/logout', { method: 'POST' })
     setUser(null)
   }, [])
 

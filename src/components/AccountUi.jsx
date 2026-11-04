@@ -1,5 +1,5 @@
 import { useId, useState } from 'react'
-import { checkPassword } from '../utils/passwordRules.js'
+import { checkPassword, MAX_PASSWORD_BYTES } from '../utils/passwordRules.js'
 import { SKILLS } from '../utils/skills.js'
 import { initials } from '../auth/AuthContext.jsx'
 import './AccountUi.css'
@@ -97,9 +97,16 @@ export function PasswordField(props) {
 
 /** De wachtwoordeisen als vinkjes, terwijl je typt (story 1). Dezelfde regels als de server (passwordRules.js). */
 export function PasswordChecklist({ password, id }) {
+  // De server weigert ook een wachtwoord van meer dan 72 bytes (isStrongPassword). Dat staat hier als
+  // extra vinkje, zodat de lijst laat zien wat de server echt controleert. Bij gewone letters is 1 teken 1 byte.
+  const notTooLong = {
+    id: 'maxLength',
+    label: `Niet langer dan ${MAX_PASSWORD_BYTES} tekens`,
+    ok: new TextEncoder().encode(String(password ?? '')).length <= MAX_PASSWORD_BYTES,
+  }
   return (
     <ul className="ui-checklist" id={id} aria-label="Eisen voor je wachtwoord">
-      {checkPassword(password).map((rule) => (
+      {[...checkPassword(password), notTooLong].map((rule) => (
         <li key={rule.id} className={rule.ok ? 'is-ok' : ''}>
           <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
             {rule.ok ? <path d="M4 12l5 5L20 6" /> : <circle cx="12" cy="12" r="7" />}

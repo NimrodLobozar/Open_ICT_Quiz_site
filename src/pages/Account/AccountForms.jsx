@@ -49,6 +49,11 @@ export function ProfileForm({ withSkills = false, onSaved }) {
     <form className="ui-form" onSubmit={submit} noValidate>
       <TextField label="Gebruikersnaam" autoComplete="username" maxLength={20} value={username} onChange={(e) => setUsername(e.target.value)} error={errors.username} />
       <TextField label="E-mailadres" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} error={errors.email} />
+      {/* Een nieuw adres telt pas na de link in de mail, zodat niemand het adres van een ander kan "bezetten". */}
+      <Notice type="success">
+        {user.pendingEmail &&
+          `We hebben een bevestigingslink gestuurd naar ${user.pendingEmail}. Tot je daarop klikt, blijft ${user.email} je e-mailadres.`}
+      </Notice>
       {withSkills && (
         <fieldset className="ui-fieldset" id="vaardigheden">
           <legend className="ui-label">Jouw vaardigheden (0–5)</legend>

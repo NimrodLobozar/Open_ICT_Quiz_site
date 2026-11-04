@@ -138,3 +138,22 @@ export function verifyEmailMail(to, username, link) {
     ].join('\n'),
   })
 }
+
+/** Je hebt op Instellingen een nieuw e-mailadres ingevuld; het wordt pas je adres na deze link. */
+export function newEmailMail(to, username, link) {
+  return sendMail({
+    to,
+    subject: 'Open ICT Quiz: bevestig je nieuwe e-mailadres',
+    text: [
+      `Hoi ${username}!`,
+      '',
+      'Je wilt dit adres gebruiken voor je account bij de Open ICT Quiz. Bevestig het via deze link (24 uur geldig):',
+      link,
+      '',
+      'Tot je op de link klikt, blijft je oude adres in gebruik.',
+      'Heb je dit niet zelf gedaan? Dan hoef je niets te doen; er verandert niets.',
+      '',
+      'Groet, de Open ICT Quiz',
+    ].join('\n'),
+  })
+}

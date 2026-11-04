@@ -1,3 +1,4 @@
+import { App as AntApp } from 'antd'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { homeFor, initials, isStaff, useAuth } from '../auth/AuthContext.jsx'
 import './QuizHeader.css'
@@ -12,14 +13,20 @@ import './QuizHeader.css'
  */
 export default function QuizHeader({ code = null, large = false, admin = false }) {
   const { user, logout } = useAuth()
+  const { message } = AntApp.useApp()
   const navigate = useNavigate()
   const { pathname } = useLocation()
   // Op het inlogscherm zelf heeft een knop "Inloggen" geen zin; dan bieden we meedoen met een code aan.
   const onAuthPage = ['/inloggen', '/registreren'].includes(pathname)
 
   async function handleLogout() {
-    await logout()
-    navigate('/inloggen', { replace: true })
+    try {
+      await logout()
+      navigate('/inloggen', { replace: true })
+    } catch {
+      // Niet doen alsof het gelukt is: je bent op de server nog ingelogd.
+      message.error('Uitloggen is niet gelukt. Controleer je internetverbinding en probeer het opnieuw.')
+    }
   }
 
   // Docenten en beheerders gaan naar hun account in het beheerportaal, studenten naar Mijn account.

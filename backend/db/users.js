@@ -15,6 +15,8 @@ export function publicUser(user) {
     id: user.id,
     username: user.username,
     email: user.email,
+    // Nieuw adres dat nog bevestigd moet worden, of null. Instellingen toont dan "check je mail".
+    pendingEmail: user.pendingEmail ?? null,
     role: user.role,
     skills: user.skills ?? {},
     createdAt: user.createdAt,
@@ -114,7 +116,8 @@ export function findUserById(id) {
  */
 export async function deleteUser(id) {
   await prisma.$transaction([
-    prisma.gameResult.updateMany({ where: { userId: id }, data: { userId: null, nickname: DELETED_PLAYER_NAME } }),
+    // Naam én vaardigheden weg: die zijn persoonlijk. Score en plaats blijven, zodat de eindstand van de anderen klopt.
+    prisma.gameResult.updateMany({ where: { userId: id }, data: { userId: null, nickname: DELETED_PLAYER_NAME, skills: {} } }),
     prisma.user.delete({ where: { id } }),
   ])
 }

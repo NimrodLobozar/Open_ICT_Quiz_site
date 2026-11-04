@@ -1,12 +1,14 @@
 import { Router } from 'express'
 import { noStore, requireAuth, requireRole } from '../auth/middleware.js'
+import { createOneTimeToken, PASSWORD_PURPOSES } from '../auth/oneTimeTokens.js'
 import { hashPassword, verifyPassword } from '../auth/password.js'
 import { passwordCheckLimiter } from '../auth/rateLimits.js'
 import { deleteOtherSessions, listSessions } from '../auth/sessions.js'
 import { parseHuEmail, parsePassword, parseUsername } from '../auth/validate.js'
 import { prisma } from '../db/prisma.js'
 import { getMyResults } from '../db/results.js'
-import { deleteUser, publicUser, updateUser } from '../db/users.js'
+import { deleteUser, findUserByEmail, publicUser, updateUser } from '../db/users.js'
+import { appUrl, newEmailMail } from '../mail/sendMail.js'
 import { cleanQuizDefaults } from '../quiz/quizRules.js'
 import { cleanAccountSkills } from '../../src/utils/skills.js'
 import { ApiError } from '../utils/ApiError.js'
@@ -30,15 +32,33 @@ router.patch('/', async (request, response) => {
   if (body.username !== undefined) Object.assign(data, parseUsername(body.username))
   // Een nieuw adres moet een HU-adres zijn (story 14). Het huidige adres mag blijven staan,
   // ook als dat geen HU-adres is (bijv. de seed-beheerder), want het formulier stuurt het altijd mee.
-  if (body.email !== undefined && body.email.trim?.().toLowerCase() !== request.user.email) {
-    data.email = parseHuEmail(body.email)
+  // typeof-check: bij email: null of een getal geeft parseHuEmail een nette 400 in plaats van een crash.
+  const typed = typeof body.email === 'string' ? body.email.trim().toLowerCase() : body.email
+  let newEmail = null
+  if (body.email !== undefined && typed === request.user.email) {
+    // Terug naar het huidige adres: een openstaande wijziging vervalt.
+    data.pendingEmail = null
+  } else if (body.email !== undefined) {
+    newEmail = parseHuEmail(body.email)
+    // Het nieuwe adres wordt pas echt je adres als je het bevestigt via de mail (zie useVerifyToken).
+    // Anders kon je het HU-adres van een ander "bezetten" zonder toegang tot die mailbox.
+    if (await findUserByEmail(newEmail)) {
+      throw new ApiError('EMAIL_TAKEN', 'Dit e-mailadres heeft al een account.', 409)
+    }
+    data.pendingEmail = newEmail
   }
   if (body.skills !== undefined) data.skills = cleanAccountSkills(body.skills)
 
   const user = await updateUser(request.user.id, data)
-  // Nieuw e-mailadres? Dan werken oude "wachtwoord vergeten"-links (naar het oude adres) niet meer.
-  if (data.email && data.email !== request.user.email) {
-    await prisma.oneTimeToken.deleteMany({ where: { userId: user.id, usedAt: null } })
+  if (newEmail) {
+    // Alleen de nieuwste bevestigingslink werkt: een oude link mag geen ander (eerder getypt) adres bevestigen.
+    await prisma.oneTimeToken.deleteMany({ where: { userId: user.id, purpose: 'VERIFY', usedAt: null } })
+    const token = await createOneTimeToken(user.id, 'VERIFY')
+    // Niet wachten op de mail: een trage maildienst mag het opslaan niet ophouden.
+    // Komt de mail niet aan, dan sla je het adres gewoon nog een keer op.
+    newEmailMail(newEmail, user.username, `${appUrl()}/email-bevestigen?token=${token}`).catch((error) =>
+      console.error('Bevestigingsmail voor nieuw adres niet verstuurd:', error.message),
+    )
   }
   response.json({ user: publicUser(user) })
 })
@@ -57,9 +77,18 @@ router.post('/password', passwordCheckLimiter, async (request, response) => {
   if (password === currentPassword) {
     throw new ApiError('PASSWORD_SAME', 'Je nieuwe wachtwoord mag niet hetzelfde zijn als je huidige wachtwoord.', 400)
   }
-  await updateUser(request.user.id, { passwordHash: await hashPassword(password) })
-  // Andere apparaten uitloggen: was je wachtwoord gelekt, dan is de indringer er nu uit. Dit apparaat blijft ingelogd.
-  await deleteOtherSessions(request.user.id, request.authSession.id)
+  const passwordHash = await hashPassword(password)
+  const userId = request.user.id
+  // Alles in één transactie, zodat het nooit half gebeurt:
+  // - nieuw wachtwoord;
+  // - openstaande "wachtwoord vergeten"-links vervallen. Anders kon iemand met een oude link
+  //   jouw nieuwe wachtwoord meteen weer overschrijven;
+  // - andere apparaten uitloggen: was je wachtwoord gelekt, dan is de indringer er nu uit. Dit apparaat blijft ingelogd.
+  await prisma.$transaction([
+    prisma.user.update({ where: { id: userId }, data: { passwordHash } }),
+    prisma.oneTimeToken.deleteMany({ where: { userId, purpose: { in: PASSWORD_PURPOSES }, usedAt: null } }),
+    prisma.session.deleteMany({ where: { userId, id: { not: request.authSession.id } } }),
+  ])
   response.json({ ok: true })
 })
 

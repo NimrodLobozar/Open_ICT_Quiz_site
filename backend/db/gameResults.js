@@ -1,4 +1,5 @@
 import { prisma } from './prisma.js'
+import { DELETED_PLAYER_NAME } from './users.js'
 
 /**
  * Slaat de eindstand van een game op: één GameSession met een GameResult per speler.
@@ -21,14 +22,38 @@ export async function saveGameResults(game) {
 }
 
 async function insertSession(record) {
+  // Tweede poging alleen als een account of de quiz precies tijdens het opslaan verdween (foreign key, P2003).
+  // Bij die poging zien we dat het weg is en slaan we de rij op zonder die koppeling.
+  try {
+    return await insertOnce(record)
+  } catch (error) {
+    if (error?.code !== 'P2003') throw error
+    return insertOnce(record)
+  }
+}
+
+async function insertOnce(record) {
   const { results, ...session } = record
+  // Is de quiz tijdens de ronde verwijderd, dan bestaat quizId niet meer. De titel staat er als kopie bij,
+  // dus de uitslag blijft leesbaar, net als bij een quiz die ná het opslaan wordt verwijderd (onDelete: SetNull).
+  // Zonder deze check zou de hele eindstand niet opgeslagen worden, voor iedereen.
+  if (session.quizId !== null && session.quizId !== undefined) {
+    const quiz = await prisma.quiz.findUnique({ where: { id: session.quizId }, select: { id: true } })
+    if (!quiz) session.quizId = null
+  }
+
   // Heeft een speler tijdens de ronde zijn account verwijderd, dan bestaat zijn userId niet meer.
-  // Zonder deze check zou de hele eindstand niet opgeslagen worden (foreign key), voor iedereen.
   const userIds = [...new Set(results.map((result) => result.userId).filter((id) => id !== null))]
   const existing = userIds.length
     ? new Set((await prisma.user.findMany({ where: { id: { in: userIds } }, select: { id: true } })).map((u) => u.id))
     : new Set()
-  const rows = results.map((result) => ({ ...result, userId: existing.has(result.userId) ? result.userId : null }))
+  const rows = results.map((result) => {
+    if (result.userId === null || existing.has(result.userId)) return result
+    // Account verwijderd: dezelfde anonieme rij als deleteUser maakt (backend/db/users.js).
+    // Naam en vaardigheden komen nog uit het geheugen van de game, maar die mogen niet opnieuw opgeslagen worden.
+    // Echte gasten (userId was al null) houden gewoon hun naam.
+    return { ...result, userId: null, nickname: DELETED_PLAYER_NAME, skills: {} }
+  })
 
   // Eén transactie: of alles staat erin, of niets; nooit een half scoreboard.
   // De rijen één voor één, zodat we per rij het id weten (createMany geeft geen gegarandeerde volgorde terug).
@@ -57,12 +82,17 @@ export async function claimGuestResults(game, playerId, user) {
   const player = game.getPlayer(playerId)
   // Speelde hij al met een account, dan staat de score al goed.
   if (!player || player.userId !== null || player.isBot) return 0
+  // Speelt dit account zelf al mee in deze game (bijv. in een andere browser)? Dan niets koppelen:
+  // anders staat hetzelfde account twee keer in dezelfde eindstand. Zelfde regel als game.linkAccount.
+  if ([...game.players.values()].some((other) => other.userId === user.id)) return 0
   let claimed = 0
   for (const { resultIds } of game.savedRounds.values()) {
     const resultId = (await resultIds).get(playerId)
     if (!resultId) continue // in deze ronde speelde hij niet mee
     const { count } = await prisma.gameResult.updateMany({
-      where: { id: resultId, userId: null },
+      // Ook in de database: alleen als dit account nog geen uitslag in deze ronde heeft.
+      // Dat vangt ook een account dat in die ronde meedeed en de game intussen verliet.
+      where: { id: resultId, userId: null, session: { results: { none: { userId: user.id } } } },
       data: { userId: user.id },
     })
     claimed += count

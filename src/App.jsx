@@ -1,5 +1,21 @@
 import { Link, Navigate, Route, Routes } from "react-router-dom";
+import RequireAuth from "./auth/RequireAuth.jsx";
 import QuizHeader from "./components/QuizHeader.jsx";
+import AccountPage from "./pages/Account/AccountPage.jsx";
+import SettingsPage from "./pages/Account/SettingsPage.jsx";
+import AdminAccountPage from "./pages/Admin/AdminAccountPage.jsx";
+import OverviewPage from "./pages/Admin/OverviewPage.jsx";
+import QuizEditorPage from "./pages/Admin/QuizEditorPage.jsx";
+import QuizzesPage from "./pages/Admin/QuizzesPage.jsx";
+import ResultsPage from "./pages/Admin/ResultsPage.jsx";
+import UsersPage from "./pages/Admin/UsersPage.jsx";
+import AuthPage from "./pages/Auth/AuthPage.jsx";
+import ForgotPasswordPage from "./pages/Auth/ForgotPasswordPage.jsx";
+import PrivacyPage from "./pages/Auth/PrivacyPage.jsx";
+import SetPasswordPage from "./pages/Auth/SetPasswordPage.jsx";
+import VerifyEmailPage from "./pages/Auth/VerifyEmailPage.jsx";
+import HomePage from "./pages/Home/HomePage.jsx";
+import HostChoicePage from "./pages/HostChoice/HostChoicePage.jsx";
 import EndScreenPageHost from "./pages/EndScreenPage_Host/EndScreenPage.jsx";
 import EndScreenPagePlayer from "./pages/EndScreenPage_Player/EndScreenPage.jsx";
 import HostGamePage, {
@@ -8,23 +24,23 @@ import HostGamePage, {
 import JoinPage from "./pages/JoinPage/JoinPage.jsx";
 import LobbyPage from "./pages/Lobby/LobbyPage.jsx";
 import LobbyPlayer from "./pages/Lobby/LobbyPlayer.jsx";
-import PlaceholderPage from "./pages/PlaceholderPage.jsx";
 import PlayerGamePage from "./pages/PlayerGamePage/PlayerGamePage.jsx";
 import PlayerQuestionPage from "./pages/QuestionPage_Player/PlayerQuestionPage.jsx";
 import PlayerResultPage from "./pages/QuestionPage_Player/PlayerResultPage.jsx";
-import LeaderboardPage from "./pages/QuestionPage_Host/LeaderboardPage.jsx";
+import LeaderboardPage from "./pages/Leaderboard/LeaderboardPage.jsx";
 import QuestionAnswersPage from "./pages/QuestionPage_Host/QuestionAnswersPage.jsx";
 import QuestionPreviewPage from "./pages/QuestionPage_Host/QuestionPreviewPage.jsx";
 import TemplatePage from "./pages/_Template/TemplatePage.jsx";
+
+// Rollen die eigen quizzen mogen maken en hosten.
+const STAFF = ["TEACHER", "ADMIN"];
 
 export default function App() {
   return (
     <>
       <Routes>
-        {/* TODO(team, volgende sprint): echte startpagina met keuze tussen hosten en meedoen.
-            Tot die er is, sturen we iedereen op de voorpagina door naar het joinformulier.
-            Werkt voor elk adres (localhost, IP of domein), want het kijkt alleen naar het pad. */}
-        <Route path="/" element={<Navigate to="/join" replace />} />
+        {/* Startpagina: kiezen tussen meedoen en hosten. */}
+        <Route path="/" element={<HomePage />} />
         {/* Linkjes naar alle pagina's, voor het team. Niet gelinkt: je moet de URL kennen. */}
         <Route
           path="/dev"
@@ -33,7 +49,7 @@ export default function App() {
               <QuizHeader />
               <main className="page__main">
                 <h1>Welcome to the Quiz</h1>
-                <Link to="/host/new">Quiz hosten (test)</Link>
+                <Link to="/">Startpagina (meedoen of hosten)</Link>
                 <br />
                 <Link to="/join">Meedoen</Link>
                 <br />
@@ -65,24 +81,44 @@ export default function App() {
         <Route path="/join" element={<JoinPage />} />
         <Route path="/join/:code" element={<JoinPage />} />
         <Route path="/play/:code" element={<PlayerGamePage />} />
+        {/* Hosten mag iedereen, ook een gast: die krijgt een willekeurige quiz.
+            Een eigen quiz (?quiz=<id>) mag alleen een docent of beheerder; dat controleert de server. */}
         <Route path="/host/new" element={<HostCreatePage />} />
+        {/* Daarvoor: kiezen wat je host (willekeurig, of later een bestaande quiz). */}
+        <Route path="/host" element={<HostChoicePage />} />
         <Route path="/host/:code" element={<HostGamePage />} />
+        <Route path="/leaderboard" element={<RequireAuth><LeaderboardPage /></RequireAuth>} />
         {/* Demo's met nepdata, om de designs te bekijken. */}
         <Route path="/end" element={<EndScreenPageHost />} />
         <Route path="/end-player" element={<EndScreenPagePlayer />} />
         <Route path="/question" element={<QuestionPreviewPage />} />
         <Route path="/question-answers" element={<QuestionAnswersPage />} />
-        <Route path="/leaderboard" element={<LeaderboardPage />} />
         <Route path="/player-question" element={<PlayerQuestionPage />} />
         <Route path="/player-result" element={<PlayerResultPage />} />
         {/* Sjabloon om te kopiëren voor een nieuwe pagina. */}
         <Route path="/template" element={<TemplatePage />} />
-        {/* TODO(team, L1): echte pagina's zodra er accounts zijn. */}
-        <Route path="/login" element={<PlaceholderPage title="Inloggen" />} />
-        <Route
-          path="/account/nieuw"
-          element={<PlaceholderPage title="Account maken" />}
-        />
+        {/* Accounts (sprint 2): inloggen, registreren, wachtwoord vergeten. */}
+        <Route path="/inloggen" element={<AuthPage mode="login" />} />
+        <Route path="/registreren" element={<AuthPage mode="register" />} />
+        <Route path="/wachtwoord-vergeten" element={<ForgotPasswordPage />} />
+        <Route path="/wachtwoord-instellen" element={<SetPasswordPage />} />
+        <Route path="/email-bevestigen" element={<VerifyEmailPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        {/* Oude adressen uit sprint 1. */}
+        <Route path="/login" element={<Navigate to="/inloggen" replace />} />
+        <Route path="/account/nieuw" element={<Navigate to="/registreren" replace />} />
+        <Route path="/profiel" element={<Navigate to="/account" replace />} />
+        {/* Mijn account: voor iedereen die is ingelogd. */}
+        <Route path="/account" element={<RequireAuth><AccountPage /></RequireAuth>} />
+        <Route path="/account/instellingen" element={<RequireAuth><SettingsPage /></RequireAuth>} />
+        {/* Admin-portaal: docenten en beheerders; Gebruikers alleen beheerders. */}
+        <Route path="/admin" element={<RequireAuth roles={STAFF}><OverviewPage /></RequireAuth>} />
+        <Route path="/admin/quizzen" element={<RequireAuth roles={STAFF}><QuizzesPage /></RequireAuth>} />
+        <Route path="/admin/quizzen/nieuw" element={<RequireAuth roles={STAFF}><QuizEditorPage key="nieuw" /></RequireAuth>} />
+        <Route path="/admin/quizzen/:id" element={<RequireAuth roles={STAFF}><QuizEditorPage /></RequireAuth>} />
+        <Route path="/admin/gebruikers" element={<RequireAuth roles={["ADMIN"]}><UsersPage /></RequireAuth>} />
+        <Route path="/admin/uitslagen" element={<RequireAuth roles={STAFF}><ResultsPage /></RequireAuth>} />
+        <Route path="/admin/account" element={<RequireAuth roles={STAFF}><AdminAccountPage /></RequireAuth>} />
         {/* Onbekende URL: ook naar het joinformulier, in plaats van een lege pagina. */}
         <Route path="*" element={<Navigate to="/join" replace />} />
       </Routes>

@@ -5,10 +5,13 @@ export const EVENTS = {
   GAME_SYNC: "game:sync",
   HOST_START: "host:start",
   HOST_NEXT: "host:next",
+  HOST_PAUSE: "host:pause", // "Tijd stoppen": klok stil, vraag blijft staan
   HOST_RESTART: "host:restart",
   PLAYER_ANSWER: "player:answer",
   HOST_KICK_PLAYER: "host:kick-player", // alleen in de lobby
   HOST_LOCK: "host:lock", // alleen in de lobby
+  HOST_SET_TIME_LIMIT: "host:set-time-limit", // alleen in de lobby
+  HOST_SET_QUESTION_COUNT: "host:set-question-count",
   DEV_FINISH: "dev:finish", // alleen in development
 
   // Server → client

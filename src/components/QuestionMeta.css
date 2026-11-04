@@ -1,0 +1,46 @@
+/* Vaardigheid en niveau van een vraag (tussenstand). Kleuren uit index.css. */
+.question-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  font-size: 15px;
+}
+
+.question-meta--large {
+  font-size: 20px;
+}
+
+.question-meta__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 2px solid var(--quiz-border);
+  background: var(--quiz-surface);
+  color: var(--quiz-text);
+  font-weight: 700;
+}
+
+.question-meta__dot {
+  width: 0.7em;
+  height: 0.7em;
+  border-radius: 50%;
+}
+
+.question-meta__level {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.question-meta__level span {
+  width: 0.45em;
+  height: 0.9em;
+  border-radius: 2px;
+  background: var(--quiz-border);
+}
+
+.question-meta__level span.is-on {
+  background: var(--quiz-primary);
+}

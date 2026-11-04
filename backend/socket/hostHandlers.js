@@ -60,6 +60,20 @@ export function registerHostHandlers(io, socket, game) {
     }
   });
 
+  // "Tijd stoppen": de klok staat stil, maar de vraag blijft op het scherm (om te bespreken).
+  // Daarna gaat host:next naar de tussenstand. Zelfde check als hierboven tegen een klik op een oud scherm.
+  socket.on(EVENTS.HOST_PAUSE, ({ questionIndex } = {}, ack) => {
+    try {
+      if (questionIndex !== game.questionIndex)
+        throw new GameError("WRONG_PHASE", "Dit scherm is al voorbij.");
+      game.pauseTimer();
+      afterPhaseChange(io, game);
+      ack?.({ ok: true });
+    } catch (error) {
+      ack?.(toErrorResponse(error));
+    }
+  });
+
   socket.on(EVENTS.HOST_RESTART, (_payload, ack) => {
     try {
       // 1. Mag het? Alleen na het podium.
@@ -102,6 +116,28 @@ export function registerHostHandlers(io, socket, game) {
       game.setLocked(locked);
       sendLobbyUpdate(io, game);
       ack?.({ ok: true, locked: game.locked });
+    } catch (error) {
+      ack?.(toErrorResponse(error));
+    }
+  });
+
+  // Tijd per vraag kiezen in de lobby. Game.setTimeLimit controleert of het mag;
+  // lobby:update vertelt daarna iedereen (host én spelers) de nieuwe tijd.
+  socket.on(EVENTS.HOST_SET_TIME_LIMIT, ({ seconds = null } = {}, ack) => {
+    try {
+      game.setTimeLimit(seconds);
+      sendLobbyUpdate(io, game);
+      ack?.({ ok: true, timeLimitSec: game.timeLimitSec });
+    } catch (error) {
+      ack?.(toErrorResponse(error));
+    }
+  });
+
+  socket.on(EVENTS.HOST_SET_QUESTION_COUNT, ({ count } = {}, ack) => {
+    try {
+      game.setQuestionCount(count);
+      sendLobbyUpdate(io, game);
+      ack?.({ ok: true, questionCount: game.questionCount });
     } catch (error) {
       ack?.(toErrorResponse(error));
     }

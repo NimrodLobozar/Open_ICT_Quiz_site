@@ -22,10 +22,22 @@ describe('Game.toSessionRecord', () => {
 
     expect(record).toMatchObject({ code: '482913', round: 1, startedAt: game.startedAt, endedAt })
     expect(record.results).toEqual([
-      { nickname: 'Anna', score: 800, rank: 1, correctCount: 1, skills: { Frontend: 4 }, isBot: false },
-      { nickname: 'Bram', score: 800, rank: 1, correctCount: 1, skills: {}, isBot: false },
-      { nickname: 'Cas', score: 0, rank: 3, correctCount: 0, skills: {}, isBot: true },
+      { nickname: 'Anna', score: 800, rank: 1, correctCount: 1, skills: { Frontend: 4 }, isBot: false, userId: null },
+      { nickname: 'Bram', score: 800, rank: 1, correctCount: 1, skills: {}, isBot: false, userId: null },
+      { nickname: 'Cas', score: 0, rank: 3, correctCount: 0, skills: {}, isBot: true, userId: null },
     ])
+  })
+
+  it('bewaart de quiz, het aantal vragen en het account van een ingelogde speler (sprint 2)', () => {
+    const game = new Game('482913', { quizId: 7, quizTitle: 'Git & GitHub' })
+    const emma = game.addPlayer('Emma', { userId: 42 })
+    game.addPlayer('Gast')
+    expect(emma.isVerified).toBe(true)
+    game.finish()
+
+    const record = game.toSessionRecord()
+    expect(record).toMatchObject({ quizId: 7, quizTitle: 'Git & GitHub', questionCount: game.totalQuestions })
+    expect(record.results.map((result) => result.userId).sort()).toEqual([42, null])
   })
 
   it('telt de ronde op na een herstart', () => {

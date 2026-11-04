@@ -54,6 +54,13 @@
   font-variant-numeric: tabular-nums; /* alle cijfers even breed, dan springen scores niet */
 }
 
+.podium__skill {
+  flex: 0 0 auto;
+  font-size: 18px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
 /* Plaats 1 valt op: volle breedte, gevulde balk en grotere letters. */
 .podium__place--first {
   width: 100%;
@@ -95,6 +102,7 @@
   }
   .podium__rank { font-size: 32px; }
   .podium__name { font-size: 20px; }
+  .podium__skill { font-size: 15px; }
   .podium__score { font-size: 18px; }
   .podium__place--first .podium__bar { min-height: 80px; }
   .podium__place--first .podium__rank { font-size: 44px; }

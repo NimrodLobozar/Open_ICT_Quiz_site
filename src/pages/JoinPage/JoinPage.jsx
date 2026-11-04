@@ -1,247 +1,197 @@
-import { Alert, Button, Card, Form, Input, Slider, Typography } from 'antd'
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { api } from '../../api/http.js'
 import { useAuth } from '../../auth/AuthContext.jsx'
+import { Notice, SkillSliders, TextField } from '../../components/AccountUi.jsx'
+import PageRings from '../../components/PageRings.jsx'
 import QuizHeader from '../../components/QuizHeader.jsx'
 import { joinStartSkills } from '../../utils/skills.js'
-import { LoginForm as AccountLoginForm } from '../Auth/AuthPage.jsx'
+import { LoginForm } from '../Auth/AuthPage.jsx'
+import '../Auth/AuthPage.css'
 import './JoinPage.css'
-
-const skillDefinitions = [
-  { label: 'SD', color: '#f59e0b' },
-  { label: 'AI', color: '#14b8a6' },
-  { label: 'TI', color: '#facc15' },
-  { label: 'CSC', color: '#6366f1' },
-  { label: 'GD', color: '#22c55e' },
-  { label: 'BI', color: '#3b82f6' },
-]
 
 // Als de game geen quiz uit de database heeft (oude games), tonen we deze titel.
 const DEFAULT_QUIZ_TITLE = 'Open ICT Quiz'
+const INVALID_CODE = 'Deze code bestaat niet. Controleer de 6 cijfers op het grote scherm.'
 
+/**
+ * /join en /join/:code. Zelfde stijl als /inloggen (AuthPage.css): cirkels op de achtergrond,
+ * wisselknop bovenaan en één kaart in het midden.
+ * Stap 1: code invullen (of eerst inloggen). Stap 2 (/join/:code): naam en vaardigheden.
+ */
 export default function JoinPage() {
   const { code } = useParams()
   const location = useLocation()
   const navigate = useNavigate()
-  const [locationNotice, setLocationNotice] = useState('')
-  const [isNoticeClosing, setIsNoticeClosing] = useState(false)
   const [game, setGame] = useState(null)
-  const isInvalidCode = code && !/^\d{6}$/.test(code)
-  const [codeStatus, setCodeStatus] = useState(code ? 'checking' : 'idle')
+  // Melding na een foute code in de link (bijv. /join/999999). Staat boven het codeveld.
+  const [notice, setNotice] = useState(null)
 
   useEffect(() => {
-    if (isInvalidCode) {
-      navigate('/join', {
-        replace: true,
-        state: { locationNotice: 'Ongeldige code. Voer een 6-cijferige code in.' },
-      })
-      return
-    }
-
-    if (!code) {
-      setCodeStatus('idle')
+    setGame(null)
+    if (!code) return
+    if (!/^\d{6}$/.test(code)) {
+      navigate('/join', { replace: true, state: { notice: INVALID_CODE } })
       return
     }
 
     // Voorkomt dat een oud antwoord nog iets doet als de code intussen veranderd is.
     let cancelled = false
-
     // Games leven in het geheugen van de server (aangemaakt door de host), dus we vragen het daar na.
-    async function checkCode() {
-      try {
-        const data = await api(`/games/${code}`)
-        if (cancelled) return
-        setGame(data)
-        setCodeStatus('valid')
-      } catch (error) {
+    api(`/games/${code}`)
+      .then((data) => !cancelled && setGame(data))
+      .catch((error) => {
         if (cancelled) return
         navigate('/join', {
           replace: true,
-          state: {
-            locationNotice: error.status === 404
-              ? 'Ongeldige code. Voer een 6-cijferige code in.'
-              : 'De quizcode kon niet worden gecontroleerd.',
-          },
+          state: { notice: error.status === 404 ? INVALID_CODE : 'De code kon niet worden gecontroleerd. Probeer het opnieuw.' },
         })
-      }
-    }
-
-    checkCode()
-
+      })
     return () => {
       cancelled = true
     }
-  }, [code, isInvalidCode, navigate])
+  }, [code, navigate])
 
+  // De melding uit de navigatie overnemen en meteen uit de geschiedenis halen,
+  // anders staat hij er na een refresh nog steeds.
   useEffect(() => {
-    const notice = location.state?.locationNotice
-
-    if (!notice) return
-
-    setLocationNotice(notice)
-    setIsNoticeClosing(false)
+    if (!location.state?.notice) return
+    setNotice(location.state.notice)
     navigate(location.pathname, { replace: true, state: null })
-  }, [location.pathname, location.state?.locationNotice, navigate])
-
-  useEffect(() => {
-    if (!locationNotice) return
-
-    const closeTimeout = setTimeout(() => {
-      setIsNoticeClosing(true)
-    }, 5000)
-    const removeTimeout = setTimeout(() => {
-      setLocationNotice('')
-    }, 5300)
-
-    return () => {
-      clearTimeout(closeTimeout)
-      clearTimeout(removeTimeout)
-    }
-  }, [locationNotice])
+  }, [location.pathname, location.state?.notice, navigate])
 
   return (
-    <div className="page join-page">
+    <div className="page auth-page join-page">
+      <PageRings />
       <QuizHeader />
-      {locationNotice && (
-        <Alert
-          className={`join-notice ${isNoticeClosing ? 'join-notice-closing' : ''}`}
-          type="error"
-          showIcon
-          message="Ongeldige quizcode"
-          description={locationNotice}
-        />
-      )}
-      {code && !isInvalidCode && codeStatus === 'valid' && game ? (
-        <NicknameStep key={code} code={code} locked={game.locked} quizTitle={game.quizTitle ?? DEFAULT_QUIZ_TITLE} />
-      ) : <CodeStep />}
-    </div>
-  )
-}
-
-function CodeStep() {
-  const [login, setLogin] = useState(false)
-
-  return (
-    <div className="code-panel">
-      <div className="code-options" role="tablist" aria-label="Kies hoe je wilt meedoen">
-        <button
-          className={`code-option ${!login ? 'code-option-active' : ''}`}
-          type="button"
-          role="tab"
-          aria-selected={!login}
-          onClick={() => setLogin(false)}
-        >
-          Meedoen met code
-        </button>
-        <button
-          className={`code-option ${login ? 'code-option-active' : ''}`}
-          type="button"
-          role="tab"
-          aria-selected={login}
-          onClick={() => setLogin(true)}
-        >
-          Login
-        </button>
-      </div>
-      <Card className="code-card">
-        {login ? (
-          <LoginForm />
+      <main className="page__main auth-page__main">
+        {code && game ? (
+          <NicknameStep key={code} code={code} locked={game.locked} quizTitle={game.quizTitle ?? DEFAULT_QUIZ_TITLE} />
+        ) : code ? (
+          <p className="auth-page__note" role="status">Code controleren…</p>
         ) : (
-          <CodeForm />
+          <CodeStep notice={notice} onClearNotice={() => setNotice(null)} />
         )}
-      </Card>
+      </main>
     </div>
   )
 }
 
-// Tab "Login": hetzelfde inlogformulier als /inloggen. Na het inloggen blijf je hier en vul je de code in.
-function LoginForm() {
+/**
+ * Stap 1. Niet ingelogd: wisselknop "Meedoen met code" / "Inloggen".
+ * Ingelogd: geen wisselknop meer nodig, alleen het codeveld.
+ */
+function CodeStep({ notice, onClearNotice }) {
   const { user } = useAuth()
-  if (user) {
-    return (
-      <p className="join-logged-in">
-        Je bent ingelogd als <strong>{user.username}</strong>. Vul bij &quot;Meedoen met code&quot; de code in; je uitslag
-        komt dan op <Link to="/account">Mijn account</Link>.
-      </p>
-    )
-  }
-  return <AccountLoginForm compact onSuccess={() => {}} />
-}
-
-function CodeForm() {
-  const navigate = useNavigate()
-  const [error, setError] = useState(null)
-
-  // Eerst vragen of de game bestaat, zodat je bij een typfout meteen een melding krijgt.
-  async function checkCode({ code }) {
-    setError(null)
-    try {
-      await api(`/games/${code}`)
-      navigate(`/join/${code}`)
-    } catch (apiError) {
-      setError(apiError.message)
-    }
-  }
+  const [tab, setTab] = useState('code')
+  // Na het inloggen op de tab "Inloggen" is user gevuld: dan verdwijnen de tabs en zie je meteen het codeveld.
+  const showLogin = !user && tab === 'login'
 
   return (
     <>
-      <header className="code-header">
-        <Typography.Title className="code-title" level={3}>Voer de code in</Typography.Title>
-      </header>
-      {error && <Alert type="error" showIcon message={error} style={{ marginBottom: 16 }} />}
-      <Form className="code-form" layout="vertical" onFinish={checkCode}>
-        <Form.Item
-          label="Code"
-          name="code"
-          rules={[{ required: true, pattern: /^\d{6}$/, message: 'Vul de 6 cijfers in.' }]}
-          normalize={(value) => value.replace(/\D/g, '').slice(0, 6)}
-        >
-          <Input
-            size="large"
-            inputMode="numeric"
-            autoComplete="off"
-            maxLength={6}
-            placeholder="123456"
-            style={{ fontSize: 28, letterSpacing: 6, textAlign: 'center' }}
-          />
-        </Form.Item>
-        <Button className="code-button" type="primary" htmlType="submit" size="large" block>
-          Verder
-        </Button>
-      </Form>
+      {!user && (
+        <div className="auth-page__tabs" role="group" aria-label="Kies hoe je wilt meedoen">
+          <button type="button" className={!showLogin ? 'is-active' : ''} aria-pressed={!showLogin} onClick={() => setTab('code')}>
+            Meedoen met code
+          </button>
+          <button type="button" className={showLogin ? 'is-active' : ''} aria-pressed={showLogin} onClick={() => setTab('login')}>
+            Inloggen
+          </button>
+        </div>
+      )}
+      <div className="auth-page__card ui-card">
+        {/* onSuccess: na het inloggen hier blijven (niet naar Mijn account), zodat je de code kunt invullen. */}
+        {showLogin ? <LoginForm onSuccess={() => {}} /> : <CodeForm notice={notice} onClearNotice={onClearNotice} />}
+      </div>
+      {!user && (
+        <p className="auth-page__note">
+          {showLogin ? 'Ingelogd komt je uitslag op Mijn account.' : 'Je hebt geen account nodig om mee te doen.'}
+        </p>
+      )}
     </>
   )
 }
 
-function SkillSlider({ label, color, value, onChange }) {
+function CodeForm({ notice, onClearNotice }) {
+  const { user } = useAuth()
+  const navigate = useNavigate()
+  const [code, setCode] = useState('')
+  const [error, setError] = useState(null)
+  const [busy, setBusy] = useState(false)
+
+  // Eerst vragen of de game bestaat, zodat je bij een typfout meteen een melding krijgt.
+  async function submit(event) {
+    event.preventDefault()
+    onClearNotice()
+    if (!/^\d{6}$/.test(code)) {
+      setError('Vul de 6 cijfers van de code in.')
+      return
+    }
+    setError(null)
+    setBusy(true)
+    try {
+      await api(`/games/${code}`)
+      navigate(`/join/${code}`)
+    } catch (apiError) {
+      setError(apiError.status === 404 ? INVALID_CODE : apiError.message)
+      setBusy(false)
+    }
+  }
+
   return (
-    <div className="skill-slider">
-      <span className="skill-label">
-        <span className="skill-dot" style={{ backgroundColor: color }} aria-hidden="true" />
-        {label}
-      </span>
-      <Slider value={value} onChange={onChange} min={0} max={5} style={{ flex: 1 }} />
-      <strong>{value}</strong>
-    </div>
+    <form className="ui-form" onSubmit={submit} noValidate>
+      <div>
+        <p className="auth-page__welcome">{user ? `Hoi ${user.username}!` : 'Klaar voor de quiz?'}</p>
+        <h1 className="ui-title">MEEDOEN</h1>
+      </div>
+      <TextField
+        label="Quizcode"
+        hint="De 6 cijfers op het grote scherm."
+        className="join-page__code"
+        inputMode="numeric"
+        autoComplete="off"
+        maxLength={6}
+        placeholder="123456"
+        autoFocus
+        value={code}
+        // Alleen cijfers: plakken van "123 456" werkt dan ook.
+        onChange={(event) => {
+          setCode(event.target.value.replace(/\D/g, '').slice(0, 6))
+          setError(null)
+          onClearNotice()
+        }}
+        error={error ?? notice}
+      />
+      <button type="submit" className="ui-btn ui-btn--primary ui-btn--block" disabled={busy}>
+        {busy ? 'Controleren…' : 'Verder'}
+      </button>
+      {user && (
+        <p className="auth-page__switch">
+          Je doet mee als <strong>{user.username}</strong>. Je uitslag komt op{' '}
+          <Link to="/account" className="ui-link">Mijn account</Link>.
+        </p>
+      )}
+    </form>
   )
 }
 
+/** Stap 2: naam (alleen voor gasten) en vaardigheden. */
 function NicknameStep({ code, locked, quizTitle }) {
-  const [form] = Form.useForm()
   const navigate = useNavigate()
   // Ingelogd? Dan speel je onder je accountnaam (de server gebruikt die ook) en komt je uitslag op Mijn account.
   const { user } = useAuth()
+  const [nickname, setNickname] = useState('')
+  const [nameError, setNameError] = useState(null)
   const [error, setError] = useState(null)
   const [sending, setSending] = useState(false)
   // Met een account beginnen de sliders bij je opgeslagen vaardigheden.
-  const [skillValues, setSkillValues] = useState(() => joinStartSkills(user))
+  const [skills, setSkills] = useState(() => joinStartSkills(user))
 
   // Het account komt soms pas binnen ná de eerste render (useAuth vraagt /auth/me op).
   // Dan de sliders alsnog op je accountwaarden zetten, anders bleven ze op de gast-waarde staan.
   const userId = user?.id
   useEffect(() => {
-    if (userId) setSkillValues(joinStartSkills(user))
+    if (userId) setSkills(joinStartSkills(user))
     // Alleen opnieuw als er een ánder account inlogt, niet bij elke render (dan zou schuiven niet werken).
   }, [userId])
 
@@ -254,11 +204,18 @@ function NicknameStep({ code, locked, quizTitle }) {
 
   // De server checkt de naam en zet de cookie. Daarna weet /play/:code wie we zijn.
   // De skills bewaart de server bij de speler; ze komen in de database bij de eindstand (GameResult).
-  async function join({ nickname }) {
+  async function join(event) {
+    event.preventDefault()
     setError(null)
+    const name = nickname.trim()
+    if (!user && (name.length < 2 || name.length > 20)) {
+      setNameError('Kies een naam van 2 tot 20 tekens.')
+      return
+    }
+    setNameError(null)
     setSending(true)
     try {
-      await api(`/games/${code}/players`, { method: 'POST', body: { nickname, skills: skillValues } })
+      await api(`/games/${code}/players`, { method: 'POST', body: { nickname: name, skills } })
       navigate(`/play/${code}`)
     } catch (apiError) {
       setError(apiError.message)
@@ -267,65 +224,51 @@ function NicknameStep({ code, locked, quizTitle }) {
   }
 
   return (
-    <>
-      <Card className="join-card">
-        <header className="join-header">
-          <Typography.Text type="secondary" className="join-header-text">
-            {quizTitle}
-          </Typography.Text>
-          <Typography.Text type="secondary" className="join-header-text">
-            {code}
-          </Typography.Text>
-        </header>
-        <div className="join-title">
-          <Typography.Text type="secondary" className="join-title-text">
-            Je bent er bijna!
-          </Typography.Text>
-          <Typography.Title className="join-title-title">
-            Vul je gegevens in
-          </Typography.Title>
+    <div className="auth-page__card ui-card">
+      <form className="ui-form" onSubmit={join} noValidate>
+        <div className="join-page__meta">
+          <span>{quizTitle}</span>
+          <span>Code {code}</span>
         </div>
-        {locked && (
-          <Alert type="warning" showIcon message="Deze lobby is gesloten." style={{ marginBottom: 16 }} />
+        <div>
+          <p className="auth-page__welcome">Je bent er bijna!</p>
+          <h1 className="ui-title">JOUW GEGEVENS</h1>
+        </div>
+        {locked && <Notice>Deze lobby is gesloten: er kunnen geen nieuwe spelers meer bij.</Notice>}
+        {user ? (
+          <p className="join-page__as">
+            Je doet mee als <strong>{user.username}</strong>. Je uitslag wordt bewaard op je account.
+          </p>
+        ) : (
+          <TextField
+            label="Gebruikersnaam"
+            hint="2 tot 20 tekens. Deze naam zie je op het grote scherm."
+            maxLength={20}
+            autoComplete="off"
+            autoFocus
+            value={nickname}
+            onChange={(event) => setNickname(event.target.value)}
+            error={nameError}
+          />
         )}
-        {error && <Alert type="error" showIcon message={error} style={{ marginBottom: 16 }} />}
-        <Form form={form} layout="vertical" onFinish={join}>
-          {user ? (
-            <p className="join-logged-in">
-              Je doet mee als <strong>{user.username}</strong>. Je uitslag wordt bewaard op je account.
-            </p>
-          ) : (
-            <Form.Item
-              label="Gebruikersnaam:"
-              name="nickname"
-              rules={[{ required: true, min: 2, max: 20, whitespace: true, message: '2 tot 20 tekens.' }]}
-              style={{ marginBottom: '2vh' }}
-            >
-              <Input placeholder="Vul hier in..." size="large" maxLength={20} autoComplete="off" autoFocus />
-            </Form.Item>
-          )}
-          <Form.Item label="Vul hier jouw vaardigheden in: (0-5)" required style={{ marginBottom: '2.5vh' }}>
-            <div className="skills-list">
-              {skillDefinitions.map((skill) => (
-                <SkillSlider
-                  key={skill.label}
-                  {...skill}
-                  value={skillValues[skill.label]}
-                  onChange={(value) => setSkillValues((current) => ({ ...current, [skill.label]: value }))}
-                />
-              ))}
-            </div>
-          </Form.Item>
-          <Button type="primary" htmlType="submit" size="large" block loading={sending}>
-            Join
-          </Button>
-          {!user && (
-            <Link to={`/inloggen?terug=${encodeURIComponent(`/join/${code}`)}`} className="login-link">
-              Gegevens bewaren? Log in om je voortgang te bewaren.
-            </Link>
-          )}
-        </Form>
-      </Card>
-    </>
+        <fieldset className="ui-fieldset">
+          <legend className="ui-label">Jouw vaardigheden (0–5)</legend>
+          <SkillSliders value={skills} onChange={setSkills} />
+        </fieldset>
+        <Notice>{error}</Notice>
+        <button type="submit" className="ui-btn ui-btn--primary ui-btn--block" disabled={sending}>
+          {sending ? 'Bezig met meedoen…' : 'Meedoen'}
+        </button>
+        {!user && (
+          <p className="auth-page__switch">
+            Scores bewaren?{' '}
+            <Link to={`/inloggen?terug=${encodeURIComponent(`/join/${code}`)}`} className="ui-link">
+              Log in
+            </Link>{' '}
+            voordat je meedoet.
+          </p>
+        )}
+      </form>
+    </div>
   )
 }

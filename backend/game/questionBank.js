@@ -473,26 +473,17 @@ export const QUESTION_BANK = [
     ["Hetzelfde sterke wachtwoord voor alles"],
     ["Je naam met een paar cijfers erachter"],
   ]),
-  bankQuestion("CSC", 1, "Wat is phishing?", [
-    ["Malware die je bestanden versleutelt en losgeld vraagt"],
-    ["Een aanval die een website platlegt met enorm veel verkeer"],
-    [
-      "Een nepbericht dat je probeert te verleiden om gegevens af te geven",
-      true,
-    ],
-    ["Software die stiekem je toetsaanslagen registreert"],
-  ]),
   bankQuestion("CSC", 1, "Welk wachtwoord is het sterkst?", [
     ["Welkom123"],
     ["P@ssw0rd"],
     ["Jan1990!"],
     ["fiets-Lamp-Regen-42!", true],
   ]),
-  bankQuestion("CSC", 2, "Waar staat de S in HTTPS voor?", [
-    ["Speed"],
-    ["Server"],
-    ["Simple"],
-    ["Secure", true],
+  bankQuestion("CSC", 1, "Wat doet ransomware?", [
+    ["Het versnelt je computer door oude bestanden op te ruimen"],
+    ["Het versleutelt je bestanden en vraagt losgeld", true],
+    ["Het maakt automatisch een back-up van je bestanden"],
+    ["Het blokkeert reclame op websites"],
   ]),
   bankQuestion("CSC", 2, "Wat is tweestapsverificatie (2FA)?", [
     ["Iets wat je weet én iets wat je hebt", true],
@@ -505,6 +496,15 @@ export const QUESTION_BANK = [
     ["Server"],
     ["Standard"],
     ["System"],
+  ]),
+  bankQuestion("CSC", 2, "Wat doet een VPN?", [
+    ["Het maakt je wachtwoorden sterker"],
+    ["Het verwijdert virussen van je computer"],
+    [
+      "Het stuurt je verkeer via een versleutelde verbinding naar een andere server",
+      true,
+    ],
+    ["Het maakt je internetverbinding altijd sneller"],
   ]),
   bankQuestion("CSC", 2, "Wat doet tweestapsverificatie (2FA)?", [
     ["Het wachtwoord twee keer laten invoeren bij het inloggen"],

@@ -1,6 +1,6 @@
 import { App as AntApp } from 'antd'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { homeFor, initials, isStaff, useAuth } from '../auth/AuthContext.jsx'
+import { initials, isStaff, useAuth } from '../auth/AuthContext.jsx'
 import './QuizHeader.css'
 
 /**
@@ -35,7 +35,8 @@ export default function QuizHeader({ code = null, large = false, admin = false }
   return (
     <nav className={`quiz-header ${large ? 'quiz-header--large' : ''}`} aria-label="Hoofdmenu">
       <span className="quiz-header__brand">
-        <Link to={user ? homeFor(user) : '/'} className="quiz-header__logo">
+        {/* Het logo gaat altijd naar de startpagina, ook ingelogd. Je account zit al achter de knop met je naam. */}
+        <Link to="/" className="quiz-header__logo">
           OPEN ICT QUIZ
         </Link>
         {admin && <span className="quiz-header__badge">BEHEER</span>}

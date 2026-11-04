@@ -22,6 +22,21 @@
   overflow-wrap: anywhere;
 }
 
+.player-question__multiplier {
+  align-self: flex-start;
+  margin: -12px 0 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--quiz-accent);
+  color: var(--quiz-text);
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.player-question__multiplier strong {
+  font-size: 20px;
+}
+
 .player-question__reading {
   margin: 0;
   padding: 32px;

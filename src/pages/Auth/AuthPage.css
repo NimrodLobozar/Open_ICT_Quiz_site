@@ -29,7 +29,9 @@
   border: 2px solid var(--quiz-border);
 }
 
-.auth-page__tabs a {
+/* Links op /inloggen, knoppen op /join: dezelfde pil. */
+.auth-page__tabs a,
+.auth-page__tabs button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -41,12 +43,20 @@
   text-decoration: none;
 }
 
-.auth-page__tabs a.is-active {
+.auth-page__tabs button {
+  border: 0;
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.auth-page__tabs .is-active {
   background: var(--quiz-accent);
   font-weight: 800;
 }
 
-.auth-page__tabs a:focus-visible {
+.auth-page__tabs a:focus-visible,
+.auth-page__tabs button:focus-visible {
   outline: 3px solid var(--quiz-primary);
   outline-offset: 2px;
 }

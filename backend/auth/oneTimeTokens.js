@@ -86,10 +86,14 @@ export async function usePasswordToken(token, newPassword) {
     if (!(await markUsed(tx, record, PASSWORD_PURPOSES))) return false
     // De link kwam via de mail binnen, dus het adres is van deze persoon: meteen ook bevestigd (story 14).
     // Zo is een docent die zijn uitnodiging gebruikt ook bevestigd.
+    // Een wachtend nieuw e-mailadres vervalt, met zijn bevestigingslinks: had een indringer zijn eigen adres
+    // klaargezet, dan kan hij het account na deze reset niet alsnog overnemen. (Het adres is via deze link
+    // hierboven al bevestigd, dus een VERIFY-link is ook niet meer nodig.)
     await tx.user.update({
       where: { id: record.userId },
-      data: { passwordHash, emailVerifiedAt: record.user.emailVerifiedAt ?? new Date() },
+      data: { passwordHash, pendingEmail: null, emailVerifiedAt: record.user.emailVerifiedAt ?? new Date() },
     })
+    await tx.oneTimeToken.deleteMany({ where: { userId: record.userId, purpose: 'VERIFY', usedAt: null } })
     // Was het account overgenomen, dan is de indringer er nu ook uit.
     await tx.session.deleteMany({ where: { userId: record.userId } })
     return true

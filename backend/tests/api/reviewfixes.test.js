@@ -137,6 +137,31 @@ describe('wachtwoord wijzigen', () => {
     expect(reset.status).toBe(400)
     expect((await browser().post('/api/auth/login').send({ email: 'jan@student.hu.nl', password: 'Nieuw12345' })).status).toBe(200)
   })
+
+  it('wachtwoord wijzigen of resetten: een klaargezet nieuw e-mailadres van een indringer vervalt', async () => {
+    const { user, agent: intruder } = await loggedIn({ email: 'jan@student.hu.nl' })
+    // De indringer (met Jans sessie) zet zijn eigen adres klaar.
+    await intruder.patch('/api/me').send({ email: 'indringer@student.hu.nl' })
+    const intruderToken = await tokenFromMail('indringer@student.hu.nl', 'email-bevestigen')
+
+    // Jan reset zijn wachtwoord via de mail.
+    await browser().post('/api/auth/forgot').send({ email: 'jan@student.hu.nl' })
+    const resetToken = await tokenFromMail('jan@student.hu.nl', 'wachtwoord-instellen')
+    expect((await browser().post('/api/auth/password').send({ token: resetToken, password: 'Nieuw12345' })).status).toBe(200)
+
+    expect((await browser().post('/api/auth/verify-email').send({ token: intruderToken })).status).toBe(400)
+    expect(await prisma.user.findUnique({ where: { id: user.id } })).toMatchObject({ email: 'jan@student.hu.nl', pendingEmail: null })
+  })
+
+  it('wachtwoord wijzigen (ingelogd) laat een wachtend adres ook vervallen', async () => {
+    const { user, agent } = await loggedIn({ email: 'jan@student.hu.nl' })
+    await agent.patch('/api/me').send({ email: 'indringer@student.hu.nl' })
+    const token = await tokenFromMail('indringer@student.hu.nl', 'email-bevestigen')
+
+    await agent.post('/api/me/password').send({ currentPassword: PASSWORD, newPassword: 'Nieuw12345' })
+    expect((await browser().post('/api/auth/verify-email').send({ token })).status).toBe(400)
+    expect(await prisma.user.findUnique({ where: { id: user.id } })).toMatchObject({ email: 'jan@student.hu.nl', pendingEmail: null })
+  })
 })
 
 describe('uitslagen opslaan', () => {

@@ -40,6 +40,8 @@ export default function VerifyEmailPage() {
         // (zodat het nieuwe adres meteen zichtbaar is) en terug naar je account in plaats van naar inloggen.
         if (user) {
           await refresh()
+          // Intussen naar een andere pagina gegaan? Dan je niet alsnog wegsturen.
+          if (cancelled) return
           navigate(homeFor(user), { replace: true })
         } else {
           navigate('/inloggen?bevestigd=1', { replace: true })

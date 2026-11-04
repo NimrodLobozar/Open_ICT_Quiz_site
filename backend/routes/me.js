@@ -121,9 +121,11 @@ router.post('/password', passwordCheckLimiter, async (request, response) => {
   // - openstaande "wachtwoord vergeten"-links vervallen. Anders kon iemand met een oude link
   //   jouw nieuwe wachtwoord meteen weer overschrijven;
   // - andere apparaten uitloggen: was je wachtwoord gelekt, dan is de indringer er nu uit. Dit apparaat blijft ingelogd.
+  // - een wachtend nieuw e-mailadres (en de link ervan) vervalt ook: had een indringer zijn eigen adres
+  //   klaargezet, dan kan hij daarmee na deze wijziging niet alsnog het account overnemen.
   await prisma.$transaction([
-    prisma.user.update({ where: { id: userId }, data: { passwordHash } }),
-    prisma.oneTimeToken.deleteMany({ where: { userId, purpose: { in: PASSWORD_PURPOSES }, usedAt: null } }),
+    prisma.user.update({ where: { id: userId }, data: { passwordHash, pendingEmail: null } }),
+    prisma.oneTimeToken.deleteMany({ where: { userId, purpose: { in: [...PASSWORD_PURPOSES, 'VERIFY'] }, usedAt: null } }),
     prisma.session.deleteMany({ where: { userId, id: { not: request.authSession.id } } }),
   ])
   response.json({ ok: true })

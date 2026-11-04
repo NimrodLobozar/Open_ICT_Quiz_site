@@ -316,6 +316,21 @@
   color: var(--quiz-success);
 }
 
+/* Uitleg, geen succes of fout: in de gewone kleuren. Minder vet, want het is een hele zin. */
+.ui-notice--info {
+  align-items: flex-start;
+  background: var(--quiz-surface);
+  border: 2px solid var(--quiz-border);
+  color: var(--quiz-text);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.ui-notice--info svg {
+  margin-top: 1px;
+  color: var(--quiz-primary);
+}
+
 .ui-select {
   min-height: 48px;
   padding: 0 14px;

@@ -70,24 +70,3 @@ export const passwordCheckLimiter = rateLimit({
   legacyHeaders: false,
   handler: tooMany('Te veel pogingen. Probeer het over een kwartier opnieuw.'),
 })
-
-// Nieuw e-mailadres op Instellingen: elke echte wijziging (en elke "opnieuw sturen") verstuurt een bevestigingsmail.
-// Zonder grens kon één account onbeperkt mails laten versturen, door steeds een ander adres op te slaan.
-// 5 mails per account per kwartier, net als de andere mailroutes. Eén limiter voor beide routes, zodat ze samen tellen.
-// Gewoon je naam of vaardigheden opslaan (ook met hetzelfde of het al wachtende adres erbij) telt niet mee.
-function sendsNewEmailMail(request) {
-  if (request.method !== 'PATCH') return true // POST /email/resend verstuurt altijd een mail
-  const email = typeof request.body?.email === 'string' ? request.body.email.trim().toLowerCase() : request.body?.email
-  if (email === undefined) return false
-  return email !== request.user?.email && email !== request.user?.pendingEmail
-}
-
-export const emailChangeLimiter = rateLimit({
-  windowMs: MAIL_WINDOW_MS,
-  limit: MAIL_LIMIT,
-  skip: (request) => !sendsNewEmailMail(request),
-  keyGenerator: (request) => `email-change:${request.user?.id}:${request.user?.createdAt?.getTime()}`,
-  standardHeaders: 'draft-8',
-  legacyHeaders: false,
-  handler: tooManyMails,
-})

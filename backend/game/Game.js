@@ -429,9 +429,11 @@ export class Game {
     if (this.phase !== PHASES.QUESTION_ACTIVE)
       throw new GameError("WRONG_PHASE", "De vraag is al gestopt.", 409);
     const question = this.currentQuestion;
+    // Gesorteerd op id: de antwoorden zijn gehusseld, maar deze lijst moet elke keer gelijk zijn.
     const correctOptionIds = question.options
       .filter((option) => option.isCorrect)
-      .map((option) => option.id);
+      .map((option) => option.id)
+      .sort((a, b) => a - b);
     const answerCounts = Object.fromEntries(
       question.options.map((option) => [option.id, 0]),
     );
